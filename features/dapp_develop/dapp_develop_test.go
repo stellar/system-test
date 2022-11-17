@@ -203,15 +203,15 @@ func initializeScenario(ctx *godog.ScenarioContext) {
 
 		testConfig := newTestConfig(e2eConfig)
 
-        envCmd := cmd.NewCmd("/bin/sh", "-c", "rm -rf dapp_develop_testing; mkdir dapp_develop_testing") 
+        envCmd := cmd.NewCmd("/bin/sh", "-c", fmt.Sprintf("rm -rf %s; mkdir %s", e2e.TestTmpDirectory, e2e.TestTmpDirectory)) 
 
 	    status, _, err := e2e.RunCommand(envCmd, testConfig.E2EConfig)
 
 	    if status != 0 || err != nil {
-	    	return nil, fmt.Errorf("could not initialize 'dapp_develop_testing' directory, had error %v, %v", status, err)
+	    	return nil, fmt.Errorf("could not initialize %s directory, had error %v, %v", e2e.TestTmpDirectory, status, err)
 	    }
 
-        testConfig.TestWorkingDir = "dapp_develop_testing"
+        testConfig.TestWorkingDir = e2e.TestTmpDirectory
 		ctx = context.WithValue(ctx, e2e.TestConfigContextKey, testConfig) 
 		return ctx, nil
 	})

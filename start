@@ -3,15 +3,13 @@ set -e
 
 # the versions of software that tests will use
 RUST_TOOLCHAIN_VERSION=
-SOROBAN_CLI_CRATE_VERSION="0.2.1"
-SOROBAN_JS_CLIENT_NPM_VERSION="v0.1.3"
-SOROBAN_EXAMPLES_GIT_HASH="fc5ef23277f4c032aa7102e4787b406ac2b2f6cd"
+SOROBAN_CLI_CRATE_VERSION=
+# JS CLIENT is not implemented as a test yet
+SOROBAN_JS_CLIENT_NPM_VERSION=
+SOROBAN_EXAMPLES_GIT_HASH="master"
 SOROBAN_EXAMPLES_REPO_URL="https://github.com/stellar/soroban-examples.git"
 
-# for now the target network under test is an internal instance of standalone network launched from the quickstart soroban-dev image. 
-# this references static account key pair that is seeded in the quickstart standalone network.
-# could allow this to reference external network services at some point if needed, 
-# maybe pass friendbot url also, in that mode, VERSION variables would be ignored here. 
+# the target network under test
 CORE_DEBIAN_VERSION="19.5.1-1111.eba1d3de9.focal~soroban"
 HORIZON_DEBIAN_VERSION="2.22.0~soroban-304"
 SOROBAN_RPC_DEBIAN_VERSION="0.0.1~alpha-2"
@@ -20,15 +18,16 @@ TARGET_NETWORK_SECRET_KEY="SC5O7VZUXDJ6JBDSZ74DSERXL7W3Y5LTOAMRF7RQRL3TAGAPS7LUV
 TARGET_NETWORK_PUBLIC_KEY="GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI"
 TARGET_NETWORK_RPC_URL="http://localhost:8000/soroban/rpc"
 
-# example filter for all combos of one scenario outline: -test.run ^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$
-# each example data for a scenario outline is postfixed with '01', '02', etc ..
+# example filter for all combos of one scenario outline: ^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$
+# each row in example data for a scenario outline is postfixed with '#01', '#02', example:
+# TestDappDevelop/DApp developer compiles, deploys and invokes a contract#01
 TEST_FILTER=""
 VERBOSE_OUTPUT=false
 RUN_TARGET_STACK_ONLY=false
 
 trap printout SIGINT
 printout() {
-   echo "Canceling and exit."
+   echo "Cancelling and exit."
    exit
 }
     
@@ -65,7 +64,7 @@ function main() {
     fi  
 
     echo "  RUST_TOOLCHAIN_VERSION=${RUST_TOOLCHAIN_VERSION:-$(rustc --version 2>/dev/null )}"
-    echo "  SOROBAN_CLI_CRATE_VERSION=$SOROBAN_CLI_CRATE_VERSION"
+    echo "  SOROBAN_CLI_CRATE_VERSION=${SOROBAN_CLI_CRATE_VERSION:-$(soroban version 2>/dev/null )}"
     echo "  SOROBAN_JS_CLIENT_NPM_VERSION=$SOROBAN_JS_CLIENT_NPM_VERSION"
     echo "  SOROBAN_EXAMPLES_GIT_HASH=$SOROBAN_EXAMPLES_GIT_HASH"
     echo "  SOROBAN_EXAMPLES_REPO_URL=$SOROBAN_EXAMPLES_REPO_URL"
@@ -75,22 +74,22 @@ function main() {
     echo "  TARGET_NETWORK_RPC_URL=$TARGET_NETWORK_RPC_URL"
     echo "  TEST_FILTER=$TEST_FILTER"
 
-    if [ ! -z $RUST_TOOLCHAIN_VERSION ]; then 
+    if [ ! -z "$RUST_TOOLCHAIN_VERSION" ]; then 
       echo "Installing rust toolchain ..."
-      curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain ${RUST_TOOLCHAIN_VERSION} 
+      curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain "${RUST_TOOLCHAIN_VERSION}" 
     fi  
    
     cd /opt/test
 
-    export SorobanCLICrateVersion="${SOROBAN_CLI_CRATE_VERSION}"
-    export SorobanJSClientNpmVersion="${SOROBAN_JS_CLIENT_NPM_VERSION}" 
-    export SorobanExamplesGitHash="${SOROBAN_EXAMPLES_GIT_HASH}"
-    export SorobanExamplesRepoURL="${SOROBAN_EXAMPLES_REPO_URL}"
+    export SorobanCLICrateVersion=${SOROBAN_CLI_CRATE_VERSION}
+    export SorobanJSClientNpmVersion=${SOROBAN_JS_CLIENT_NPM_VERSION} 
+    export SorobanExamplesGitHash=${SOROBAN_EXAMPLES_GIT_HASH}
+    export SorobanExamplesRepoURL=${SOROBAN_EXAMPLES_REPO_URL}
     export TargetNetworkPassPhrase="${TARGET_NETWORK_PASSPHRASE}"
-    export TargetNetworkSecretKey="${TARGET_NETWORK_SECRET_KEY}"
-    export TargetNetworkPublicKey="${TARGET_NETWORK_PUBLIC_KEY}"
-    export TargetNetworkRPCURL="${TARGET_NETWORK_RPC_URL}" 
-    export VerboseOutput="${VERBOSE_OUTPUT}"
+    export TargetNetworkSecretKey=${TARGET_NETWORK_SECRET_KEY}
+    export TargetNetworkPublicKey=${TARGET_NETWORK_PUBLIC_KEY}
+    export TargetNetworkRPCURL=${TARGET_NETWORK_RPC_URL}
+    export VerboseOutput=${VERBOSE_OUTPUT}
 
     for file in ./bin/*; 
     do 

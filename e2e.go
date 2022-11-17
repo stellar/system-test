@@ -23,16 +23,17 @@ type E2EConfig struct {
     TargetNetworkPublicKey        string
 }
 
+const TestTmpDirectory = "test_tmp_workspace"
 
 func InitEnvironment() (*E2EConfig, error) {
 	var flagConfig = &E2EConfig{}
 	var err error
-	if flagConfig.SorobanCLICrateVersion, err = getEnv("SorobanCLICrateVersion"); err != nil {
-		return nil, err
-	}
-	if flagConfig.SorobanJSClientNpmVersion, err = getEnv("SorobanJSClientNpmVersion"); err != nil {
-		return nil, err
-	}
+
+	flagConfig.SorobanCLICrateVersion, _ = getEnv("SorobanCLICrateVersion")
+
+	//TODO - enable this when JS Client test steps are supported.
+	flagConfig.SorobanJSClientNpmVersion, _ = getEnv("SorobanJSClientNpmVersion")
+
 	if flagConfig.SorobanExamplesGitHash, err = getEnv("SorobanExamplesGitHash"); err != nil {
 		return nil, err
 	}
