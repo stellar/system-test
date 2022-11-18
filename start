@@ -33,7 +33,7 @@ printout() {
     
 function main() {
 
-    process_args $*
+    process_args "$@"
 
     echo "running target stack with following config:"
     echo "  CORE_DEBIAN_VERSION=$CORE_DEBIAN_VERSION"
@@ -72,14 +72,14 @@ function main() {
     echo "  TARGET_NETWORK_SECRET_KEY=$TARGET_NETWORK_SECRET_KEY"
     echo "  TARGET_NETWORK_PUBLIC_KEY=$TARGET_NETWORK_PUBLIC_KEY"
     echo "  TARGET_NETWORK_RPC_URL=$TARGET_NETWORK_RPC_URL"
-    echo "  TEST_FILTER=$TEST_FILTER"
+    echo "  TEST_FILTER=${TEST_FILTER}"
 
     if [ ! -z "$RUST_TOOLCHAIN_VERSION" ]; then 
       echo "Installing rust toolchain ..."
       curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain "${RUST_TOOLCHAIN_VERSION}" 
     fi  
    
-    cd /opt/test
+    cd /opt/test/bin
 
     export SorobanCLICrateVersion=${SOROBAN_CLI_CRATE_VERSION}
     export SorobanJSClientNpmVersion=${SOROBAN_JS_CLIENT_NPM_VERSION} 
@@ -91,8 +91,11 @@ function main() {
     export TargetNetworkRPCURL=${TARGET_NETWORK_RPC_URL}
     export VerboseOutput=${VERBOSE_OUTPUT}
 
-    for file in ./bin/*; 
+    for file in ./*; 
     do 
+      if [[ "$file" =~ ^.*\.feature$ ]]; then 
+          continue
+      fi  
       # these bin files were compiled from go feature tests in the Dockerfile during image build
       echo "Running test binary ${file} ... "
       ${file} -test.v ${TEST_FILTER};
@@ -139,7 +142,7 @@ function process_args() {
         shift
         ;;   
       --TestFilter)
-        TEST_FILTER="-test.run $1"
+        TEST_FILTER="-test.run ""$1"""
         shift
         ;;     
       --VerboseOutput)
@@ -175,4 +178,4 @@ function validateSorobanRPC () {
     done 
 }
 
-main $@
+main "$@"

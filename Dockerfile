@@ -8,8 +8,11 @@ ADD go.sum /test
 ADD e2e.go /test
 
 WORKDIR /test
-# specify each feature folder with go test module, compiles each feature to a binary to be executed 
+# specify each feature folder with go test module, 
+# compiles each feature to a binary to be executed, 
+# and copies the .feature file with it for runtime.
 RUN go test -c -o ./bin/dapp_develop_test ./features/dapp_develop/...
+ADD features/dapp_develop/dapp_develop.feature ./bin
 
 FROM stellar/quickstart:soroban-dev
 
