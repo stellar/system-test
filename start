@@ -54,8 +54,7 @@ function main() {
     echo "Starting the Soroban stack ..." 
     /start --standalone --enable-soroban-rpc > /var/log/quickstart.log 2>&1 &
     validateSorobanRPC
-    echo "Soroban rpc is running, begin tests ..."
-
+    echo "Tests can now begin ..."
     if [ "$RUN_TARGET_STACK_ONLY" = "true" ]; then  
         while : 
         do 
@@ -176,6 +175,20 @@ function validateSorobanRPC () {
       sleep 5
       COUNTER=$[$COUNTER +1]
     done 
+    echo "Soroban rpc is running ..."
+
+    COUNTER=1
+    while ! (curl --silent --location --request GET 'http://localhost:8000' | jq --exit-status '.history_latest_ledger > 0'); do
+      if [ $COUNTER -gt 24 ]; then 
+          echo "Horizon ingestion did not become available in 2 minutes, aborting test ..."
+          exit 1
+      fi 
+      echo "Waiting for horizon ingestion to be caught up ..."
+      sleep 5
+      COUNTER=$[$COUNTER +1]
+    done 
+    echo "Horizon ingestion is moving forward ..."
+
 }
 
 main "$@"
