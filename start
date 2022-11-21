@@ -30,7 +30,15 @@ printout() {
    echo "Cancelling and exit."
    exit
 }
-    
+
+trap finish EXIT
+function finish {
+  if [ $? > 0 ]; then
+     echo "Error occurred, dumping all logs ..."
+     cat /var/log/quickstart.log
+  fi  
+}
+
 function main() {
 
     process_args "$@"

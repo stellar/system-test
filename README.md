@@ -20,6 +20,8 @@ docker run --platform linux/amd64 --rm -it --name e2e_test stellar/stellar-syste
 --VerboseOutput false 
 ```
 
+This follows standard exit code conventions, so if all tests pass in the container run, exit code from command line execution will be 0, otherwise, if any failures in container or tests, then exit code will be greater than 0.
+
 * RustToolchainVersion is optional, image uses a default of pre-installed 1.65.0 
 
 * TestFilter is optional, it is a regex of the feature test name and a scenario defined within, each row in example data for a scenario outline is postfixed with '#01', '#02', example:
@@ -31,7 +33,7 @@ The ending wildcard allows for all combonations of example data for a scenario o
 * the target network under test when running docker is an internal instance of standalone network launched from the quickstart soroban-dev image, which creates a static root account key pair seeded in the quickstart standalone network. At some point, may allow this to reference external network services if requirements come up, maybe pass friendbot url in that case, etc, if doing that external targets, then CoreDebianVersion, HorizonDebianVersion, SorobanRPCDebianVersion would be ignored. 
 
 ### Run tests from locally checked out repo.
-This approach allows to run the tests directly on host as go tests. It is more oriented towards development environments, with ability to  configure more aspects directly, like target network to use, but does require more environment setup.
+This approach allows to run the tests directly on host as go tests. It allows to configure more aspects directly, like target network to use, and whether to try to use pre-existing cli on the host if desired but does require more environment setup.
 
 #### pre-requirements:
 
@@ -55,6 +57,8 @@ system-test $ SorobanCLICrateVersion=0.2.1 \
  VerboseOutput=false \
  go test -v --run "^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$" ./features/dapp_develop/...
 ```
+
+This follows standard go test conventions, so if all tests pass, exit code from command line execution will be 0, otherwise, if any tests fail, then exit code will be greater than 0.
 
 * SorobanCLICrateVersion is optional, if not defined, test will attempt to run soroban as provided from your operating system PATH, i.e. you install soroban cli manually on your machine first. Otherwise, the test will install this soroban cli version onto the o/s.
 
