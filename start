@@ -51,11 +51,11 @@ function main() {
     echo "Installing Soroban stack ..."
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -qq > /var/log/quickstart.log 2>&1
-    apt-get install -y -qq stellar-core=${CORE_DEBIAN_VERSION} > /var/log/quickstart.log 2>&1
+    apt-get install -y -qq --allow-downgrades stellar-core=${CORE_DEBIAN_VERSION} > /var/log/quickstart.log 2>&1
     echo "Installed core ..."
-    apt-get install -y -qq stellar-horizon=${HORIZON_DEBIAN_VERSION} > /var/log/quickstart.log 2>&1
+    apt-get install -y -qq --allow-downgrades stellar-horizon=${HORIZON_DEBIAN_VERSION} > /var/log/quickstart.log 2>&1
     echo "Installed horizon ..."
-    apt-get install -y -qq stellar-soroban-rpc=${SOROBAN_RPC_DEBIAN_VERSION} > /var/log/quickstart.log 2>&1
+    apt-get install -y -qq --allow-downgrades stellar-soroban-rpc=${SOROBAN_RPC_DEBIAN_VERSION} > /var/log/quickstart.log 2>&1
     echo "Installed soroban rpc ..."
     apt-get clean -qq > /var/log/quickstart.log 2>&1
  

@@ -1,5 +1,3 @@
-# https://cucumber.io/docs/gherkin/reference/
-
 Feature: DApp Contract Development
 
 Scenario Outline: DApp developer compiles, deploys and invokes a contract

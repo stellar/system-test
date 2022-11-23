@@ -116,7 +116,7 @@ func InstallCli(fc *E2EConfig) error {
 	    if status != 0 || err != nil {
 	    	return fmt.Errorf("no soroban cli present, SorobanCLICrateVersion was not specified, and not able to run soroban from current path, %d, %e", status, err)
 	    }
-        fmt.Printf("Soroban cli version, SorobanCLICrateVersion was not specified, will use version already present on path:\n %v", versionOutput)
+        fmt.Printf("SorobanCLICrateVersion was not specified, will use version already present on path:\n %v \n\n", versionOutput)
         return nil
     }
 
