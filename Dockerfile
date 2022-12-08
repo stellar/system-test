@@ -2,12 +2,11 @@ FROM golang:1.19 as go
 
 RUN ["mkdir", "-p", "/test"] 
 RUN ["mkdir", "-p", "/test/bin"] 
-ADD features /test/features
-ADD go.mod /test
-ADD go.sum /test
-ADD e2e.go /test
 
+ADD go.mod go.sum /test
 WORKDIR /test
+RUN go mod download
+ADD e2e.go ./ features ./
 # specify each feature folder with go test module, 
 # compiles each feature to a binary to be executed, 
 # and copies the .feature file with it for runtime.

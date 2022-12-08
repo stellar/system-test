@@ -35,7 +35,7 @@ The ending wildcard allows for all combonations of example data for a scenario o
 ### Run tests from locally checked out repo.
 This approach allows to run the tests directly on host as go tests. It allows to configure more aspects directly, like target network to use, and whether to try to use pre-existing cli on the host if desired but does require more environment setup.
 
-#### pre-requirements:
+#### Prerequisites:
 
  1. go 1.18 or above - https://go.dev/doc/install
  2. rust toolchain(cargo and rustc), install the version per testing requirements or stable, - use rustup - https://www.rust-lang.org/tools/install 
@@ -45,7 +45,7 @@ This approach allows to run the tests directly on host as go tests. It allows to
      ```
  4. locally checkout stellar/system-test GH repo and go into top folder - `git clone https://github.com/stellar/system-test.git;cd system-test`
 
-#### running tests (and a test/scenario filter as example)
+#### Running tests (and a test/scenario filter as example)
 ```
 system-test $ SorobanCLICrateVersion=0.2.1 \
  SorobanExamplesGitHash="main" \
