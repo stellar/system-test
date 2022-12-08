@@ -1,0 +1,202 @@
+#! /usr/bin/env bash
+set -e
+
+# the versions of software that tests will use
+RUST_TOOLCHAIN_VERSION=
+SOROBAN_CLI_CRATE_VERSION=
+# JS CLIENT is not implemented as a test yet
+SOROBAN_JS_CLIENT_NPM_VERSION=
+SOROBAN_EXAMPLES_GIT_HASH="master"
+SOROBAN_EXAMPLES_REPO_URL="https://github.com/stellar/soroban-examples.git"
+
+# the target network under test
+CORE_DEBIAN_VERSION="19.5.1-1111.eba1d3de9.focal~soroban"
+HORIZON_DEBIAN_VERSION="2.22.0~soroban-304"
+SOROBAN_RPC_DEBIAN_VERSION="0.0.1~alpha-2"
+TARGET_NETWORK_PASSPHRASE="Standalone Network ; February 2017"
+TARGET_NETWORK_SECRET_KEY="SC5O7VZUXDJ6JBDSZ74DSERXL7W3Y5LTOAMRF7RQRL3TAGAPS7LUVG3L"
+TARGET_NETWORK_PUBLIC_KEY="GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI"
+TARGET_NETWORK_RPC_URL="http://localhost:8000/soroban/rpc"
+
+# example filter for all combos of one scenario outline: ^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$
+# each row in example data for a scenario outline is postfixed with '#01', '#02', example:
+# TestDappDevelop/DApp developer compiles, deploys and invokes a contract#01
+TEST_FILTER=""
+VERBOSE_OUTPUT=false
+RUN_TARGET_STACK_ONLY=false
+
+trap printout SIGINT
+printout() {
+   echo "Cancelling and exit."
+   exit
+}
+
+trap finish EXIT
+function finish {
+  if [ $? > 0 ]; then
+     echo "Error occurred, dumping all logs ..."
+     cat /var/log/quickstart.log
+  fi  
+}
+
+function main() {
+
+    process_args "$@"
+
+    echo "running target stack with following config:"
+    echo "  CORE_DEBIAN_VERSION=$CORE_DEBIAN_VERSION"
+    echo "  HORIZON_DEBIAN_VERSION=$HORIZON_DEBIAN_VERSION"
+    echo "  SOROBAN_RPC_DEBIAN_VERSION=$SOROBAN_RPC_DEBIAN_VERSION"
+
+    echo "Installing Soroban stack ..."
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq > /var/log/quickstart.log 2>&1
+    apt-get install -y -qq --allow-downgrades stellar-core=${CORE_DEBIAN_VERSION} > /var/log/quickstart.log 2>&1
+    echo "Installed core ..."
+    apt-get install -y -qq --allow-downgrades stellar-horizon=${HORIZON_DEBIAN_VERSION} > /var/log/quickstart.log 2>&1
+    echo "Installed horizon ..."
+    apt-get install -y -qq --allow-downgrades stellar-soroban-rpc=${SOROBAN_RPC_DEBIAN_VERSION} > /var/log/quickstart.log 2>&1
+    echo "Installed soroban rpc ..."
+    apt-get clean -qq > /var/log/quickstart.log 2>&1
+ 
+    echo "Starting the Soroban stack ..." 
+    /start --standalone --enable-soroban-rpc > /var/log/quickstart.log 2>&1 &
+    validateSorobanRPC
+    echo "Tests can now begin ..."
+    if [ "$RUN_TARGET_STACK_ONLY" = "true" ]; then  
+        while : 
+        do 
+          sleep 10 
+        done
+    fi  
+
+    echo "  RUST_TOOLCHAIN_VERSION=${RUST_TOOLCHAIN_VERSION:-$(rustc --version 2>/dev/null )}"
+    echo "  SOROBAN_CLI_CRATE_VERSION=${SOROBAN_CLI_CRATE_VERSION:-$(soroban version 2>/dev/null )}"
+    echo "  SOROBAN_JS_CLIENT_NPM_VERSION=$SOROBAN_JS_CLIENT_NPM_VERSION"
+    echo "  SOROBAN_EXAMPLES_GIT_HASH=$SOROBAN_EXAMPLES_GIT_HASH"
+    echo "  SOROBAN_EXAMPLES_REPO_URL=$SOROBAN_EXAMPLES_REPO_URL"
+    echo "  TARGET_NETWORK_PASSPHRASE=$TARGET_NETWORK_PASSPHRASE"
+    echo "  TARGET_NETWORK_SECRET_KEY=$TARGET_NETWORK_SECRET_KEY"
+    echo "  TARGET_NETWORK_PUBLIC_KEY=$TARGET_NETWORK_PUBLIC_KEY"
+    echo "  TARGET_NETWORK_RPC_URL=$TARGET_NETWORK_RPC_URL"
+    echo "  TEST_FILTER=${TEST_FILTER}"
+
+    if [ ! -z "$RUST_TOOLCHAIN_VERSION" ]; then 
+      echo "Installing rust toolchain ..."
+      curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain "${RUST_TOOLCHAIN_VERSION}" 
+    fi  
+   
+    cd /opt/test/bin
+
+    export SorobanCLICrateVersion=${SOROBAN_CLI_CRATE_VERSION}
+    export SorobanJSClientNpmVersion=${SOROBAN_JS_CLIENT_NPM_VERSION} 
+    export SorobanExamplesGitHash=${SOROBAN_EXAMPLES_GIT_HASH}
+    export SorobanExamplesRepoURL=${SOROBAN_EXAMPLES_REPO_URL}
+    export TargetNetworkPassPhrase="${TARGET_NETWORK_PASSPHRASE}"
+    export TargetNetworkSecretKey=${TARGET_NETWORK_SECRET_KEY}
+    export TargetNetworkPublicKey=${TARGET_NETWORK_PUBLIC_KEY}
+    export TargetNetworkRPCURL=${TARGET_NETWORK_RPC_URL}
+    export VerboseOutput=${VERBOSE_OUTPUT}
+
+    for file in ./*; 
+    do 
+      if [[ "$file" =~ ^.*\.feature$ ]]; then 
+          continue
+      fi  
+      # these bin files were compiled from go feature tests in the Dockerfile during image build
+      echo "Running test binary ${file} ... "
+      ${file} -test.v ${TEST_FILTER};
+    done 
+    
+}
+
+function process_args() {
+    while [[ -n "$1" ]]; do
+      ARG="$1"
+      shift
+
+      case "${ARG}" in
+      --RustToolchainVersion)
+        RUST_TOOLCHAIN_VERSION="$1"
+        shift
+        ;;  
+      --CoreDebianVersion)
+        CORE_DEBIAN_VERSION="$1"
+        shift
+        ;;
+      --HorizonDebianVersion)
+        HORIZON_DEBIAN_VERSION="$1"
+        shift
+        ;;  
+      --SorobanRPCDebianVersion)
+        SOROBAN_RPC_DEBIAN_VERSION="$1"
+        shift
+        ;; 
+      --SorobanCLICrateVersion)
+        SOROBAN_CLI_CRATE_VERSION="$1"
+        shift
+        ;;   
+      --SorobanJSClientNpmVersion)
+        SOROBAN_JS_CLIENT_NPM_VERSION="$1"
+        shift
+        ;;   
+      --SorobanExamplesGitHash)
+        SOROBAN_EXAMPLES_GIT_HASH="$1"
+        shift
+        ;;     
+      --SorobanExamplesRepoURL)
+        SOROBAN_EXAMPLES_REPO_URL="$1"
+        shift
+        ;;   
+      --TestFilter)
+        TEST_FILTER="-test.run ""$1"""
+        shift
+        ;;     
+      --VerboseOutput)
+        VERBOSE_OUTPUT="$1"
+        shift
+        ;;  
+      --RunTargetStackOnly)
+        RUN_TARGET_STACK_ONLY="$1"
+        shift
+        ;;          
+      *)
+      esac
+    done
+}
+
+function validateSorobanRPC () {
+    COUNTER=1
+    while ! (curl --silent --location --request POST 'http://localhost:8000/soroban/rpc' \
+                --header 'Content-Type: application/json' \
+        --data-raw '{
+          "jsonrpc": "2.0",
+          "id": 10235,
+          "method": "getHealth"
+          
+        }' | jq --exit-status '.result.status == "healthy"'); do
+      if [ $COUNTER -gt 24 ]; then 
+          echo "Soroban rpc did not become available in 2 minutes, aborting test ..."
+          exit 1
+      fi 
+      echo "Waiting for soroban rpc to be available..."
+      sleep 5
+      COUNTER=$[$COUNTER +1]
+    done 
+    echo "Soroban rpc is running ..."
+
+    COUNTER=1
+    while ! (curl --silent --location --request GET 'http://localhost:8000' | jq --exit-status '.history_latest_ledger > 0'); do
+      if [ $COUNTER -gt 24 ]; then 
+          echo "Horizon ingestion did not become available in 2 minutes, aborting test ..."
+          exit 1
+      fi 
+      echo "Waiting for horizon ingestion to be caught up ..."
+      sleep 5
+      COUNTER=$[$COUNTER +1]
+    done 
+    echo "Horizon ingestion is moving forward ..."
+
+}
+
+main "$@"

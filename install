@@ -1,0 +1,9 @@
+#! /usr/bin/env bash
+set -e
+
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get install -y build-essential
+apt-get clean
+
+curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain stable
