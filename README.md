@@ -20,6 +20,8 @@ docker run --platform linux/amd64 --rm -it --name e2e_test stellar/stellar-syste
 --VerboseOutput false 
 ```
 
+
+
 This follows standard exit code conventions, so if all tests pass in the container run, exit code from command line execution will be 0, otherwise, if any failures in container or tests, then exit code will be greater than 0.
 
 * RustToolchainVersion is optional, image uses a default of pre-installed 1.65.0 
