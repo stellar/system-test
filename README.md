@@ -16,6 +16,7 @@ docker run --platform linux/amd64 --rm -it --name e2e_test stellar/system-test:l
 --VerboseOutput false 
 ```
 
+
 Optional settings:
 
 To compile soroban tools components from local source on host machine instead of package versions. Usage of either of these two requires adding a docker volume mount to your local cloned copy of soroban-tools git repo `-v /full/path/to/soroban-tools:/soroban-tools`
