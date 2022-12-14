@@ -118,7 +118,7 @@ func InstallCli(fc *E2EConfig) error {
 
 	var installCliCmd *cmd.Cmd
 	if fc.SorobanCLISourceVolume != "" {
-		installCliCmd = cmd.NewCmd("/bin/sh", "-c", fmt.Sprintf("cd %s; cargo install --config net.git-fetch-with-cli=true --config build.jobs=6 -f --path .", fc.SorobanCLISourceVolume))
+		installCliCmd = cmd.NewCmd("/bin/sh", "-c", fmt.Sprintf("cd %s; cargo install --config net.git-fetch-with-cli=true --config build.jobs=6 -f --path ./cmd/soroban-cli", fc.SorobanCLISourceVolume))
 	} else if fc.SorobanCLICrateVersion == "" {
 		envCmd := cmd.NewCmd("soroban", "version")
 

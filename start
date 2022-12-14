@@ -40,12 +40,9 @@ printout() {
 trap finish EXIT
 function finish {
   CANCELLED=true
-  if [ $? > 0 ]; then
-     echo "Error occurred, dumping setup logs ..."
-     cat /var/log/systemtest.log
-     if [ "$DEBUG_MODE" = "true" ]; then
-         read -p 'Debug mode, you can shell into the container now, hit enter to let container stop: ' 
-     fi     
+  if [ $? > 0 ] && [ "$DEBUG_MODE" = "true" ]; then
+      echo "** DEBUG MODE Enabled **"
+      read -p 'Debug mode, you can shell into the container now, hit enter to let container stop: ' 
   fi  
 }
 
@@ -134,7 +131,7 @@ function main() {
     echo "  TARGET_NETWORK_RPC_URL=$TARGET_NETWORK_RPC_URL"
     echo "  TEST_FILTER=${TEST_FILTER}"
 
-    if [ ! -z "$RUST_TOOLCHAIN_VERSION" && "$RUST_TOOLCHAIN_VERSION" != "$RUST_TOOLCHAIN_DEFAULT_INSTALLED_VERSION" ]; then 
+    if [ ! -z "$RUST_TOOLCHAIN_VERSION" ] && [ "$RUST_TOOLCHAIN_VERSION" != "$RUST_TOOLCHAIN_DEFAULT_INSTALLED_VERSION" ]; then 
       echo "Installing rust toolchain $RUST_TOOLCHAIN_VERSION ..."
       curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain "${RUST_TOOLCHAIN_VERSION}" 
     fi 

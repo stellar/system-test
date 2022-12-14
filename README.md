@@ -48,7 +48,7 @@ Default target network for system tests is new/empty instance of standalone netw
 `--TargetNetworkTestAccountPublic "{your test account key pair info}"`
 
 Debug mode, the docker container will exit with error code when any pre-setup or test fails to pass,
-you can enable DEBUG_MODE flag, and the container will stay running, prompting you for enter key before shutting down, make sure you invoke docker with `-it` so the prompt will reach your command line. While container is kept running, you can shell into it and view log files of core, rpc, horizon all of which are located in container at `/var/log/supervisor`.
+you can enable DEBUG_MODE flag, and the container will stay running, prompting you for enter key before shutting down, make sure you invoke docker with `-it` so the prompt will reach your command line. While container is kept running, you can shell into it via `docker exec -it <container id or name>` and view log files of core, rpc, horizon all of which are located in container at `/var/log/supervisor`.
 `--DebugMode=true`
 
 
