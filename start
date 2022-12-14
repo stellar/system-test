@@ -40,7 +40,7 @@ printout() {
 trap finish EXIT
 function finish {
   CANCELLED=true
-  if [ $? > 0 ] && [ "$DEBUG_MODE" = "true" ]; then
+  if [ "$DEBUG_MODE" = "true" ]; then
       echo "** DEBUG MODE Enabled **"
       read -p 'Debug mode, you can shell into the container now, hit enter to let container stop: ' 
   fi  
@@ -50,7 +50,7 @@ function main() {
 
     process_args "$@"
 
-    if [ "$TARGET_NETWORK" != "standalone" && "$TARGET_NETWORK" != "futurenet" ]; then
+    if [ "$TARGET_NETWORK" != "standalone" ] && [ "$TARGET_NETWORK" != "futurenet" ]; then
         echo "Invalid TargetNetwork, must be one of standalone or futurenet, aborting test ..."
         exit 1
     fi  
