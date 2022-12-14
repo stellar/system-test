@@ -18,7 +18,8 @@ FROM stellar/quickstart:soroban-dev
 RUN ["mkdir", "-p", "/opt/test"] 
 ADD start /opt/test
 COPY --from=go /test/bin/ /opt/test/bin
-
+COPY --from=go /usr/local/go/ /usr/local/go/
+ 
 RUN ["mkdir", "-p", "/rust"] 
 ENV CARGO_HOME=/rust/.cargo
 ENV RUSTUP_HOME=/rust/.rust
@@ -27,7 +28,7 @@ ADD install /
 RUN ["chmod", "+x", "install"]
 RUN /install
 
-ENV PATH="$CARGO_HOME/bin:${PATH}"
+ENV PATH="/usr/local/go/bin:$CARGO_HOME/bin:${PATH}"
 
 RUN ["chmod", "+x", "/opt/test/start"]
 
