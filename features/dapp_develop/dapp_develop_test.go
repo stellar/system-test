@@ -333,10 +333,6 @@ func initializeScenario(scenarioCtx *godog.ScenarioContext) {
 			scenarioCtx.Step(`^I used cli to deploy contract ([\S|\s]+) using my account to network$`, deployContract)
 			scenarioCtx.Step(`^I invoke function ([\S|\s]+) on ([\S|\s]+) with request parameter ([\S|\s]*) from ([\S|\s]+)$`, invokeContract)
 			scenarioCtx.Step(`^the result should be (\S+)$`, theResultShouldBe)
-		case "DApp developer deploys and invokes a token contract":
-			scenarioCtx.Step(`^I used cli to deploy token contract with name ([\S|\s]+) and symbol ([\S|\s]+) to network$`, deployTokenContract)
-			scenarioCtx.Step(`^I invoke function ([\S|\s]+) on ([\S|\s]+) with request parameter ([\S|\s]*) from ([\S|\s]+)$`, invokeContract)
-			scenarioCtx.Step(`^the result should be ([\S|\s]+)$`, theResultShouldBe)
 		}
 
 		return ctx, nil
