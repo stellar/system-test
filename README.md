@@ -6,7 +6,7 @@
 ### Run tests from the docker image:
 In short term, running tests on the `stellar/stellar-system-test` docker image is only supported on hosts that are on x86/amd cpu platforms. Arm cpu platforms are not supported for docker usage yet, this includes any Apple M1 device. If you are in the latter group, then can still run the tests but will need to refer to running tests directly from checked out repo instead.
 
-Running docker image, this is an example of command line args, please change these to settings that make sense for you expectations:
+Running docker image, this is an example using real version numbers, please change these version values to versions you want to test:
 ```
 docker run --platform linux/amd64 --rm -it --name e2e_test stellar/system-test:latest \
 --SorobanCLICrateVersion 0.2.1 \
@@ -68,7 +68,7 @@ This approach allows to run the tests directly on host as go tests. It allows to
      ```
  4. locally checkout stellar/system-test GH repo and go into top folder - `git clone https://github.com/stellar/system-test.git;cd system-test`
 
-#### Running tests (and a test/scenario filter as example)
+#### Running tests 
 ```
 system-test $ SorobanCLICrateVersion=0.2.1 \
  SorobanExamplesGitHash="main" \
@@ -82,6 +82,8 @@ system-test $ SorobanCLICrateVersion=0.2.1 \
 ```
 
 This follows standard go test conventions, so if all tests pass, exit code from command line execution will be 0, otherwise, if any tests fail, then exit code will be greater than 0.
+
+This example uses a feature/scenario filter also to limit which tests are run.
 
 * SorobanCLICrateVersion is optional, if not defined, test will attempt to run soroban as provided from your operating system PATH, i.e. you install soroban cli manually on your machine first. Otherwise, the test will install this soroban cli version onto the o/s.
 
