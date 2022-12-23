@@ -10,6 +10,7 @@ import (
 
 type E2EConfig struct {
 	// e2e settings
+	SorobanCLISourceVolume    string
 	SorobanCLICrateVersion    string
 	SorobanJSClientNpmVersion string
 	SorobanExamplesGitHash    string
@@ -30,6 +31,7 @@ func InitEnvironment() (*E2EConfig, error) {
 	var err error
 
 	flagConfig.SorobanCLICrateVersion, _ = getEnv("SorobanCLICrateVersion")
+	flagConfig.SorobanCLISourceVolume, _ = getEnv("SorobanCLISourceVolume")
 
 	//TODO - enable this when JS Client test steps are supported.
 	flagConfig.SorobanJSClientNpmVersion, _ = getEnv("SorobanJSClientNpmVersion")
@@ -66,7 +68,7 @@ var TestConfigContextKey = TestContextKey("TestConfig")
 func RunCommand(testCmd *cmd.Cmd, config *E2EConfig) (int, []string, error) {
 	// Run, stream output, and wait for Cmd to return Status
 	if config.VerboseOutput {
-		fmt.Printf("running command %s %v", testCmd.Name, testCmd.Args)
+		fmt.Printf("running command %s %v \n\n", testCmd.Name, testCmd.Args)
 	}
 
 	output := []string{}
@@ -76,6 +78,7 @@ func RunCommand(testCmd *cmd.Cmd, config *E2EConfig) (int, []string, error) {
 		Streaming: true,
 	}
 	envCmd := cmd.NewCmdOptions(cmdOptions, testCmd.Name, testCmd.Args...)
+	envCmd.Dir = testCmd.Dir
 
 	doneChan := make(chan struct{})
 	go func() {
@@ -113,7 +116,17 @@ func RunCommand(testCmd *cmd.Cmd, config *E2EConfig) (int, []string, error) {
 }
 
 func InstallCli(fc *E2EConfig) error {
-	if fc.SorobanCLICrateVersion == "" {
+
+	var installCliCmd *cmd.Cmd
+	if fc.SorobanCLISourceVolume != "" {
+		installCliCmd = cmd.NewCmd("cargo",
+			"install",
+			"--config", "net.git-fetch-with-cli=true",
+			"--config", "build.jobs=6",
+			"-f",
+			"--path", "./cmd/soroban-cli")
+		installCliCmd.Dir = fc.SorobanCLISourceVolume
+	} else if fc.SorobanCLICrateVersion == "" {
 		envCmd := cmd.NewCmd("soroban", "version")
 
 		status, versionOutput, err := RunCommand(envCmd, fc)
@@ -123,14 +136,19 @@ func InstallCli(fc *E2EConfig) error {
 		}
 		fmt.Printf("SorobanCLICrateVersion was not specified, will use version already present on path:\n %v \n\n", versionOutput)
 		return nil
+	} else {
+		installCliCmd = cmd.NewCmd("cargo",
+			"install",
+			"--config", "net.git-fetch-with-cli=true",
+			"--config", "build.jobs=6",
+			"-f", "--locked", "soroban-cli",
+			"--version", fc.SorobanCLICrateVersion)
 	}
 
-	envCmd := cmd.NewCmd("cargo", "install", "--config", "net.git-fetch-with-cli=true", "--config", "build.jobs=6", "-f", "--locked", "soroban-cli", "--version", fc.SorobanCLICrateVersion)
-
-	status, _, err := RunCommand(envCmd, fc)
+	status, _, err := RunCommand(installCliCmd, fc)
 
 	if status != 0 || err != nil {
-		return fmt.Errorf("cargo install of soroban cli version %s had status %v and error %v", fc.SorobanCLICrateVersion, status, err)
+		return fmt.Errorf("cargo install of soroban cli had status %v and error %v", status, err)
 	}
 
 	return nil

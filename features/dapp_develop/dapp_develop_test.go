@@ -1,8 +1,11 @@
 package dapp_develop
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 
@@ -25,8 +28,18 @@ type testConfig struct {
 
 	// per scenario step results state
 	DeployedContractId       string
+	InstalledContractId      string
 	ContractFunctionResponse string
 	TestWorkingDir           string
+}
+
+type accountInfo struct {
+	ID       string `json:"id"`
+	Sequence int64  `json:"sequence,string"`
+}
+
+type accountResponse struct {
+	Result accountInfo `json:"result"`
 }
 
 func TestDappDevelop(t *testing.T) {
@@ -49,15 +62,14 @@ func TestDappDevelop(t *testing.T) {
 	err = e2e.InstallCli(e2eConfig)
 
 	if err != nil {
-		fmt.Printf("Failed to install CLI version %s, error: %v", e2eConfig.SorobanCLICrateVersion, err)
+		fmt.Printf("Failed to install CLI version %s, error: %v \n\n", e2eConfig.SorobanCLICrateVersion, err)
 		os.Exit(1)
 	}
 
 	status := godog.TestSuite{
-		Name:                 "soroban dapp e2e",
-		Options:              opts,
-		TestSuiteInitializer: initializeTestSuite,
-		ScenarioInitializer:  initializeScenario,
+		Name:                "soroban dapp e2e",
+		Options:             opts,
+		ScenarioInitializer: initializeScenario,
 	}.Run()
 
 	if status != 0 {
@@ -84,7 +96,8 @@ func compileContract(ctx context.Context, contractExamplesSubPath string) error 
 		return fmt.Errorf("git clone of soroban example contracts from %s had error %v, %v", testConfig.E2EConfig.SorobanExamplesRepoURL, status, err)
 	}
 
-	envCmd = cmd.NewCmd("/bin/sh", "-c", fmt.Sprintf("cd %s; git checkout %s", contractWorkingDirectory, testConfig.E2EConfig.SorobanExamplesGitHash))
+	envCmd = cmd.NewCmd("git", "checkout", testConfig.E2EConfig.SorobanExamplesGitHash)
+	envCmd.Dir = contractWorkingDirectory
 
 	status, _, err = e2e.RunCommand(envCmd, testConfig.E2EConfig)
 
@@ -92,7 +105,8 @@ func compileContract(ctx context.Context, contractExamplesSubPath string) error 
 		return fmt.Errorf("git checkout %v of sample contracts repo %s had error %v, %v", testConfig.E2EConfig.SorobanExamplesGitHash, testConfig.E2EConfig.SorobanExamplesRepoURL, status, err)
 	}
 
-	envCmd = cmd.NewCmd("/bin/sh", "-c", fmt.Sprintf("cd %s/%s; cargo build --config net.git-fetch-with-cli=true --target wasm32-unknown-unknown --release", contractWorkingDirectory, contractExamplesSubPath))
+	envCmd = cmd.NewCmd("cargo", "build", "--config", "net.git-fetch-with-cli=true", "--target", "wasm32-unknown-unknown", "--release")
+	envCmd.Dir = fmt.Sprintf("%s/%s", contractWorkingDirectory, contractExamplesSubPath)
 
 	status, _, err = e2e.RunCommand(envCmd, testConfig.E2EConfig)
 
@@ -108,13 +122,23 @@ func deployContract(ctx context.Context, compiledContractFileName string) error 
 	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
 	contractWorkingDirectory := fmt.Sprintf("%s/soroban_examples", testConfig.TestWorkingDir)
 
-	envCmd := cmd.NewCmd("/bin/sh", "-c",
-		fmt.Sprintf("soroban deploy --wasm ./%s/target/wasm32-unknown-unknown/release/%s --rpc-url %s --secret-key %s --network-passphrase %q",
-			contractWorkingDirectory,
-			compiledContractFileName,
-			testConfig.E2EConfig.TargetNetworkRPCURL,
-			testConfig.E2EConfig.TargetNetworkSecretKey,
-			testConfig.E2EConfig.TargetNetworkPassPhrase))
+	var envCmd *cmd.Cmd
+
+	if testConfig.InstalledContractId != "" {
+		envCmd = cmd.NewCmd("soroban",
+			"deploy",
+			"--wasm-hash", testConfig.InstalledContractId,
+			"--rpc-url", testConfig.E2EConfig.TargetNetworkRPCURL,
+			"--secret-key", testConfig.E2EConfig.TargetNetworkSecretKey,
+			"--network-passphrase", testConfig.E2EConfig.TargetNetworkPassPhrase)
+	} else {
+		envCmd = cmd.NewCmd("soroban",
+			"deploy",
+			"--wasm", fmt.Sprintf("./%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, compiledContractFileName),
+			"--rpc-url", testConfig.E2EConfig.TargetNetworkRPCURL,
+			"--secret-key", testConfig.E2EConfig.TargetNetworkSecretKey,
+			"--network-passphrase", testConfig.E2EConfig.TargetNetworkPassPhrase)
+	}
 
 	status, stdOut, err := e2e.RunCommand(envCmd, testConfig.E2EConfig)
 
@@ -127,6 +151,32 @@ func deployContract(ctx context.Context, compiledContractFileName string) error 
 	}
 
 	testConfig.DeployedContractId = stdOut[0]
+	return nil
+}
+
+func installContract(ctx context.Context, compiledContractFileName string) error {
+
+	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
+	contractWorkingDirectory := fmt.Sprintf("%s/soroban_examples", testConfig.TestWorkingDir)
+
+	envCmd := cmd.NewCmd("soroban",
+		"install",
+		"--wasm", fmt.Sprintf("./%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, compiledContractFileName),
+		"--rpc-url", testConfig.E2EConfig.TargetNetworkRPCURL,
+		"--secret-key", testConfig.E2EConfig.TargetNetworkSecretKey,
+		"--network-passphrase", testConfig.E2EConfig.TargetNetworkPassPhrase)
+
+	status, stdOut, err := e2e.RunCommand(envCmd, testConfig.E2EConfig)
+
+	if status != 0 || err != nil {
+		return fmt.Errorf("soroban cli install of example contract %s had error %v, %v", compiledContractFileName, status, err)
+	}
+
+	if len(stdOut) < 1 {
+		return fmt.Errorf("soroban cli install of example contract %s returned no contract id", compiledContractFileName)
+	}
+
+	testConfig.InstalledContractId = stdOut[0]
 	return nil
 }
 
@@ -157,23 +207,20 @@ func invokeContract(ctx context.Context, functionName string, contractName strin
 
 func invokeContractFromCliTool(testConfig *testConfig, functionName string, contractName string, param1 string) (string, error) {
 
-	var param1Flag string
-	var param1Value string
+	args := []string{"invoke", "--fn", functionName}
 
 	if param1 != "" {
-		param1Flag = "--arg"
-		param1Value = fmt.Sprintf("%q", param1)
+		args = append(args, "--arg")
+		args = append(args, param1)
 	}
 
-	envCmd := cmd.NewCmd("/bin/sh", "-c",
-		fmt.Sprintf("soroban invoke --fn %s %s %s --id %s --rpc-url %s --secret-key %s --network-passphrase %q",
-			functionName,
-			param1Flag,
-			param1Value,
-			testConfig.DeployedContractId,
-			testConfig.E2EConfig.TargetNetworkRPCURL,
-			testConfig.E2EConfig.TargetNetworkSecretKey,
-			testConfig.E2EConfig.TargetNetworkPassPhrase))
+	args = append(args,
+		"--id", testConfig.DeployedContractId,
+		"--rpc-url", testConfig.E2EConfig.TargetNetworkRPCURL,
+		"--secret-key", testConfig.E2EConfig.TargetNetworkSecretKey,
+		"--network-passphrase", testConfig.E2EConfig.TargetNetworkPassPhrase)
+
+	envCmd := cmd.NewCmd("soroban", args...)
 
 	status, stdOut, err := e2e.RunCommand(envCmd, testConfig.E2EConfig)
 
@@ -196,16 +243,51 @@ func theResultShouldBe(ctx context.Context, expectedResult string) error {
 	return t.Err
 }
 
-func initializeScenario(ctx *godog.ScenarioContext) {
-	ctx.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
+func queryAccount(ctx context.Context) error {
+	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
+
+	getAccountRequest := []byte(`{
+           "jsonrpc": "2.0",
+           "id": 10235,
+           "method": "getAccount",
+           "params": { 
+               "address": "` + testConfig.E2EConfig.TargetNetworkPublicKey + `"
+            }
+        }`)
+
+	resp, err := http.Post("http://localhost:8000/soroban/rpc", "application/json", bytes.NewBuffer(getAccountRequest))
+	if err != nil {
+		return fmt.Errorf("soroban rpc get account had error %e", err)
+	}
+
+	var rpcResponse accountResponse
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&rpcResponse)
+	if err != nil {
+		return fmt.Errorf("soroban rpc get account, not able to parse response, %v, %e", resp.Body, err)
+	}
+
+	var t e2e.Asserter
+	assert.Equal(&t, testConfig.E2EConfig.TargetNetworkPublicKey, rpcResponse.Result.ID, "RPC get account, Expected %v but got %v", testConfig.E2EConfig.TargetNetworkPublicKey, rpcResponse.Result.ID)
+	return t.Err
+}
+
+func initializeScenario(scenarioCtx *godog.ScenarioContext) {
+	scenarioCtx.Before(func(ctx context.Context, scenario *godog.Scenario) (context.Context, error) {
 
 		e2eConfig := ctx.Value(e2e.TestConfigContextKey).(*e2e.E2EConfig)
 
 		testConfig := newTestConfig(e2eConfig)
 
-		envCmd := cmd.NewCmd("/bin/sh", "-c", fmt.Sprintf("rm -rf %s; mkdir %s", e2e.TestTmpDirectory, e2e.TestTmpDirectory))
-
+		envCmd := cmd.NewCmd("rm", "-rf", e2e.TestTmpDirectory)
 		status, _, err := e2e.RunCommand(envCmd, testConfig.E2EConfig)
+
+		if status != 0 || err != nil {
+			return nil, fmt.Errorf("could not remove %s directory, had error %v, %v", e2e.TestTmpDirectory, status, err)
+		}
+
+		envCmd = cmd.NewCmd("mkdir", e2e.TestTmpDirectory)
+		status, _, err = e2e.RunCommand(envCmd, testConfig.E2EConfig)
 
 		if status != 0 || err != nil {
 			return nil, fmt.Errorf("could not initialize %s directory, had error %v, %v", e2e.TestTmpDirectory, status, err)
@@ -213,16 +295,33 @@ func initializeScenario(ctx *godog.ScenarioContext) {
 
 		testConfig.TestWorkingDir = e2e.TestTmpDirectory
 		ctx = context.WithValue(ctx, e2e.TestConfigContextKey, testConfig)
+
+		switch scenario.Name {
+		case "DApp developer compiles, installs, deploys and invokes a contract":
+			scenarioCtx.Step(`^I used cli to compile example contract ([\S|\s]+)$`, compileContract)
+			scenarioCtx.Step(`^I used rpc to verify my account is on the network`, queryAccount)
+			scenarioCtx.Step(`^I used cli to install contract ([\S|\s]+) on ledger using my account to network$`, installContract)
+			scenarioCtx.Step(`^I used cli to deploy contract ([\S|\s]+) by installed hash using my account to network$`, deployContract)
+			scenarioCtx.Step(`^I invoke function ([\S|\s]+) on ([\S|\s]+) with request parameter ([\S|\s]*) from ([\S|\s]+)$`, invokeContract)
+			scenarioCtx.Step(`^the result should be (\S+)$`, theResultShouldBe)
+		case "DApp developer compiles, deploys and invokes a contract":
+			scenarioCtx.Step(`^I used cli to compile example contract ([\S|\s]+)$`, compileContract)
+			scenarioCtx.Step(`^I used rpc to verify my account is on the network`, queryAccount)
+			scenarioCtx.Step(`^I used cli to deploy contract ([\S|\s]+) using my account to network$`, deployContract)
+			scenarioCtx.Step(`^I invoke function ([\S|\s]+) on ([\S|\s]+) with request parameter ([\S|\s]*) from ([\S|\s]+)$`, invokeContract)
+			scenarioCtx.Step(`^the result should be (\S+)$`, theResultShouldBe)
+		}
+
 		return ctx, nil
 	})
+	scenarioCtx.After(func(ctx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
+		e2eConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
+		envCmd := cmd.NewCmd("rm", "-rf", e2e.TestTmpDirectory)
+		status, _, err := e2e.RunCommand(envCmd, e2eConfig.E2EConfig)
 
-	// register resolvers to execute these steps found in .features file
-	ctx.Step(`^I used cli to compile example contract (\S+)$`, compileContract)
-	ctx.Step(`^I used cli to deploy contract (\S+) to network$`, deployContract)
-	ctx.Step(`^I invoke function (\S+) on (\S+) with request parameter (\S*) from (\S+)$`, invokeContract)
-	ctx.Step(`^the result should be (\S+)$`, theResultShouldBe)
-}
-
-func initializeTestSuite(ctx *godog.TestSuiteContext) {
-	ctx.BeforeSuite(func() {})
+		if status != 0 || err != nil {
+			return nil, fmt.Errorf("could not remove %s directory, had error %v, %v", e2e.TestTmpDirectory, status, err)
+		}
+		return ctx, nil
+	})
 }
