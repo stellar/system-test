@@ -43,7 +43,7 @@ jobs:
 
   push:
     # Push image to registry after build for pull requests from a local branch.
-    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+    if: (github.event_name == 'push' && github.ref_name == 'master') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     needs: build
     permissions:
       packages: write
