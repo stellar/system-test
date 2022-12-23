@@ -78,6 +78,7 @@ func RunCommand(testCmd *cmd.Cmd, config *E2EConfig) (int, []string, error) {
 		Streaming: true,
 	}
 	envCmd := cmd.NewCmdOptions(cmdOptions, testCmd.Name, testCmd.Args...)
+	envCmd.Dir = testCmd.Dir
 
 	doneChan := make(chan struct{})
 	go func() {
@@ -118,7 +119,13 @@ func InstallCli(fc *E2EConfig) error {
 
 	var installCliCmd *cmd.Cmd
 	if fc.SorobanCLISourceVolume != "" {
-		installCliCmd = cmd.NewCmd("/bin/sh", "-c", fmt.Sprintf("cd %s; cargo install --config net.git-fetch-with-cli=true --config build.jobs=6 -f --path ./cmd/soroban-cli", fc.SorobanCLISourceVolume))
+		installCliCmd = cmd.NewCmd("cargo",
+			"install",
+			"--config", "net.git-fetch-with-cli=true",
+			"--config", "build.jobs=6",
+			"-f",
+			"--path", "./cmd/soroban-cli")
+		installCliCmd.Dir = fc.SorobanCLISourceVolume
 	} else if fc.SorobanCLICrateVersion == "" {
 		envCmd := cmd.NewCmd("soroban", "version")
 
@@ -130,7 +137,12 @@ func InstallCli(fc *E2EConfig) error {
 		fmt.Printf("SorobanCLICrateVersion was not specified, will use version already present on path:\n %v \n\n", versionOutput)
 		return nil
 	} else {
-		installCliCmd = cmd.NewCmd("cargo", "install", "--config", "net.git-fetch-with-cli=true", "--config", "build.jobs=6", "-f", "--locked", "soroban-cli", "--version", fc.SorobanCLICrateVersion)
+		installCliCmd = cmd.NewCmd("cargo",
+			"install",
+			"--config", "net.git-fetch-with-cli=true",
+			"--config", "build.jobs=6",
+			"-f", "--locked", "soroban-cli",
+			"--version", fc.SorobanCLICrateVersion)
 	}
 
 	status, _, err := RunCommand(installCliCmd, fc)

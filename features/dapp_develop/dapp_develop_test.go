@@ -96,7 +96,8 @@ func compileContract(ctx context.Context, contractExamplesSubPath string) error 
 		return fmt.Errorf("git clone of soroban example contracts from %s had error %v, %v", testConfig.E2EConfig.SorobanExamplesRepoURL, status, err)
 	}
 
-	envCmd = cmd.NewCmd("/bin/sh", "-c", fmt.Sprintf("cd %s; git checkout %s", contractWorkingDirectory, testConfig.E2EConfig.SorobanExamplesGitHash))
+	envCmd = cmd.NewCmd("git", "checkout", testConfig.E2EConfig.SorobanExamplesGitHash)
+	envCmd.Dir = contractWorkingDirectory
 
 	status, _, err = e2e.RunCommand(envCmd, testConfig.E2EConfig)
 
@@ -104,7 +105,8 @@ func compileContract(ctx context.Context, contractExamplesSubPath string) error 
 		return fmt.Errorf("git checkout %v of sample contracts repo %s had error %v, %v", testConfig.E2EConfig.SorobanExamplesGitHash, testConfig.E2EConfig.SorobanExamplesRepoURL, status, err)
 	}
 
-	envCmd = cmd.NewCmd("/bin/sh", "-c", fmt.Sprintf("cd %s/%s; cargo build --config net.git-fetch-with-cli=true --target wasm32-unknown-unknown --release", contractWorkingDirectory, contractExamplesSubPath))
+	envCmd = cmd.NewCmd("cargo", "build", "--config", "net.git-fetch-with-cli=true", "--target", "wasm32-unknown-unknown", "--release")
+	envCmd.Dir = fmt.Sprintf("%s/%s", contractWorkingDirectory, contractExamplesSubPath)
 
 	status, _, err = e2e.RunCommand(envCmd, testConfig.E2EConfig)
 
@@ -123,20 +125,19 @@ func deployContract(ctx context.Context, compiledContractFileName string) error 
 	var envCmd *cmd.Cmd
 
 	if testConfig.InstalledContractId != "" {
-		envCmd = cmd.NewCmd("/bin/sh", "-c",
-			fmt.Sprintf("soroban deploy --wasm-hash %s --rpc-url %s --secret-key %s --network-passphrase %q",
-				testConfig.InstalledContractId,
-				testConfig.E2EConfig.TargetNetworkRPCURL,
-				testConfig.E2EConfig.TargetNetworkSecretKey,
-				testConfig.E2EConfig.TargetNetworkPassPhrase))
+		envCmd = cmd.NewCmd("soroban",
+			"deploy",
+			"--wasm-hash", testConfig.InstalledContractId,
+			"--rpc-url", testConfig.E2EConfig.TargetNetworkRPCURL,
+			"--secret-key", testConfig.E2EConfig.TargetNetworkSecretKey,
+			"--network-passphrase", testConfig.E2EConfig.TargetNetworkPassPhrase)
 	} else {
-		envCmd = cmd.NewCmd("/bin/sh", "-c",
-			fmt.Sprintf("soroban deploy --wasm ./%s/target/wasm32-unknown-unknown/release/%s --rpc-url %s --secret-key %s --network-passphrase %q",
-				contractWorkingDirectory,
-				compiledContractFileName,
-				testConfig.E2EConfig.TargetNetworkRPCURL,
-				testConfig.E2EConfig.TargetNetworkSecretKey,
-				testConfig.E2EConfig.TargetNetworkPassPhrase))
+		envCmd = cmd.NewCmd("soroban",
+			"deploy",
+			"--wasm", fmt.Sprintf("./%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, compiledContractFileName),
+			"--rpc-url", testConfig.E2EConfig.TargetNetworkRPCURL,
+			"--secret-key", testConfig.E2EConfig.TargetNetworkSecretKey,
+			"--network-passphrase", testConfig.E2EConfig.TargetNetworkPassPhrase)
 	}
 
 	status, stdOut, err := e2e.RunCommand(envCmd, testConfig.E2EConfig)
@@ -158,13 +159,12 @@ func installContract(ctx context.Context, compiledContractFileName string) error
 	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
 	contractWorkingDirectory := fmt.Sprintf("%s/soroban_examples", testConfig.TestWorkingDir)
 
-	envCmd := cmd.NewCmd("/bin/sh", "-c",
-		fmt.Sprintf("soroban install --wasm ./%s/target/wasm32-unknown-unknown/release/%s --rpc-url %s --secret-key %s --network-passphrase %q",
-			contractWorkingDirectory,
-			compiledContractFileName,
-			testConfig.E2EConfig.TargetNetworkRPCURL,
-			testConfig.E2EConfig.TargetNetworkSecretKey,
-			testConfig.E2EConfig.TargetNetworkPassPhrase))
+	envCmd := cmd.NewCmd("soroban",
+		"install",
+		"--wasm", fmt.Sprintf("./%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, compiledContractFileName),
+		"--rpc-url", testConfig.E2EConfig.TargetNetworkRPCURL,
+		"--secret-key", testConfig.E2EConfig.TargetNetworkSecretKey,
+		"--network-passphrase", testConfig.E2EConfig.TargetNetworkPassPhrase)
 
 	status, stdOut, err := e2e.RunCommand(envCmd, testConfig.E2EConfig)
 
@@ -177,32 +177,6 @@ func installContract(ctx context.Context, compiledContractFileName string) error
 	}
 
 	testConfig.InstalledContractId = stdOut[0]
-	return nil
-}
-
-func deployTokenContract(ctx context.Context, name string, symbol string) error {
-
-	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
-
-	envCmd := cmd.NewCmd("/bin/sh", "-c",
-		fmt.Sprintf("soroban token create --name %q --symbol %q --rpc-url %s --secret-key %s --network-passphrase %q",
-			name,
-			symbol,
-			testConfig.E2EConfig.TargetNetworkRPCURL,
-			testConfig.E2EConfig.TargetNetworkSecretKey,
-			testConfig.E2EConfig.TargetNetworkPassPhrase))
-
-	status, stdOut, err := e2e.RunCommand(envCmd, testConfig.E2EConfig)
-
-	if status != 0 || err != nil {
-		return fmt.Errorf("soroban cli deployment of token contract %v had error %v, %v", name, status, err)
-	}
-
-	if len(stdOut) < 1 {
-		return fmt.Errorf("soroban cli deployment of token contract %s returned no contract id", name)
-	}
-
-	testConfig.DeployedContractId = stdOut[0]
 	return nil
 }
 
@@ -233,23 +207,20 @@ func invokeContract(ctx context.Context, functionName string, contractName strin
 
 func invokeContractFromCliTool(testConfig *testConfig, functionName string, contractName string, param1 string) (string, error) {
 
-	var param1Flag string
-	var param1Value string
+	args := []string{"invoke", "--fn", functionName}
 
 	if param1 != "" {
-		param1Flag = "--arg"
-		param1Value = fmt.Sprintf("%q", param1)
+		args = append(args, "--arg")
+		args = append(args, param1)
 	}
 
-	envCmd := cmd.NewCmd("/bin/sh", "-c",
-		fmt.Sprintf("soroban invoke --fn %s %s %s --id %s --rpc-url %s --secret-key %s --network-passphrase %q",
-			functionName,
-			param1Flag,
-			param1Value,
-			testConfig.DeployedContractId,
-			testConfig.E2EConfig.TargetNetworkRPCURL,
-			testConfig.E2EConfig.TargetNetworkSecretKey,
-			testConfig.E2EConfig.TargetNetworkPassPhrase))
+	args = append(args,
+		"--id", testConfig.DeployedContractId,
+		"--rpc-url", testConfig.E2EConfig.TargetNetworkRPCURL,
+		"--secret-key", testConfig.E2EConfig.TargetNetworkSecretKey,
+		"--network-passphrase", testConfig.E2EConfig.TargetNetworkPassPhrase)
+
+	envCmd := cmd.NewCmd("soroban", args...)
 
 	status, stdOut, err := e2e.RunCommand(envCmd, testConfig.E2EConfig)
 
@@ -308,9 +279,15 @@ func initializeScenario(scenarioCtx *godog.ScenarioContext) {
 
 		testConfig := newTestConfig(e2eConfig)
 
-		envCmd := cmd.NewCmd("/bin/sh", "-c", fmt.Sprintf("rm -rf %s; mkdir %s", e2e.TestTmpDirectory, e2e.TestTmpDirectory))
-
+		envCmd := cmd.NewCmd("rm", "-rf", e2e.TestTmpDirectory)
 		status, _, err := e2e.RunCommand(envCmd, testConfig.E2EConfig)
+
+		if status != 0 || err != nil {
+			return nil, fmt.Errorf("could not remove %s directory, had error %v, %v", e2e.TestTmpDirectory, status, err)
+		}
+
+		envCmd = cmd.NewCmd("mkdir", e2e.TestTmpDirectory)
+		status, _, err = e2e.RunCommand(envCmd, testConfig.E2EConfig)
 
 		if status != 0 || err != nil {
 			return nil, fmt.Errorf("could not initialize %s directory, had error %v, %v", e2e.TestTmpDirectory, status, err)
@@ -338,11 +315,12 @@ func initializeScenario(scenarioCtx *godog.ScenarioContext) {
 		return ctx, nil
 	})
 	scenarioCtx.After(func(ctx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
-		testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
-		envCmd := cmd.NewCmd("/bin/sh", "-c", fmt.Sprintf("rm -rf %s", e2e.TestTmpDirectory))
-		status, _, err := e2e.RunCommand(envCmd, testConfig.E2EConfig)
+		e2eConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
+		envCmd := cmd.NewCmd("rm", "-rf", e2e.TestTmpDirectory)
+		status, _, err := e2e.RunCommand(envCmd, e2eConfig.E2EConfig)
+
 		if status != 0 || err != nil {
-			fmt.Printf("could not remove temp directory %s, had error %v, %v", e2e.TestTmpDirectory, status, err)
+			return nil, fmt.Errorf("could not remove %s directory, had error %v, %v", e2e.TestTmpDirectory, status, err)
 		}
 		return ctx, nil
 	})
