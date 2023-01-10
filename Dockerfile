@@ -13,7 +13,7 @@ ADD e2e.go ./ features ./
 RUN go test -c -o ./bin/dapp_develop_test ./features/dapp_develop/...
 ADD features/dapp_develop/dapp_develop.feature ./bin
 
-FROM stellar/quickstart:soroban-dev
+FROM stellar/quickstart@sha256:8968d5c3344fe447941ebef12c5bede6f15ba29b63317a488c16c5d5842e4a71
 
 RUN ["mkdir", "-p", "/opt/test"] 
 ADD start /opt/test
