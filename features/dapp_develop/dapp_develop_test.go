@@ -126,6 +126,7 @@ func deployContract(ctx context.Context, compiledContractFileName string) error 
 
 	if testConfig.InstalledContractId != "" {
 		envCmd = cmd.NewCmd("soroban",
+			//		"contract",
 			"deploy",
 			"--wasm-hash", testConfig.InstalledContractId,
 			"--rpc-url", testConfig.E2EConfig.TargetNetworkRPCURL,
@@ -133,6 +134,7 @@ func deployContract(ctx context.Context, compiledContractFileName string) error 
 			"--network-passphrase", testConfig.E2EConfig.TargetNetworkPassPhrase)
 	} else {
 		envCmd = cmd.NewCmd("soroban",
+			//		"contract",
 			"deploy",
 			"--wasm", fmt.Sprintf("./%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, compiledContractFileName),
 			"--rpc-url", testConfig.E2EConfig.TargetNetworkRPCURL,
@@ -160,6 +162,7 @@ func installContract(ctx context.Context, compiledContractFileName string) error
 	contractWorkingDirectory := fmt.Sprintf("%s/soroban_examples", testConfig.TestWorkingDir)
 
 	envCmd := cmd.NewCmd("soroban",
+		//	"contract",
 		"install",
 		"--wasm", fmt.Sprintf("./%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, compiledContractFileName),
 		"--rpc-url", testConfig.E2EConfig.TargetNetworkRPCURL,
@@ -207,7 +210,11 @@ func invokeContract(ctx context.Context, functionName string, contractName strin
 
 func invokeContractFromCliTool(testConfig *testConfig, functionName string, contractName string, param1 string) (string, error) {
 
-	args := []string{"invoke", "--fn", functionName}
+	args := []string{
+		//             "contract",
+		"invoke",
+		"--fn",
+		functionName}
 
 	if param1 != "" {
 		args = append(args, "--arg")
@@ -255,7 +262,7 @@ func queryAccount(ctx context.Context) error {
             }
         }`)
 
-	resp, err := http.Post("http://localhost:8000/soroban/rpc", "application/json", bytes.NewBuffer(getAccountRequest))
+	resp, err := http.Post(testConfig.E2EConfig.TargetNetworkRPCURL, "application/json", bytes.NewBuffer(getAccountRequest))
 	if err != nil {
 		return fmt.Errorf("soroban rpc get account had error %e", err)
 	}
