@@ -43,8 +43,11 @@ or
 The ending wildcard allows for all combinations of example data for a scenario outline, without that it would just run the first example data set in a scenario outline.
 
 The default target network for system tests is a new/empty instance of standalone network hosted inside the docker container, tests will use the default root account already seeded into standalone network. Alternatively, can override the network settings here:  
-`--TargetNetwork {standalone|futurenet}` \\ sets the internally hosted network to either standalone or futurenet  
-`--TargetNetworkRPCURL {http://<rpc_host:rpc_port>/soroban/rpc}` \\ tests use this rpc instance and the container will not run a network internally, therefore ignores  `CoreDebianVersion`, `HorizonDebianVersion`,`SorobanRPCDebianVersion`, `TargetNetwork`  
+* Tests will use an internally hosted core node connected to standalone or futurenet network  
+`--TargetNetwork {standalone|futurenet}`  
+* Tests use this rpc instance and the container will not run a network internally, therefore ignores  `CoreDebianVersion`, `HorizonDebianVersion`,`SorobanRPCDebianVersion`, `TargetNetwork`  
+`--TargetNetworkRPCURL {http://<rpc_host:rpc_port>/soroban/rpc}`  
+* Tests use these settings in either mode target network mode, and these are by default set to work with standalone
 `--TargetNetworkPassphrase "{passphrase}"`  
 `--TargetNetworkTestAccountSecret "{your test account key pair info}"`  
 `--TargetNetworkTestAccountPublic "{your test account key pair info}"`  
@@ -73,9 +76,9 @@ This approach allows to run the tests directly on host as go tests. It allows to
 #### Running tests 
 ```
 system-test $ SorobanCLICrateVersion=0.2.1 \
- SorobanExamplesGitHash="main" \
+ SorobanExamplesGitHash="main" \\
  SorobanExamplesRepoURL="https://github.com/stellar/soroban-examples.git" \
- TargetNetworkPassPhrase="Standalone Network ; February 2017" \
+ TargetNetworkPassPhrase="Standalone Network ; February 2017" \\
  TargetNetworkSecretKey="SC5O7VZUXDJ6JBDSZ74DSERXL7W3Y5LTOAMRF7RQRL3TAGAPS7LUVG3L" \
  TargetNetworkPublicKey="GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI" \
  TargetNetworkRPCURL="http://localhost:8000/soroban/rpc" \
