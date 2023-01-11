@@ -43,11 +43,11 @@ or
 The ending wildcard allows for all combinations of example data for a scenario outline, without that it would just run the first example data set in a scenario outline.
 
 The default target network for system tests is a new/empty instance of standalone network hosted inside the docker container, tests will use the default root account already seeded into standalone network. Alternatively, can override the network settings here:  
-* Tests will use an internally hosted core node connected to standalone or futurenet network  
+* Tests will use an internally hosted core node connected to standalone or futurenet network:  
 `--TargetNetwork {standalone|futurenet}`  
-* Tests use this rpc instance and the container will not run a network internally, therefore ignores  `CoreDebianVersion`, `HorizonDebianVersion`,`SorobanRPCDebianVersion`, `TargetNetwork`  
+* Tests use this rpc instance and the container will not run a network internally, therefore ignores  `CoreDebianVersion`, `HorizonDebianVersion`,`SorobanRPCDebianVersion`, `TargetNetwork`:  
 `--TargetNetworkRPCURL {http://<rpc_host:rpc_port>/soroban/rpc}`  
-* Tests use these settings in either mode target network mode, and these are by default set to work with standalone
+* Tests use these settings in either target network mode, and these are by default set to work with standalone:  
 `--TargetNetworkPassphrase "{passphrase}"`  
 `--TargetNetworkTestAccountSecret "{your test account key pair info}"`  
 `--TargetNetworkTestAccountPublic "{your test account key pair info}"`  
