@@ -4,7 +4,7 @@
 `docker build --platform linux/amd64 --no-cache -t stellar/system-test -f Dockerfile .`
 
 ### Run tests from the docker image:
-In short term, running tests on the `stellar/stellar-system-test` docker image is only supported on hosts that are on x86/amd cpu platforms. Arm cpu platforms are not supported for docker usage yet, this includes any Apple M1 device. If you are in the latter group, then can still run the tests but will need to refer to running tests directly from checked out repo instead.
+In short term, running tests on the `stellar/system-test` docker image is only supported on hosts that are on x86/amd cpu platforms. Arm cpu platforms are not supported for docker usage yet, this includes any Apple M1 device. If you are in the latter group, then can still run the tests but will need to refer to running tests directly from checked out repo instead.
 
 Running docker image, this is an example using real version numbers, please change these version values to versions you want to test:
 ```
@@ -19,36 +19,41 @@ docker run --platform linux/amd64 --rm -it --name e2e_test stellar/system-test:l
 
 Optional settings:
 
-To compile soroban tools components from local source on host machine instead of package versions. Usage of either of these two requires adding a docker volume mount to your local cloned copy of soroban-tools git repo `-v /full/path/to/soroban-tools:/soroban-tools`
+To compile soroban tools components from local source on host machine instead of package versions. Usage of either of these two requires adding a docker volume mount to your local cloned copy of soroban-tools git repo  
+`-v /full/path/to/soroban-tools:/soroban-tools`
 
-to compile local copy of cli source code, include this parameter, if empty it uses `--SorobanCLICrateVersion` instead. 
-`--SorobanCLISourceVolume=/soroban-tools`
+* to compile local copy of cli source code, include this parameter, if empty it uses `--SorobanCLICrateVersion` instead:  
+`--SorobanCLISourceVolume /soroban-tools`
 
-to compile local copy of rpc source code, set this paramter, if empty it uses `--SorobanRPCDebianVersion` instead.
-`--SorobanRPCSourceVolume=/soroban-tools`
+* to compile local copy of rpc source code, set this paramter, if empty it uses `--SorobanRPCDebianVersion` instead:  
+`--SorobanRPCSourceVolume /soroban-tools`
 
-To specify git version of the smart contract source code used as test fixtures. 
-`--SorobanExamplesGitHash {branch, tag, git commit hash}` 
+To specify git version of the smart contract source code used as test fixtures.  
+`--SorobanExamplesGitHash {branch, tag, git commit hash}`  
 `--SorobanExamplesRepoURL "https://github.com/stellar/soroban-examples.git"` 
 
-Default rust toolchain version in system test image was 1.65.0, to override and install different:
+Default rust toolchain version in system test image was 1.65.0, to override and install different:  
 `--RustToolchainVersion {version}`
 
-To specify which system test feature/scenarios to run, it is a regex of the feature test name and a scenario defined within, each row in example data for a scenario outline is postfixed with '#01', '#02', examples:
-`--TestFilter "^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$"`
-or
-`--TestFilter "^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract#01$"`
+To specify which system test feature/scenarios to run, it is a regex of the feature test name and a scenario defined within, each row in example data for a scenario outline is postfixed with '#01', '#02', examples:  
+`--TestFilter "^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$"`  
+or  
+`--TestFilter "^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract#01$"`  
 
 The ending wildcard allows for all combinations of example data for a scenario outline, without that it would just run the first example data set in a scenario outline.
 
-Default target network for system tests is new/empty instance of standalone network, and tests will use the default root account already seeded into standalone network, can override here.
-`--TargetNetwork {standalone|futurenet}`
-`--TargetNetworkPassphrase "{passphrase}"`
-`--TargetNetworkTestAccountSecret "{your test account key pair info}"`
-`--TargetNetworkTestAccountPublic "{your test account key pair info}"`
+The default target network for system tests is a new/empty instance of standalone network hosted inside the docker container, tests will use the default root account already seeded into standalone network. Alternatively, can override the network settings here:  
+* Tests will use an internally hosted core node connected to standalone or futurenet network:  
+`--TargetNetwork {standalone|futurenet}`  
+* Tests use this rpc instance and the container will not run a network internally, therefore ignores  `CoreDebianVersion`, `HorizonDebianVersion`,`SorobanRPCDebianVersion`, `TargetNetwork`:  
+`--TargetNetworkRPCURL {http://<rpc_host:rpc_port>/soroban/rpc}`  
+* Tests use these settings in either target network mode, and these are by default set to work with standalone:  
+`--TargetNetworkPassphrase "{passphrase}"`  
+`--TargetNetworkTestAccountSecret "{your test account key pair info}"`  
+`--TargetNetworkTestAccountPublic "{your test account key pair info}"`  
 
 Debug mode, the docker container will exit with error code when any pre-setup or test fails to pass,
-you can enable DEBUG_MODE flag, and the container will stay running, prompting you for enter key before shutting down, make sure you invoke docker with `-it` so the prompt will reach your command line. While container is kept running, you can shell into it via `docker exec -it <container id or name>` and view log files of core, rpc, horizon all of which are located in container at `/var/log/supervisor`.
+you can enable DEBUG_MODE flag, and the container will stay running, prompting you for enter key before shutting down, make sure you invoke docker with `-it` so the prompt will reach your command line. While container is kept running, you can shell into it via `docker exec -it <container id or name>` and view log files of core, rpc, horizon all of which are located in container at `/var/log/supervisor`.  
 `--DebugMode=true`
 
 
@@ -71,9 +76,9 @@ This approach allows to run the tests directly on host as go tests. It allows to
 #### Running tests 
 ```
 system-test $ SorobanCLICrateVersion=0.2.1 \
- SorobanExamplesGitHash="main" \
+ SorobanExamplesGitHash="main" \\
  SorobanExamplesRepoURL="https://github.com/stellar/soroban-examples.git" \
- TargetNetworkPassPhrase="Standalone Network ; February 2017" \
+ TargetNetworkPassPhrase="Standalone Network ; February 2017" \\
  TargetNetworkSecretKey="SC5O7VZUXDJ6JBDSZ74DSERXL7W3Y5LTOAMRF7RQRL3TAGAPS7LUVG3L" \
  TargetNetworkPublicKey="GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI" \
  TargetNetworkRPCURL="http://localhost:8000/soroban/rpc" \

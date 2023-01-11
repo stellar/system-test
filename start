@@ -18,11 +18,11 @@ CORE_DEBIAN_VERSION=
 HORIZON_DEBIAN_VERSION=
 SOROBAN_RPC_DEBIAN_VERSION=
 SOROBAN_RPC_SOURCE_VOLUME=
-TARGET_NETWORK=standalone
+TARGET_NETWORK=
 TARGET_NETWORK_PASSPHRASE="Standalone Network ; February 2017"
 TARGET_NETWORK_SECRET_KEY="SC5O7VZUXDJ6JBDSZ74DSERXL7W3Y5LTOAMRF7RQRL3TAGAPS7LUVG3L"
 TARGET_NETWORK_PUBLIC_KEY="GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI"
-TARGET_NETWORK_RPC_URL="http://localhost:8000/soroban/rpc"
+TARGET_NETWORK_RPC_URL=
 
 # example filter for all combos of one scenario outline: ^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$
 # each row in example data for a scenario outline is postfixed with '#01', '#02', example:
@@ -51,60 +51,78 @@ function main() {
 
     process_args "$@"
 
-    if [ "$TARGET_NETWORK" != "standalone" ] && [ "$TARGET_NETWORK" != "futurenet" ]; then
+    if [ ! -z "$TARGET_NETWORK_RPC_URL" ] && [ ! -z "$TARGET_NETWORK" ]; then
+        echo "Invalid TargetNetwork config, must be TargetNetwork=standalone|futurenet or TargetNetworkRPCURL, aborting test ..."
+        exit 1
+    fi  
+
+    if [ -z "$TARGET_NETWORK_RPC_URL" ] && [ "$TARGET_NETWORK" != "standalone" ] && [ "$TARGET_NETWORK" != "futurenet" && ]; then
         echo "Invalid TargetNetwork, must be one of standalone or futurenet, aborting test ..."
         exit 1
     fi  
 
-    if [ "$RUN_TARGET_STACK_ONLY" != "true" ] && [ -z "$SOROBAN_CLI_CRATE_VERSION" ] && [ -z "$SOROBAN_CLI_SOURCE_VOLUME" ]; then
-        echo "Invalid CLI config, must provide SorobanCLICrateVersion or SorobanCLISourceVolume , aborting test ..."
+    if [ ! -z "$TARGET_NETWORK_RPC_URL" ] && [ "$RUN_TARGET_STACK_ONLY" = "true" ]; then
+        echo "Invalid Network config, must be TargetNetworkRPCURL or RunTargetStackOnly, aborting test ..."
         exit 1
-    fi 
-
-    if [ -z "$SOROBAN_RPC_DEBIAN_VERSION" ] && [ -z "$SOROBAN_RPC_SOURCE_VOLUME" ]; then
-        echo "Invalid RPC config, must provide SorobanRPCDebianVersion or SorobanRPCSourceVolume , aborting test ..."
-        exit 1
-    fi 
-
-    if [ -z "$CORE_DEBIAN_VERSION" ]; then
-        echo "Invalid Core config, must provide CoreDebianVersion , aborting test ..."
-        exit 1
-    fi 
-
-    if [ -z "$HORIZON_DEBIAN_VERSION" ]; then
-        echo "Invalid Horizon config, must provide HorizonDebianVersion , aborting test ..."
-        exit 1
-    fi 
-
-    echo "running target stack with following config:"
-    echo "  CORE_DEBIAN_VERSION=$CORE_DEBIAN_VERSION"
-    echo "  HORIZON_DEBIAN_VERSION=$HORIZON_DEBIAN_VERSION"
-    if [ ! -z "$SOROBAN_RPC_SOURCE_VOLUME" ]; then
-        echo "  SOROBAN_RPC_SOURCE_VOLUME=$SOROBAN_RPC_SOURCE_VOLUME"
-    else
-        echo "  SOROBAN_RPC_DEBIAN_VERSION=$SOROBAN_RPC_DEBIAN_VERSION"
-    fi  
-     
-    echo "Installing Soroban stack ..."
-    export DEBIAN_FRONTEND=noninteractive
-    apt-get update -qq >> /var/log/systemtest.log 2>&1
-    apt-get install -y -qq --allow-downgrades stellar-core=${CORE_DEBIAN_VERSION} >> /var/log/systemtest.log 2>&1
-    echo "Installed core ..."
-    apt-get install -y -qq --allow-downgrades stellar-horizon=${HORIZON_DEBIAN_VERSION} >> /var/log/systemtest.log 2>&1
-    echo "Installed horizon ..."
-    if [ ! -z "$SOROBAN_RPC_SOURCE_VOLUME" ]; then
-       pushd "$SOROBAN_RPC_SOURCE_VOLUME"
-       go build -v -trimpath -buildvcs=false -o usr/bin/stellar-soroban-rpc ./cmd/soroban-rpc
-       popd
-       echo "Compiled soroban rpc from source ... $(/usr/bin/stellar-soroban-rpc version)"
-    else
-       apt-get install -y -qq --allow-downgrades stellar-soroban-rpc=${SOROBAN_RPC_DEBIAN_VERSION} >> /var/log/systemtest.log 2>&1
-       echo "Installed soroban rpc ..."
     fi  
 
-    /start --$TARGET_NETWORK --enable-soroban-rpc >> /var/log/systemtest.log 2>&1 &
-    validateSorobanRPC
-    echo "Started the Soroban stack on target network $TARGET_NETWORK ..." 
+    if [ -z "$TARGET_NETWORK_RPC_URL" ]; then
+
+        if [ "$RUN_TARGET_STACK_ONLY" != "true" ] && [ -z "$SOROBAN_CLI_CRATE_VERSION" ] && [ -z "$SOROBAN_CLI_SOURCE_VOLUME" ]; then
+            echo "Invalid CLI config, must provide SorobanCLICrateVersion or SorobanCLISourceVolume , aborting test ..."
+            exit 1
+        fi 
+
+        if [ -z "$SOROBAN_RPC_DEBIAN_VERSION" ] && [ -z "$SOROBAN_RPC_SOURCE_VOLUME" ]; then
+            echo "Invalid RPC config, must provide SorobanRPCDebianVersion or SorobanRPCSourceVolume , aborting test ..."
+            exit 1
+        fi 
+
+        if [ -z "$CORE_DEBIAN_VERSION" ]; then
+            echo "Invalid Core config, must provide CoreDebianVersion , aborting test ..."
+            exit 1
+        fi 
+
+        if [ -z "$HORIZON_DEBIAN_VERSION" ]; then
+            echo "Invalid Horizon config, must provide HorizonDebianVersion , aborting test ..."
+            exit 1
+        fi 
+
+        TARGET_NETWORK_RPC_URL=http://localhost:8000/soroban/rpc
+
+        echo "running target stack with following config:"
+        echo "  CORE_DEBIAN_VERSION=$CORE_DEBIAN_VERSION"
+        echo "  HORIZON_DEBIAN_VERSION=$HORIZON_DEBIAN_VERSION"
+        if [ ! -z "$SOROBAN_RPC_SOURCE_VOLUME" ]; then
+            echo "  SOROBAN_RPC_SOURCE_VOLUME=$SOROBAN_RPC_SOURCE_VOLUME"
+        else
+            echo "  SOROBAN_RPC_DEBIAN_VERSION=$SOROBAN_RPC_DEBIAN_VERSION"
+        fi  
+         
+        echo "Installing Soroban stack ..."
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update -qq >> /var/log/systemtest.log 2>&1
+        apt-get install -y -qq --allow-downgrades stellar-core=${CORE_DEBIAN_VERSION} >> /var/log/systemtest.log 2>&1
+        echo "Installed core ..."
+        apt-get install -y -qq --allow-downgrades stellar-horizon=${HORIZON_DEBIAN_VERSION} >> /var/log/systemtest.log 2>&1
+        echo "Installed horizon ..."
+        if [ ! -z "$SOROBAN_RPC_SOURCE_VOLUME" ]; then
+            pushd "$SOROBAN_RPC_SOURCE_VOLUME"
+            go build -v -trimpath -buildvcs=false -o usr/bin/stellar-soroban-rpc ./cmd/soroban-rpc
+            popd
+            echo "Compiled soroban rpc from source ... $(/usr/bin/stellar-soroban-rpc version)"
+        else
+            apt-get install -y -qq --allow-downgrades stellar-soroban-rpc=${SOROBAN_RPC_DEBIAN_VERSION} >> /var/log/systemtest.log 2>&1
+            echo "Installed soroban rpc ..."
+        fi  
+
+        /start --$TARGET_NETWORK --enable-soroban-rpc >> /var/log/systemtest.log 2>&1 &
+        validateSorobanRPC
+        validateHorizon
+        echo "Started the Soroban stack on target network $TARGET_NETWORK ..." 
+    else
+        validateSorobanRPC     
+    fi
     
     apt-get clean -qq >> /var/log/systemtest.log 2>&1
     
@@ -242,15 +260,23 @@ function process_args() {
       --TargetNetworkTestAccountPublic) 
         TARGET_NETWORK_PUBLIC_KEY="$1"
         shift
-        ;;             
+        ;;       
+      --TargetNetworkRPCURL) 
+        TARGET_NETWORK_RPC_URL="$1"
+        shift
+        ;;            
       *)
       esac
     done
+
+    if [ -z "$TARGET_NETWORK_RPC_URL" ] && [ -z "$TARGET_NETWORK" ]; then
+        TARGET_NETWORK=standalone
+    fi 
 }
 
 function validateHorizon () {
     COUNTER=1
-    while ! (curl --silent --location --request GET 'http://localhost:8000' | jq --exit-status '.history_latest_ledger > 0'); do
+    while ! (curl --silent --location --request GET 'http://localhost:8000' | jq --exit-status '.history_latest_ledger > 0' > /dev/null 2>&1 ); do
       if [ $COUNTER -gt 24 ]; then 
           echo "Horizon ingestion did not become available in 2 minutes, aborting test ..."
           exit 1
@@ -264,14 +290,14 @@ function validateHorizon () {
 
 function validateSorobanRPC () {
     COUNTER=1
-    while ! (curl --silent --location --request POST 'http://localhost:8000/soroban/rpc' \
+    while ! (curl --silent --location --request POST "$TARGET_NETWORK_RPC_URL" \
                 --header 'Content-Type: application/json' \
         --data-raw '{
           "jsonrpc": "2.0",
           "id": 10235,
           "method": "getHealth"
           
-        }' | jq --exit-status '.result.status == "healthy"'); do
+        }' | jq --exit-status '.result.status == "healthy"' > /dev/null 2>&1 ); do
       if [ $COUNTER -gt 24 ]; then 
           echo "Soroban rpc did not become available in 2 minutes, aborting test ..."
           exit 1
@@ -281,9 +307,6 @@ function validateSorobanRPC () {
       COUNTER=$[$COUNTER +1]
     done 
     echo "Soroban rpc is running ..."
-
-    validateHorizon
-
 }
 
 main "$@"
