@@ -126,7 +126,7 @@ func deployContract(ctx context.Context, compiledContractFileName string) error 
 
 	if testConfig.InstalledContractId != "" {
 		envCmd = cmd.NewCmd("soroban",
-			//		"contract",
+			"contract",
 			"deploy",
 			"--wasm-hash", testConfig.InstalledContractId,
 			"--rpc-url", testConfig.E2EConfig.TargetNetworkRPCURL,
@@ -134,7 +134,7 @@ func deployContract(ctx context.Context, compiledContractFileName string) error 
 			"--network-passphrase", testConfig.E2EConfig.TargetNetworkPassPhrase)
 	} else {
 		envCmd = cmd.NewCmd("soroban",
-			//		"contract",
+			"contract",
 			"deploy",
 			"--wasm", fmt.Sprintf("./%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, compiledContractFileName),
 			"--rpc-url", testConfig.E2EConfig.TargetNetworkRPCURL,
@@ -162,7 +162,7 @@ func installContract(ctx context.Context, compiledContractFileName string) error
 	contractWorkingDirectory := fmt.Sprintf("%s/soroban_examples", testConfig.TestWorkingDir)
 
 	envCmd := cmd.NewCmd("soroban",
-		//	"contract",
+		"contract",
 		"install",
 		"--wasm", fmt.Sprintf("./%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, compiledContractFileName),
 		"--rpc-url", testConfig.E2EConfig.TargetNetworkRPCURL,
@@ -211,7 +211,7 @@ func invokeContract(ctx context.Context, functionName string, contractName strin
 func invokeContractFromCliTool(testConfig *testConfig, functionName string, contractName string, param1 string) (string, error) {
 
 	args := []string{
-		//             "contract",
+		"contract",
 		"invoke",
 		"--fn",
 		functionName}
