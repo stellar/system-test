@@ -4,7 +4,7 @@
 `docker build --platform linux/amd64 --no-cache -t stellar/system-test -f Dockerfile .`
 
 ### Run tests from the docker image:
-In short term, running tests on the `stellar/stellar-system-test` docker image is only supported on hosts that are on x86/amd cpu platforms. Arm cpu platforms are not supported for docker usage yet, this includes any Apple M1 device. If you are in the latter group, then can still run the tests but will need to refer to running tests directly from checked out repo instead.
+In short term, running tests on the `stellar/system-test` docker image is only supported on hosts that are on x86/amd cpu platforms. Arm cpu platforms are not supported for docker usage yet, this includes any Apple M1 device. If you are in the latter group, then can still run the tests but will need to refer to running tests directly from checked out repo instead.
 
 Running docker image, this is an example using real version numbers, please change these version values to versions you want to test:
 ```
