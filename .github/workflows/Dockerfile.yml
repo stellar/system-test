@@ -3,8 +3,10 @@ name: Dockerfile
 on:
   push:
     branches:
-    - master
+      - master
   pull_request:
+  release:
+    types: [published]
 
 # Prevent more than one build of this workflow for a branch to be running at the
 # same time, and if multiple are queued, only run the latest, cancelling any
@@ -16,7 +18,7 @@ concurrency:
 
 env:
   HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-  IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository, github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'latest') }}
+  IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository, github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.event.release.name || 'latest') }}
 jobs:
   complete:
     if: always()
@@ -42,8 +44,8 @@ jobs:
         path: /tmp/image
 
   push:
-    # Push image to registry after build for pull requests from a local branch.
-    if: (github.event_name == 'push' && github.ref_name == 'master') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    # Push image to registry after build under certain cases
+    if: github.event_name == 'release' || (github.event_name == 'push' && github.ref_name == 'master') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     needs: build
     permissions:
       packages: write
