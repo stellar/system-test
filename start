@@ -276,7 +276,7 @@ function process_args() {
 
 function validateHorizon () {
     COUNTER=1
-    while ! (curl --silent --location --request GET 'http://localhost:8000' | jq --exit-status '.history_latest_ledger > 0'); do
+    while ! (curl --silent --location --request GET 'http://localhost:8000' | jq --exit-status '.history_latest_ledger > 0' > /dev/null 2>&1 ); do
       if [ $COUNTER -gt 24 ]; then 
           echo "Horizon ingestion did not become available in 2 minutes, aborting test ..."
           exit 1
@@ -297,7 +297,7 @@ function validateSorobanRPC () {
           "id": 10235,
           "method": "getHealth"
           
-        }' | jq --exit-status '.result.status == "healthy"'); do
+        }' | jq --exit-status '.result.status == "healthy"' > /dev/null 2>&1 ); do
       if [ $COUNTER -gt 24 ]; then 
           echo "Soroban rpc did not become available in 2 minutes, aborting test ..."
           exit 1
