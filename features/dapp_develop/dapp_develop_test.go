@@ -213,19 +213,17 @@ func invokeContractFromCliTool(testConfig *testConfig, functionName string, cont
 	args := []string{
 		"contract",
 		"invoke",
-		"--fn",
-		functionName}
-
-	if param1 != "" {
-		args = append(args, "--arg")
-		args = append(args, param1)
-	}
-
-	args = append(args,
 		"--id", testConfig.DeployedContractId,
 		"--rpc-url", testConfig.E2EConfig.TargetNetworkRPCURL,
 		"--secret-key", testConfig.E2EConfig.TargetNetworkSecretKey,
-		"--network-passphrase", testConfig.E2EConfig.TargetNetworkPassPhrase)
+		"--network-passphrase", testConfig.E2EConfig.TargetNetworkPassPhrase,
+		"--fn",
+		functionName,
+		"--"}
+
+	if param1 != "" {
+		args = append(args, param1)
+	}
 
 	envCmd := cmd.NewCmd("soroban", args...)
 
