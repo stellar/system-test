@@ -108,7 +108,7 @@ function main() {
         echo "Installed horizon ..."
         if [ ! -z "$SOROBAN_RPC_SOURCE_VOLUME" ]; then
             pushd "$SOROBAN_RPC_SOURCE_VOLUME"
-            go build -v -trimpath -buildvcs=false -o usr/bin/stellar-soroban-rpc ./cmd/soroban-rpc
+            go build -v -trimpath -buildvcs=false -o /usr/bin/stellar-soroban-rpc ./cmd/soroban-rpc
             popd
             echo "Compiled soroban rpc from source ... $(/usr/bin/stellar-soroban-rpc version)"
         else
