@@ -115,7 +115,7 @@ function main() {
             pushd "$SOROBAN_RPC_SOURCE_VOLUME"
             git config --global --add safe.directory "$SOROBAN_RPC_SOURCE_VOLUME"
             make build-soroban-rpc
-            mv soroban-rpc /usr/bin/
+            mv soroban-rpc /usr/bin/stellar-soroban-rpc
             popd
             echo "Compiled soroban rpc from source ... $(/usr/bin/stellar-soroban-rpc version)"
         else
