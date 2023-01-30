@@ -67,7 +67,6 @@ function main() {
   if [ -z "$TARGET_NETWORK_RPC_URL" ]; then
 
     TARGET_NETWORK_RPC_URL=http://localhost:8000/soroban/rpc
-
     print_screen_output "starting target stack on $TARGET_NETWORK with following server versions:"
     print_screen_output "  CORE VERSION=$(stellar-core version 2>/dev/null || echo "n/a")"
     print_screen_output "  HORIZON VERSION=$(stellar-horizon version 2>/dev/null || echo "n/a")"
@@ -102,19 +101,19 @@ function main() {
   export TargetNetworkRPCURL=${TARGET_NETWORK_RPC_URL}
   export VerboseOutput=${VERBOSE_OUTPUT}
 
-  for file in ./*; 
-  do 
+  for file in ./*;
+  do
     if [ "$CANCELLED" = "true" ]; then
         break
     fi
 
-    if [[ "$file" =~ ^.*\.feature$ ]]; then 
+    if [[ "$file" =~ ^.*\.feature$ ]]; then
         continue
-    fi  
+    fi
     # these bin files were compiled from go feature tests in the Dockerfile during image build
-    print_screen_output "Running test binary ${file} ... "  
-    ${file} -test.v ${TEST_FILTER} 2>&1 | tee -a $LOG_FILE 
-  done 
+    print_screen_output "Running test binary ${file} ... "
+    ${file} -test.v ${TEST_FILTER} 2>&1 | tee -a $LOG_FILE
+  done
 }
 
 function process_args() {
