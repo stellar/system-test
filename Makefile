@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 .EXPORT_ALL_VARIABLES:
 .SILENT:
 
