@@ -113,6 +113,7 @@ function main() {
         echo "Installed horizon ..."
         if [ ! -z "$SOROBAN_RPC_SOURCE_VOLUME" ]; then
             pushd "$SOROBAN_RPC_SOURCE_VOLUME"
+            git config --global --add safe.directory "$SOROBAN_RPC_SOURCE_VOLUME"
             make build-soroban-rpc
             mv soroban-rpc /usr/bin/
             popd
