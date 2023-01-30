@@ -66,6 +66,11 @@ function main() {
         exit 1
     fi  
 
+    if [ ! -z "$RUST_TOOLCHAIN_VERSION" ] && [ "$RUST_TOOLCHAIN_VERSION" != "$RUST_TOOLCHAIN_DEFAULT_INSTALLED_VERSION" ]; then
+      echo "Installing rust toolchain $RUST_TOOLCHAIN_VERSION ..."
+      curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain "${RUST_TOOLCHAIN_VERSION}"
+    fi
+
     if [ -z "$TARGET_NETWORK_RPC_URL" ]; then
 
         if [ "$RUN_TARGET_STACK_ONLY" != "true" ] && [ -z "$SOROBAN_CLI_CRATE_VERSION" ] && [ -z "$SOROBAN_CLI_SOURCE_VOLUME" ]; then
@@ -108,7 +113,8 @@ function main() {
         echo "Installed horizon ..."
         if [ ! -z "$SOROBAN_RPC_SOURCE_VOLUME" ]; then
             pushd "$SOROBAN_RPC_SOURCE_VOLUME"
-            go build -v -trimpath -buildvcs=false -o /usr/bin/stellar-soroban-rpc ./cmd/soroban-rpc
+            make build-soroban-rpc
+            mv soroban-rpc /usr/bin/
             popd
             echo "Compiled soroban rpc from source ... $(/usr/bin/stellar-soroban-rpc version)"
         else
@@ -149,11 +155,6 @@ function main() {
     echo "  TARGET_NETWORK_PUBLIC_KEY=$TARGET_NETWORK_PUBLIC_KEY"
     echo "  TARGET_NETWORK_RPC_URL=$TARGET_NETWORK_RPC_URL"
     echo "  TEST_FILTER=${TEST_FILTER}"
-
-    if [ ! -z "$RUST_TOOLCHAIN_VERSION" ] && [ "$RUST_TOOLCHAIN_VERSION" != "$RUST_TOOLCHAIN_DEFAULT_INSTALLED_VERSION" ]; then 
-      echo "Installing rust toolchain $RUST_TOOLCHAIN_VERSION ..."
-      curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain "${RUST_TOOLCHAIN_VERSION}" 
-    fi 
 
     cd /opt/test/bin
 
