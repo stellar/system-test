@@ -10,9 +10,6 @@ import (
 
 type E2EConfig struct {
 	// e2e settings
-	SorobanCLISourceVolume    string
-	SorobanCLICrateVersion    string
-	SorobanJSClientNpmVersion string
 	SorobanExamplesGitHash    string
 	SorobanExamplesRepoURL    string
 	VerboseOutput             bool
@@ -29,12 +26,6 @@ const TestTmpDirectory = "test_tmp_workspace"
 func InitEnvironment() (*E2EConfig, error) {
 	var flagConfig = &E2EConfig{}
 	var err error
-
-	flagConfig.SorobanCLICrateVersion, _ = getEnv("SorobanCLICrateVersion")
-	flagConfig.SorobanCLISourceVolume, _ = getEnv("SorobanCLISourceVolume")
-
-	//TODO - enable this when JS Client test steps are supported.
-	flagConfig.SorobanJSClientNpmVersion, _ = getEnv("SorobanJSClientNpmVersion")
 
 	if flagConfig.SorobanExamplesGitHash, err = getEnv("SorobanExamplesGitHash"); err != nil {
 		return nil, err
@@ -113,45 +104,6 @@ func RunCommand(testCmd *cmd.Cmd, config *E2EConfig) (int, []string, error) {
 	<-doneChan
 
 	return envCmd.Status().Exit, output, envCmd.Status().Error
-}
-
-func InstallCli(fc *E2EConfig) error {
-
-	var installCliCmd *cmd.Cmd
-	if fc.SorobanCLISourceVolume != "" {
-		installCliCmd = cmd.NewCmd("cargo",
-			"install",
-			"--config", "net.git-fetch-with-cli=true",
-			"--config", "build.jobs=6",
-			"-f",
-			"--path", "./cmd/soroban-cli")
-		installCliCmd.Dir = fc.SorobanCLISourceVolume
-	} else if fc.SorobanCLICrateVersion == "" {
-		envCmd := cmd.NewCmd("soroban", "version")
-
-		status, versionOutput, err := RunCommand(envCmd, fc)
-
-		if status != 0 || err != nil {
-			return fmt.Errorf("no soroban cli present, SorobanCLICrateVersion was not specified, and not able to run soroban from current path, %d, %e", status, err)
-		}
-		fmt.Printf("SorobanCLICrateVersion was not specified, will use version already present on path:\n %v \n\n", versionOutput)
-		return nil
-	} else {
-		installCliCmd = cmd.NewCmd("cargo",
-			"install",
-			"--config", "net.git-fetch-with-cli=true",
-			"--config", "build.jobs=6",
-			"-f", "--locked", "soroban-cli",
-			"--version", fc.SorobanCLICrateVersion)
-	}
-
-	status, _, err := RunCommand(installCliCmd, fc)
-
-	if status != 0 || err != nil {
-		return fmt.Errorf("cargo install of soroban cli had status %v and error %v", status, err)
-	}
-
-	return nil
 }
 
 // asserter is used to be able to retrieve the error reported by the called assertion

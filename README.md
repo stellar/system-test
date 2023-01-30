@@ -1,39 +1,75 @@
 # System Test
 
-### How to build the testing docker image
-`docker build --platform linux/amd64 --no-cache -t stellar/system-test -f Dockerfile .`
+### Runing tests using the docker image:
+To run tests, requires two steps: 
+  (1) First build the system test docker image with the correct versions of core,  
+  horizon, soroban rpc, rust toolchain, soroban cli, this will create a docker image named 
+  `stellar/system-test:dev`:
+  ```
+  make 
+       QUICKSTART_GIT_REF=? \
+       QUICKSTART_GIT_REPO=?
+       CORE_GIT_REF=? \
+       CORE_COMPILE_CONFIGURE_FLAGS=? \
+       SOROBAN_RPC_GIT_REF=? \
+       RUST_TOOLCHAIN_VERSION=? \
+       SOROBAN_CLI_CRATE_VERSION=? \
+       SOROBAN_CLI_GIT_REF=? build     
+  ```  
 
-### Run tests from the docker image:
-In short term, running tests on the `stellar/system-test` docker image is only supported on hosts that are on x86/amd cpu platforms. Arm cpu platforms are not supported for docker usage yet, this includes any Apple M1 device. If you are in the latter group, then can still run the tests but will need to refer to running tests directly from checked out repo instead.
+  example of build using specific git branches, latest in this case, or use tag names for releases:  
+  ```
+  $ make CORE_GIT_REF=f1dc39f0f146815e5e3a94ed162e2f0639cb433f \
+         CORE_COMPILE_CONFIGURE_FLAGS="--disable-tests --enable-next-protocol-version-unsafe-for-production" \
+         SOROBAN_RPC_GIT_REF=main \
+         RUST_TOOLCHAIN_VERSION=stable \
+         SOROBAN_CLI_GIT_REF=main \
+         QUICKSTART_GIT_REF=master build
+  ```  
 
-Running docker image, this is an example using real version numbers, please change these version values to versions you want to test:
-```
-docker run --platform linux/amd64 --rm -it --name e2e_test stellar/system-test:latest \
---SorobanCLICrateVersion 0.2.1 \
---CoreDebianVersion "19.5.1-1137.b3a6bc281.focal~soroban" \
---HorizonDebianVersion "2.22.0~soroban-318" \
---SorobanRPCDebianVersion "0.3.1-32" \
---VerboseOutput false 
-```
+  example of build using the existing quickstart:soroban-dev image which has latest released versions:  
+  ```
+  $ make QUICKSTART_IMAGE=stellar/quickstart:soroban-dev \
+         RUST_TOOLCHAIN_VERSION=1.66.0 \
+         SOROBAN_CLI_GIT_REF=main build
+  ```  
 
 
-Optional settings:
+  some settings have defaults pre-set, and optionally be overriden:  
+  ```
+  SOROBAN_CLI_GIT_REF=main  
+  SOROBAN_RPC_GIT_REF=main  
+  RUST_TOOLCHAIN_VERSION=stable   
+  QUICKSTART_GIT_REF=master
+  QUICKSTART_GIT_REPO=https://github.com/stellar/quickstart.git
+  ```  
 
-To compile soroban tools components from local source on host machine instead of package versions. Usage of either of these two requires adding a docker volume mount to your local cloned copy of soroban-tools git repo  
-`-v /full/path/to/soroban-tools:/soroban-tools`
+  some are required to be set:
+  ```
+  CORE_GIT_REF=latest git commit for core with soroban support
+  CORE_COMPILE_CONFIGURE_FLAGS="--disable-tests --enable-next-protocol-version-unsafe-for-production"
+  ```  
 
-* to compile local copy of cli source code, include this parameter, if empty it uses `--SorobanCLICrateVersion` instead:  
-`--SorobanCLISourceVolume /soroban-tools`
+  optional to set:  
+  ```
+  # this will override SOROBAN_CLI_GIT_REF, and install soroban cli from crates repo instead
+  SOROBAN_CLI_CRATE_VERSION=0.4.0  
 
-* to compile local copy of rpc source code, set this paramter, if empty it uses `--SorobanRPCDebianVersion` instead:  
-`--SorobanRPCSourceVolume /soroban-tools`
+  # this will skip building core, horion, rpc from source and instead will use the versions already compiled in the existing quickstart image provided: 
+  QUICKSTART_IMAGE=stellar/quickstart:soroban-dev
+  ```
+
+  (2) Run the system test docker image:
+  ```
+  docker run --rm -it --name e2e_test stellar/system-test:dev --VerboseOutput false 
+  ```
+
+
+Optional settings to pass when running system-test image, `stellar/system-test:<tag>`:
 
 To specify git version of the smart contract source code used as test fixtures.  
 `--SorobanExamplesGitHash {branch, tag, git commit hash}`  
 `--SorobanExamplesRepoURL "https://github.com/stellar/soroban-examples.git"` 
-
-Default rust toolchain version in system test image was 1.65.0, to override and install different:  
-`--RustToolchainVersion {version}`
 
 To specify which system test feature/scenarios to run, it is a regex of the feature test name and a scenario defined within, each row in example data for a scenario outline is postfixed with '#01', '#02', examples:  
 `--TestFilter "^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$"`  
@@ -45,7 +81,7 @@ The ending wildcard allows for all combinations of example data for a scenario o
 The default target network for system tests is a new/empty instance of standalone network hosted inside the docker container, tests will use the default root account already seeded into standalone network. Alternatively, can override the network settings here:  
 * Tests will use an internally hosted core node connected to standalone or futurenet network:  
 `--TargetNetwork {standalone|futurenet}`  
-* Tests use this rpc instance and the container will not run a network internally, therefore ignores  `CoreDebianVersion`, `HorizonDebianVersion`,`SorobanRPCDebianVersion`, `TargetNetwork`:  
+* Tests will use an external rpc instance and the container will not run core, horizon, rpc services internally:  
 `--TargetNetworkRPCURL {http://<rpc_host:rpc_port>/soroban/rpc}`  
 * Tests use these settings in either target network mode, and these are by default set to work with standalone:  
 `--TargetNetworkPassphrase "{passphrase}"`  
@@ -60,37 +96,38 @@ you can enable DEBUG_MODE flag, and the container will stay running, prompting y
 The docker run follows standard exit code conventions, so if all tests pass in the container run, exit code from command line execution will be 0, otherwise, if any failures in container or tests, then exit code will be greater than 0.
 
 
-### Run tests from locally checked out repo.
-This approach allows to run the tests directly on host as go tests. It allows to configure more aspects directly, like target network to use, and whether to try to use pre-existing cli on the host if desired but does require more environment setup.
+### Run tests from locally checked out system-test repo.
+This approach allows to run the tests directly on host as go tests, no docker image. It allows to configure more aspects directly, like target network to use, and whether to try to use pre-existing cli on the host if desired but does require more environment setup.
 
 #### Prerequisites:
 
  1. go 1.18 or above - https://go.dev/doc/install
  2. rust toolchain(cargo and rustc), install the version per testing requirements or stable, - use rustup - https://www.rust-lang.org/tools/install 
- 3. target network stack for the tests - need a soroban-rpc instance connected to horizon and core. This will usually be a standalone instance of the network for testing purposes. You can reference an existing network or can use docker image `stellar/stellar-system-test` with `--RunTargetStackOnly true` to spin up just the target network stack, specifying the versions of each component to launch:
+ 3. target network stack for the tests to execute against - need a soroban-rpc instance. You can use an existing/running instance if reachable or can use the quickstart image `stellar/quickstart:soroban-dev` to run the latest stable target network stack locally, or build quickstart with specific versions of core, horizon and soroban rpc first [following these instructions](https://github.com/stellar/quickstart#building-custom-images) and run quickstart locally.
      ```
-     docker run --platform linux/amd64 --rm -it --name e2e_test -p "8000:8000" stellar/system-test:latest --CoreDebianVersion "19.5.1-1111.eba1d3de9.focal~soroban" --HorizonDebianVersion "2.22.0~soroban-304" --SorobanRPCDebianVersion "0.0.1~alpha-2" --RunTargetStackOnly true
+     docker run --rm -it -p 8000:8000 --name stellar stellar/quickstart:dev --standalone --enable-soroban-rpc --enable-core-artificially-accelerate-time-for-testing
      ```
  4. locally checkout stellar/system-test GH repo and go into top folder - `git clone https://github.com/stellar/system-test.git;cd system-test`
+ 5. compile or install vai cargo create a version of soroban cli onto your machine and accessible from PATH.
 
 #### Running tests 
 ```
-system-test $ SorobanCLICrateVersion=0.2.1 \
- SorobanExamplesGitHash="main" \\
- SorobanExamplesRepoURL="https://github.com/stellar/soroban-examples.git" \
- TargetNetworkPassPhrase="Standalone Network ; February 2017" \\
- TargetNetworkSecretKey="SC5O7VZUXDJ6JBDSZ74DSERXL7W3Y5LTOAMRF7RQRL3TAGAPS7LUVG3L" \
- TargetNetworkPublicKey="GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI" \
- TargetNetworkRPCURL="http://localhost:8000/soroban/rpc" \
- VerboseOutput=false \
- go test -v --run "^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$" ./features/dapp_develop/...
+# example values used here are for when running quickstart:soroban-dev standalone locally
+system-test $ SorobanExamplesGitHash="main" \  
+SorobanExamplesRepoURL="https://github.com/stellar/soroban-examples.git" \  
+TargetNetworkPassPhrase="Standalone Network ; February 2017" \  
+TargetNetworkSecretKey="SC5O7VZUXDJ6JBDSZ74DSERXL7W3Y5LTOAMRF7RQRL3TAGAPS7LUVG3L" \  
+TargetNetworkPublicKey="GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI" \  
+TargetNetworkRPCURL="http://localhost:8000/soroban/rpc" \  
+VerboseOutput=false \  
+go test -v --run "^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$" ./features/dapp_develop/...
 ```
 
 This follows standard go test conventions, so if all tests pass, exit code from command line execution will be 0, otherwise, if any tests fail, then exit code will be greater than 0.
 
 This example uses a feature/scenario filter also to limit which tests are run.
 
-* SorobanCLICrateVersion is optional, if not defined, test will attempt to run soroban as provided from your operating system PATH, i.e. you install soroban cli manually on your machine first. Otherwise, the test will install this soroban cli version onto the o/s.
+* Tests will attempt to run `soroban` as the cli as provided from your operating system PATH.
 
-* the color coded output of BDD scenerio results for tests is dependent on go's testing verbose output rules, need to specify -v and a directory with single package, if multiple packages detected on directory location, then go won't print verbose output for each package, i.e. you wont see the BDD scenerio summaries printed, just the standard one liner for summary of package pass/fail status.
+* the verbose output of BDD scenerio results for tests is dependent on go's testing verbose output rules, need to specify -v and a directory with single package, if multiple packages detected on directory location, then go won't print verbose output for each package, i.e. you wont see the BDD scenerio summaries printed, just the standard one liner for summary of package pass/fail status.
 

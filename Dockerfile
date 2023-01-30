@@ -1,3 +1,5 @@
+ARG QUICKSTART_IMAGE_REF=stellar/quickstart:soroban-dev
+
 FROM golang:1.19 as go
 
 RUN ["mkdir", "-p", "/test"] 
@@ -13,22 +15,28 @@ ADD e2e.go ./ features ./
 RUN go test -c -o ./bin/dapp_develop_test ./features/dapp_develop/...
 ADD features/dapp_develop/dapp_develop.feature ./bin
 
-FROM stellar/quickstart@sha256:8968d5c3344fe447941ebef12c5bede6f15ba29b63317a488c16c5d5842e4a71
-
-RUN ["mkdir", "-p", "/opt/test"] 
-ADD start /opt/test
-COPY --from=go /test/bin/ /opt/test/bin
-COPY --from=go /usr/local/go/ /usr/local/go/
+FROM $QUICKSTART_IMAGE_REF as base
+ARG SOROBAN_CLI_CRATE_VERSION
+ARG SOROBAN_CLI_GIT_REF
+ARG RUST_TOOLCHAIN_VERSION
  
 RUN ["mkdir", "-p", "/rust"] 
 ENV CARGO_HOME=/rust/.cargo
 ENV RUSTUP_HOME=/rust/.rust
+ENV SOROBAN_CLI_CRATE_VERSION=$SOROBAN_CLI_CRATE_VERSION
+ENV SOROBAN_CLI_GIT_REF=$SOROBAN_CLI_GIT_REF
+ENV RUST_TOOLCHAIN_VERSION=$RUST_TOOLCHAIN_VERSION
+ENV PATH="/usr/local/go/bin:$CARGO_HOME/bin:${PATH}"
 
 ADD install /
 RUN ["chmod", "+x", "install"]
-RUN /install
+RUN /install 
 
-ENV PATH="/usr/local/go/bin:$CARGO_HOME/bin:${PATH}"
+FROM base as build
+RUN ["mkdir", "-p", "/opt/test"] 
+ADD start /opt/test
+COPY --from=go /test/bin/ /opt/test/bin
+COPY --from=go /usr/local/go/ /usr/local/go/
 
 RUN ["chmod", "+x", "/opt/test/start"]
 
