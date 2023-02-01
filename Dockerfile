@@ -6,11 +6,11 @@ RUN ["mkdir", "-p", "/test"]
 RUN ["mkdir", "-p", "/test/bin"] 
 
 WORKDIR /test
-ADD go.mod go.sum .
-
+ADD go.mod go.sum e2e.go ./
+ADD features ./features
 RUN go mod download
-ADD e2e.go ./ features ./
-# specify each feature folder with go test module, 
+
+# build each feature folder with go test module.
 # compiles each feature to a binary to be executed, 
 # and copies the .feature file with it for runtime.
 RUN go test -c -o ./bin/dapp_develop_test ./features/dapp_develop/...
@@ -37,7 +37,6 @@ FROM base as build
 RUN ["mkdir", "-p", "/opt/test"] 
 ADD start /opt/test
 COPY --from=go /test/bin/ /opt/test/bin
-COPY --from=go /usr/local/go/ /usr/local/go/
 
 RUN ["chmod", "+x", "/opt/test/start"]
 
