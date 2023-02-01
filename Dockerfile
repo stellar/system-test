@@ -5,8 +5,9 @@ FROM golang:1.19 as go
 RUN ["mkdir", "-p", "/test"] 
 RUN ["mkdir", "-p", "/test/bin"] 
 
-ADD go.mod go.sum /test
 WORKDIR /test
+ADD go.mod go.sum .
+
 RUN go mod download
 ADD e2e.go ./ features ./
 # specify each feature folder with go test module, 
