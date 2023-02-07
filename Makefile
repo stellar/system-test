@@ -1,6 +1,5 @@
 SHELL := /bin/bash
 .EXPORT_ALL_VARIABLES:
-.SILENT:
 
 SYSTEM_TEST_IMAGE?=stellar/system-test:dev
 SYSTEM_TEST_SHA=$(shell git rev-parse HEAD)
