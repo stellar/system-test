@@ -13,6 +13,8 @@ SOROBAN_RPC_GIT_REF=main
 RUST_TOOLCHAIN_VERSION?=stable
 SOROBAN_CLI_CRATE_VERSION=
 SOROBAN_CLI_GIT_REF=main
+# TODO: remove go ref when quickstart /scripts/soroban_repo_to_horizon_repo.sh resolves pr refs.
+GO_GIT_REF?=soroban-xdr-next
 
 QUICKSTART_IMAGE=
 QUICKSTART_GIT_REF=master
@@ -28,7 +30,8 @@ build-base:
       pushd .quickstart_repo; \
       git fetch origin "$(QUICKSTART_GIT_REF)" && git checkout FETCH_HEAD; \
       $(MAKE) CORE_REF=$(CORE_GIT_REF) \
-           CORE_CONFIGURE_FLAGS="$(CORE_COMPILE_CONFIGURE_FLAGS)" \
+      	   GO_REF=$(GO_GIT_REF) \
+      	   CORE_CONFIGURE_FLAGS="$(CORE_COMPILE_CONFIGURE_FLAGS)" \
            SOROBAN_TOOLS_REF=$(SOROBAN_RPC_GIT_REF); \
     fi
 
