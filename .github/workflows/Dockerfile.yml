@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+  create:
+    tags:      
   pull_request:
   release:
     types: [published]
@@ -18,7 +20,7 @@ concurrency:
 
 env:
   HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-  IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository, github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.event.release.name || 'latest') }}
+  IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository,  github.event.ref || 'latest') }}
   CORE_GIT_REF: f1dc39f0f146815e5e3a94ed162e2f0639cb433f
   CORE_COMPILE_CONFIGURE_FLAGS: "--disable-tests --enable-next-protocol-version-unsafe-for-production"
   SOROBAN_RPC_GIT_REF: main
@@ -57,8 +59,10 @@ jobs:
         path: /tmp/image
 
   push:
-    # Push image to registry after build under certain cases
-    if: github.event_name == 'release' || (github.event_name == 'push' && github.ref_name == 'master') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    # Only push pre-built system test image that has all versions compiled into image, that's what tags have.
+    # pr's and releases don't need to be pushed as docker images, because system test is meant to be built 
+    # from source, Makefile.
+    if: (github.event_name == 'create' && github.event.ref_type == 'tag')
     needs: build
     permissions:
       packages: write
