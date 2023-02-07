@@ -21,7 +21,7 @@ concurrency:
 env:
   HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
   IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository,  github.event.ref || 'latest') }}
-  CORE_GIT_REF: main
+  CORE_GIT_REF: master
   CORE_COMPILE_CONFIGURE_FLAGS: "--disable-tests --enable-next-protocol-version-unsafe-for-production"
   SOROBAN_RPC_GIT_REF: main
   RUST_TOOLCHAIN_VERSION: stable
@@ -59,10 +59,10 @@ jobs:
         path: /tmp/image
 
   push:
-    # Only push pre-built system test image that has all versions compiled into image, that's what tags have.
+    # Only push non 'vX.Y.Z' tags as pre-built system test image with versions compiled into image.
     # pr's and releases don't need to be pushed as docker images, because system test is meant to be built 
-    # from source, Makefile.
-    if: (github.event_name == 'create' && github.event.ref_type == 'tag')
+    # from source locally.
+    if: (github.event_name == 'create' && github.event.ref_type == 'tag' && startsWith(github.event.ref, ‘v’) != true)
     needs: build
     permissions:
       packages: write
