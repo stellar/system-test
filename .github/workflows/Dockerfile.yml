@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+  create:
+    tags:      
   pull_request:
   release:
     types: [published]
@@ -18,7 +20,13 @@ concurrency:
 
 env:
   HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-  IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository, github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.event.release.name || 'latest') }}
+  IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository,  github.event.ref || 'latest') }}
+  CORE_GIT_REF: master
+  CORE_COMPILE_CONFIGURE_FLAGS: "--disable-tests --enable-next-protocol-version-unsafe-for-production"
+  SOROBAN_RPC_GIT_REF: main
+  RUST_TOOLCHAIN_VERSION: stable
+  SOROBAN_CLI_GIT_REF: main
+  QUICKSTART_GIT_REF: master
 jobs:
   complete:
     if: always()
@@ -36,7 +44,14 @@ jobs:
         ref: ${{ env.HEAD_SHA }}
     - uses: docker/setup-buildx-action@5146db6c4d81fbfd508899f851bbb3883a96ff9f
     - name: Build System Test Image
-      run: docker buildx build --no-cache -f Dockerfile -t $IMAGE --label org.opencontainers.image.revision="${{ env.HEAD_SHA }}" -o type=docker,dest=/tmp/image .
+      run: |
+        make CORE_GIT_REF=${{ env.CORE_GIT_REF }} \
+             CORE_COMPILE_CONFIGURE_FLAGS="${{ env.CORE_COMPILE_CONFIGURE_FLAGS }}" \
+             SOROBAN_RPC_GIT_REF=${{ env.SOROBAN_RPC_GIT_REF }} \
+             RUST_TOOLCHAIN_VERSION=${{ env.RUST_TOOLCHAIN_VERSION }} \
+             SOROBAN_CLI_GIT_REF=${{ env.SOROBAN_CLI_GIT_REF }} \
+             QUICKSTART_GIT_REF=${{ env.QUICKSTART_GIT_REF }} build;
+        docker save stellar/quickstart:dev -o /tmp/image;
     - name: Upload System Test Image
       uses: actions/upload-artifact@v2
       with:
@@ -44,8 +59,10 @@ jobs:
         path: /tmp/image
 
   push:
-    # Push image to registry after build under certain cases
-    if: github.event_name == 'release' || (github.event_name == 'push' && github.ref_name == 'master') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    # Only push non 'vX.Y.Z' tags as pre-built system test image with versions compiled into image.
+    # pr's and releases don't need to be pushed as docker images, because system test is meant to be built 
+    # from source locally.
+    if: (github.event_name == 'create' && github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v') != true)
     needs: build
     permissions:
       packages: write

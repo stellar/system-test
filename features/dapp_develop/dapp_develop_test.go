@@ -59,13 +59,6 @@ func TestDappDevelop(t *testing.T) {
 	}
 	godog.BindCommandLineFlags("godog.", opts)
 
-	err = e2e.InstallCli(e2eConfig)
-
-	if err != nil {
-		fmt.Printf("Failed to install CLI version %s, error: %v \n\n", e2eConfig.SorobanCLICrateVersion, err)
-		os.Exit(1)
-	}
-
 	status := godog.TestSuite{
 		Name:                "soroban dapp e2e",
 		Options:             opts,
