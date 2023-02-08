@@ -42,7 +42,6 @@ jobs:
     - uses: actions/checkout@v2
       with:
         ref: ${{ env.HEAD_SHA }}
-    - uses: docker/setup-buildx-action@5146db6c4d81fbfd508899f851bbb3883a96ff9f
     - name: Build System Test Image
       run: |
         make CORE_GIT_REF=${{ env.CORE_GIT_REF }} \

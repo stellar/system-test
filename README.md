@@ -14,6 +14,7 @@ To run tests, requires two steps:
        SOROBAN_RPC_GIT_REF=? \
        RUST_TOOLCHAIN_VERSION=? \
        SOROBAN_CLI_CRATE_VERSION=? \
+       GO_GIT_REF=? \
        SOROBAN_CLI_GIT_REF=? build     
   ```  
 
@@ -41,6 +42,7 @@ To run tests, requires two steps:
   SOROBAN_RPC_GIT_REF=main  
   RUST_TOOLCHAIN_VERSION=stable   
   QUICKSTART_GIT_REF=master
+  GO_GIT_REF=soroban-xdr-next
   QUICKSTART_GIT_REPO=https://github.com/stellar/quickstart.git
   ```  
 

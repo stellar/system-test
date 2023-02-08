@@ -12,7 +12,8 @@ SOROBAN_RPC_GIT_REF=main
 RUST_TOOLCHAIN_VERSION?=stable
 SOROBAN_CLI_CRATE_VERSION=
 SOROBAN_CLI_GIT_REF=main
-# TODO: remove go ref when quickstart /scripts/soroban_repo_to_horizon_repo.sh resolves pr refs.
+# TODO: remove go ref if quickstart /scripts/soroban_repo_to_horizon_repo.sh can resolve remote repo pr refs
+# it currently does not and allowing this to be configured directly.
 GO_GIT_REF?=soroban-xdr-next
 
 QUICKSTART_IMAGE=
