@@ -13,7 +13,7 @@ if [ ! -z "$SOROBAN_CLI_CRATE_VERSION" ]; then
 else 
   git clone -q https://github.com/stellar/soroban-tools.git
   pushd soroban-tools
-  git checkout "$SOROBAN_CLI_GIT_REF"
-  cargo install --config net.git-fetch-with-cli=true --config build.jobs=6 -f --path ./cmd/soroban-cli
+  git fetch origin "$SOROBAN_CLI_GIT_REF" && git checkout FETCH_HEAD
+  make install_rust
   popd
 fi		
