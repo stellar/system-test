@@ -71,7 +71,7 @@ jobs:
              RUST_TOOLCHAIN_VERSION=${{ env.RUST_TOOLCHAIN_VERSION }} \
              SOROBAN_CLI_GIT_REF=${{ env.SOROBAN_CLI_GIT_REF }} \
              QUICKSTART_GIT_REF=${{ env.QUICKSTART_GIT_REF }} \
-             DOCKER_CACHE_REGISTRY=ghcr.io/${{ github.event.pull_request.head.repo.owner || github.repository_owner }} \
+             DOCKER_CACHE_REGISTRY=ghcr.io/${{ github.event.pull_request.head.repo.owner.name || github.repository_owner }} \
              SYSTEM_TEST_PUSH_IMAGE=${{ env.SYSTEM_TEST_PUSH_ENABLED == 'true' && env.IMAGE || '' }} \
              build-with-registry-cache;
   
