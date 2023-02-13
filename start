@@ -71,9 +71,13 @@ function main() {
     print_screen_output "  CORE VERSION=$(stellar-core version 2>/dev/null || echo "n/a")"
     print_screen_output "  HORIZON VERSION=$(stellar-horizon version 2>/dev/null || echo "n/a")"
     print_screen_output "  SOROBAN RPC VERSION=$(stellar-soroban-rpc version 2>/dev/null || echo "n/a")"
-      
+    
+    if [ "$TARGET_NETWORK" = "standalone" ]; then
+        ARTIFICIAL_ACCELERATE=--enable-core-artificially-accelerate-time-for-testing
+    fi          
+
     # using stdbuf to eliminate any buffering between pipe,   
-    stdbuf -o0 /start --$TARGET_NETWORK --enable-soroban-rpc --enable-core-artificially-accelerate-time-for-testing --logs 2>&1 | stdbuf -i0 -o0 tee -a -i $LOG_FILE &
+    stdbuf -o0 /start --$TARGET_NETWORK --enable-soroban-rpc $ARTIFICIAL_ACCELERATE --logs 2>&1 | stdbuf -i0 -o0 tee -a -i $LOG_FILE &
     horizon_status
     soroban_rpc_status 
   else
