@@ -44,7 +44,8 @@ jobs:
     # branch as 'soroban-release-preview6' etc. This will trigger gh workflow, and resulting system test image 
     # will be stellar/system-test:soroban-release-preview6, a reuasable test image, pinned to the specific release stack.
     runs-on: ubuntu-latest
-    permissions: write-all
+    permissions: 
+      packages: write
     steps:
     - uses: actions/checkout@v2
       with:
@@ -55,12 +56,12 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ github.token }}
-    - if: env.SYSTEM_TEST_PUSH_ENABLED == 'true'
+    - if: env.SYSTEM_TEST_PUSH_ENABLED == 'true' && secrets.DOCKERHUB_TOKEN
       uses: docker/login-action@v2
       with:
-        registry: ${{ secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io' }}
-        username: ${{ secrets.DOCKERHUB_USERNAME || github.actor }}
-        password: ${{ secrets.DOCKERHUB_TOKEN || github.token }}
+        registry: docker.io
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
     - name: Build System Test Image
       run: |
         make CORE_GIT_REF=${{ env.CORE_GIT_REF }} \
@@ -69,7 +70,7 @@ jobs:
              RUST_TOOLCHAIN_VERSION=${{ env.RUST_TOOLCHAIN_VERSION }} \
              SOROBAN_CLI_GIT_REF=${{ env.SOROBAN_CLI_GIT_REF }} \
              QUICKSTART_GIT_REF=${{ env.QUICKSTART_GIT_REF }} \
-             DOCKER_CACHE_REGISTRY=ghcr.io \
+             DOCKER_CACHE_REGISTRY=ghcr.io/${{ github.repository_owner }} \
              SYSTEM_TEST_PUSH_IMAGE=${{ env.SYSTEM_TEST_PUSH_ENABLED == 'true' && env.IMAGE || '' }} \
              build-with-registry-cache;
   
