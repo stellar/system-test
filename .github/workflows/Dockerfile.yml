@@ -44,6 +44,9 @@ jobs:
     # branch as 'soroban-release-preview6' etc. This will trigger gh workflow, and resulting system test image 
     # will be stellar/system-test:soroban-release-preview6, a reuasable test image, pinned to the specific release stack.
     runs-on: ubuntu-latest
+    permissions:
+      # enables docker layer caching to push to ghcr.io
+      packages: write
     steps:
     - uses: actions/checkout@v2
       with:
@@ -53,7 +56,7 @@ jobs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ github.token }}
     - if: env.SYSTEM_TEST_PUSH_ENABLED == 'true'
       uses: docker/login-action@v2
       with:
