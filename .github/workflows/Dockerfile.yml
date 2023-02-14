@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - master
-  create:
-    tags:      
+    tags:
+      - '*'     
   pull_request:
   release:
     types: [published]
@@ -49,8 +49,9 @@ jobs:
              SOROBAN_RPC_GIT_REF=${{ env.SOROBAN_RPC_GIT_REF }} \
              RUST_TOOLCHAIN_VERSION=${{ env.RUST_TOOLCHAIN_VERSION }} \
              SOROBAN_CLI_GIT_REF=${{ env.SOROBAN_CLI_GIT_REF }} \
+             SYSTEM_TEST_IMAGE=${{ env.IMAGE }} \
              QUICKSTART_GIT_REF=${{ env.QUICKSTART_GIT_REF }} build;
-        docker save stellar/system-test:dev -o /tmp/image;
+        docker save ${{ env.IMAGE }} -o /tmp/image;
     - name: Upload System Test Image
       uses: actions/upload-artifact@v2
       with:
