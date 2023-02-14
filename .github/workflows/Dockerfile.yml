@@ -10,16 +10,14 @@ on:
   release:
     types: [published]
 
-# Prevent more than one build of this workflow for a branch to be running at the
-# same time, and if multiple are queued, only run the latest, cancelling any
-# already running build. The exception being any protected branch, such as
-# master, where a build for every commit will run.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_protected == 'true' && github.sha || github.ref }}
   cancel-in-progress: true
 
 env:
   HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+  # the only time system test image needs to be defined for a push is when it's a non 'v' tag creation
+  PUSH_ENABLED: ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'v') != true }}
   IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository,  github.ref_name || 'latest') }}
   CORE_GIT_REF: master
   CORE_COMPILE_CONFIGURE_FLAGS: "--disable-tests --enable-next-protocol-version-unsafe-for-production"
@@ -49,7 +47,7 @@ jobs:
              SOROBAN_RPC_GIT_REF=${{ env.SOROBAN_RPC_GIT_REF }} \
              RUST_TOOLCHAIN_VERSION=${{ env.RUST_TOOLCHAIN_VERSION }} \
              SOROBAN_CLI_GIT_REF=${{ env.SOROBAN_CLI_GIT_REF }} \
-             SYSTEM_TEST_IMAGE=${{ env.IMAGE }} \
+             SYSTEM_TEST_IMAGE=${{ env.PUSH_ENABLED && env.IMAGE || 'stellar/system-test:dev' }} \
              QUICKSTART_GIT_REF=${{ env.QUICKSTART_GIT_REF }} build;
         docker save ${{ env.IMAGE }} -o /tmp/image;
     - name: Upload System Test Image
@@ -62,7 +60,7 @@ jobs:
     # Only push non 'vX.Y.Z' tags as pre-built system test image with versions compiled into image.
     # pr's and releases don't need to be pushed as docker images, because system test is meant to be built 
     # from source locally.
-    if: (github.ref_type == 'tag' && startsWith(github.ref_name, 'v') != true)
+    if: ${{ env.PUSH_ENABLED }}
     needs: build
     permissions:
       packages: write
