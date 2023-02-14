@@ -50,7 +50,8 @@ jobs:
              SYSTEM_TEST_IMAGE=${{ env.PUSH_ENABLED && env.IMAGE || 'stellar/system-test:dev' }} \
              QUICKSTART_GIT_REF=${{ env.QUICKSTART_GIT_REF }} build;
         docker save ${{ env.IMAGE }} -o /tmp/image;
-    - name: Upload System Test Image
+    - if: (github.ref_type == 'tag' && startsWith(github.ref_name, 'v') != true)
+      name: Upload System Test Image
       uses: actions/upload-artifact@v2
       with:
         name: image-Dockerfile
@@ -60,7 +61,7 @@ jobs:
     # Only push non 'vX.Y.Z' tags as pre-built system test image with versions compiled into image.
     # pr's and releases don't need to be pushed as docker images, because system test is meant to be built 
     # from source locally.
-    if: ${{ env.PUSH_ENABLED }}
+    if: (github.ref_type == 'tag' && startsWith(github.ref_name, 'v') != true)
     needs: build
     permissions:
       packages: write
