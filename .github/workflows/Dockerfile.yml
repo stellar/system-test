@@ -23,9 +23,7 @@ env:
   RUST_TOOLCHAIN_VERSION: stable
   SOROBAN_CLI_GIT_REF: main
   QUICKSTART_GIT_REF: master
-  # DOCKER_CACHE_REGISTRY=ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }} \
-  #SYSTEM_TEST_PUSH_ENABLED: ${{ github.event_name == 'create' && github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v') != true && 'true' || 'false' }}
-  SYSTEM_TEST_PUSH_ENABLED: 'false'
+  SYSTEM_TEST_PUSH_ENABLED: ${{ github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v') != true && 'true' || 'false' }}
   DOCKERHUB_ENABLED: ${{ secrets.DOCKERHUB_TOKEN && 'true' || 'false' }} 
 jobs:
   complete:
