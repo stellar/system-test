@@ -49,7 +49,10 @@ jobs:
              SOROBAN_CLI_GIT_REF=${{ env.SOROBAN_CLI_GIT_REF }} \
              SYSTEM_TEST_IMAGE=${{ env.PUSH_ENABLED && env.IMAGE || 'stellar/system-test:dev' }} \
              QUICKSTART_GIT_REF=${{ env.QUICKSTART_GIT_REF }} build;
-        docker save ${{ env.IMAGE }} -o /tmp/image;
+    - if: ${{ env.PUSH_ENABLED }}
+      name: Save Docker Image to file
+      run: |
+        docker save ${{ env.IMAGE }} -o /tmp/image; 
     - if: ${{ env.PUSH_ENABLED }}
       name: Upload System Test Image
       uses: actions/upload-artifact@v2
