@@ -50,7 +50,7 @@ jobs:
              SYSTEM_TEST_IMAGE=${{ env.PUSH_ENABLED && env.IMAGE || 'stellar/system-test:dev' }} \
              QUICKSTART_GIT_REF=${{ env.QUICKSTART_GIT_REF }} build;
         docker save ${{ env.IMAGE }} -o /tmp/image;
-    - if: (github.ref_type == 'tag' && startsWith(github.ref_name, 'v') != true)
+    - if: ${{ env.PUSH_ENABLED }}
       name: Upload System Test Image
       uses: actions/upload-artifact@v2
       with:
