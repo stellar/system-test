@@ -19,14 +19,15 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  # Soroban Preview 7 Release versions
   HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
   IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository,  github.event.ref || 'latest') }}
-  CORE_GIT_REF: master
+  CORE_GIT_REF: 3a201d2b5ecee34d6dcc0466633783f27b7fa97c
   CORE_COMPILE_CONFIGURE_FLAGS: "--disable-tests --enable-next-protocol-version-unsafe-for-production"
-  SOROBAN_RPC_GIT_REF: main
-  RUST_TOOLCHAIN_VERSION: stable
-  SOROBAN_CLI_GIT_REF: main
-  QUICKSTART_GIT_REF: master
+  SOROBAN_RPC_GIT_REF: v0.5.0
+  RUST_TOOLCHAIN_VERSION: 1.67.0
+  SOROBAN_CLI_GIT_REF: v0.5.0
+  QUICKSTART_GIT_REF: 96b6067a92a9aec3730835c2b75681b2087de911
 jobs:
   complete:
     if: always()
