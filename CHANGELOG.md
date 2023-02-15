@@ -1,6 +1,27 @@
 # System Test Releases
 
 
+#### 1.0.5
+
+* Fixed `--TargetNetwork futurenet`, was incorrectly trying to configure artificial acceleration on core config also, which is only allowed on `standalone`. [system-test, #25](https://github.com/stellar/system-test/pull/25).  
+
+This version of tests is based on [Soroban Preview 7](https://soroban.stellar.org/docs/releases) system interfaces. 
+
+#### 1.0.4
+
+* Fixed git ref resolution to detached head state when compiling soroban cli during image build [system-test, #23](https://github.com/stellar/system-test/pull/23), to build [Stellar Quickstart](https://github.com/stellar/quickstart).  
+
+This version of tests is based on [Soroban Preview 7](https://soroban.stellar.org/docs/releases) system interfaces. 
+
+#### 1.0.3
+
+* Modified test framework, [system-test, #21](https://github.com/stellar/system-test/pull/21), to build [Stellar Quickstart](https://github.com/stellar/quickstart) as the base image.  
+Refer to [README.md](https://github.com/stellar/system-test#readme) for new two step process of running tests:  
+(1) run make with server versions, creates docker image  
+(2) run the docker image to run tests.  
+
+
+This version of tests is based on [Soroban Preview 7](https://soroban.stellar.org/docs/releases) system interfaces. 
 
 #### 1.0.2
 
