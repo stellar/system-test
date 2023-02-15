@@ -27,8 +27,8 @@ FRIENDBOT_STAGE_IMAGE=$(DOCKER_REGISTRY_PATH)stellar/system-test-friendbot:dev
 SOROBAN_RPC_STAGE_IMAGE=$(DOCKER_REGISTRY_PATH)stellar/system-test-soroban-rpc:dev
 
 ifeq ($(strip $(DOCKER_CACHE)),gha)
-	DOCKER_CACHE_TO=type=gha,mode=max
-	DOCKER_CACHE_FROM=type=gha
+	DOCKER_CACHE_TO=type=gha,mode=max,scope=<SCOPE>
+	DOCKER_CACHE_FROM=type=gha,scope=<SCOPE>
 else
 	DOCKER_CACHE_TO=type=registry,ref=$(DOCKER_REGISTRY_PATH)stellar/system-test:cache
 	DOCKER_CACHE_FROM=type=registry,ref=$(DOCKER_REGISTRY_PATH)stellar/system-test:cache
@@ -62,16 +62,16 @@ build-docker-driver-for-cache:
 build-soroban-rpc-with-cache:
 	if [ -z "$(QUICKSTART_IMAGE)" ]; then \
 		docker buildx build -t "$(SOROBAN_RPC_STAGE_IMAGE)" --target build --push \
-			--cache-to $(DOCKER_CACHE_TO) \
-			--cache-from $(DOCKER_CACHE_FROM) \
+			--cache-to "$(subst <SCOPE>,soroban-rpc,$(DOCKER_CACHE_TO))" \
+			--cache-from "$(subst <SCOPE>,soroban-rpc,$(DOCKER_CACHE_FROM))" \
 			-f cmd/soroban-rpc/docker/Dockerfile https://github.com/stellar/soroban-tools.git#$(SOROBAN_RPC_GIT_REF); \
 	fi 
 
 build-horizon-with-cache:
 	if [ -z "$(QUICKSTART_IMAGE)" ]; then \
 		docker buildx build -t "$(HORIZON_STAGE_IMAGE)" --target builder --push \
-			--cache-to $(DOCKER_CACHE_TO) \
-			--cache-from $(DOCKER_CACHE_FROM) \
+			--cache-to "$(subst <SCOPE>,horizon,$(DOCKER_CACHE_TO))" \
+			--cache-from "$(subst <SCOPE>,horizon,$(DOCKER_CACHE_FROM))" \
 			--build-arg REF=$$GO_GIT_REF \
 			-f Dockerfile.horizon --target builder https://github.com/stellar/quickstart.git#$(QUICKSTART_GIT_REF); \
 	fi   
@@ -79,16 +79,16 @@ build-horizon-with-cache:
 build-friendbot-with-cache:
 	if [ -z "$(QUICKSTART_IMAGE)" ]; then \
 		docker buildx build -t "$(FRIENDBOT_STAGE_IMAGE)" --push \
-			--cache-to $(DOCKER_CACHE_TO) \
-			--cache-from $(DOCKER_CACHE_FROM) \
+			--cache-to "$(subst <SCOPE>,friendbot,$(DOCKER_CACHE_TO))" \
+			--cache-from "$(subst <SCOPE>,friendbot,$(DOCKER_CACHE_FROM))" \
 			-f services/friendbot/docker/Dockerfile https://github.com/stellar/go.git#$(GO_GIT_REF); \
 	fi
 
 build-core-with-cache: 
 	if [ -z "$(QUICKSTART_IMAGE)" ]; then \
 		docker buildx build -t "$(CORE_STAGE_IMAGE)" --push \
-			--cache-to $(DOCKER_CACHE_TO) \
-			--cache-from $(DOCKER_CACHE_FROM) \
+			--cache-to "$(subst <SCOPE>,core,$(DOCKER_CACHE_TO))" \
+			--cache-from "$(subst <SCOPE>,core,$(DOCKER_CACHE_FROM))" \
 			-f docker/Dockerfile.testing https://github.com/stellar/stellar-core.git#$(CORE_GIT_REF) \
 			--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
 			--build-arg CONFIGURE_FLAGS="$(CORE_COMPILE_CONFIGURE_FLAGS)"; \
@@ -98,8 +98,8 @@ build-base-with-cache: build-docker-driver-for-cache build-core-with-cache build
 	if [ -z "$(QUICKSTART_IMAGE)" ]; then \
 		docker buildx build -f Dockerfile https://github.com/stellar/quickstart.git#$(QUICKSTART_GIT_REF) \
 			-t "$(QUICKSTART_STAGE_IMAGE)" --push \
-			--cache-to $(DOCKER_CACHE_TO) \
-			--cache-from $(DOCKER_CACHE_FROM) \
+			--cache-to "$(subst <SCOPE>,quickstart,$(DOCKER_CACHE_TO))" \
+			--cache-from "$(subst <SCOPE>,quickstart,$(DOCKER_CACHE_FROM))" \
 			--label org.opencontainers.image.revision="$(QUICKSTART_GIT_REF)" \
 			--build-arg STELLAR_CORE_IMAGE_REF=$(CORE_STAGE_IMAGE) \
 			--build-arg HORIZON_IMAGE_REF=$(HORIZON_STAGE_IMAGE) \
@@ -110,8 +110,8 @@ build-base-with-cache: build-docker-driver-for-cache build-core-with-cache build
 build-system-test-with-cache: build-base-with-cache
 	QUICKSTART_IMAGE=$$( [ -z "$(QUICKSTART_IMAGE)" ] && echo "$(QUICKSTART_STAGE_IMAGE)" || echo "$(QUICKSTART_IMAGE)"); \
 	docker buildx build -t "$(SYSTEM_TEST_IMAGE)" $(DOCKER_SYSTEM_TEST_OUTPUT_TYPE) \
-		--cache-from $(DOCKER_CACHE_FROM) \
-		--cache-to $(DOCKER_CACHE_TO) \
+		--cache-from "$(subst <SCOPE>,systemtest,$(DOCKER_CACHE_FROM))" \
+		--cache-to "$(subst <SCOPE>,systemtest,$(DOCKER_CACHE_TO))" \
 		-f Dockerfile \
 		--build-arg QUICKSTART_IMAGE_REF=$$QUICKSTART_IMAGE \
 		--build-arg SOROBAN_CLI_CRATE_VERSION=$(SOROBAN_CLI_CRATE_VERSION) \
