@@ -64,7 +64,7 @@ jobs:
     # Only push non 'vX.Y.Z' tags as pre-built system test image with versions compiled into image.
     # pr's and releases don't need to be pushed as docker images, because system test is meant to be built 
     # from source locally.
-    if: env.PUSH_ENABLED == 'true'
+    if: "$PUSH_ENABLED" == 'true'
     needs: build
     permissions:
       packages: write
