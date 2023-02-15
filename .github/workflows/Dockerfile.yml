@@ -17,8 +17,8 @@ concurrency:
 env:
   HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
   # the only time system test image needs to be defined for a push is when it's a non 'v' tag creation
-  PUSH_ENABLED: ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'v') != true }}
-  IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository,  github.ref_name || 'latest') }}
+  PUSH_ENABLED: ${{ secrets.DOCKERHUB_TOKEN && github.ref_type == 'tag' && startsWith(github.ref_name, 'v') != true && 'true' || 'false' }}
+  IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository,  github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name ) }}
   CORE_GIT_REF: master
   CORE_COMPILE_CONFIGURE_FLAGS: "--disable-tests --enable-next-protocol-version-unsafe-for-production"
   SOROBAN_RPC_GIT_REF: main
@@ -64,7 +64,7 @@ jobs:
     # Only push non 'vX.Y.Z' tags as pre-built system test image with versions compiled into image.
     # pr's and releases don't need to be pushed as docker images, because system test is meant to be built 
     # from source locally.
-    if: (github.ref_type == 'tag' && startsWith(github.ref_name, 'v') != true)
+    if: env.PUSH_ENABLED == 'true'
     needs: build
     permissions:
       packages: write
