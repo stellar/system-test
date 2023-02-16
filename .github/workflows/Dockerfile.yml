@@ -36,6 +36,8 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    outputs:
+      push_enabled: ${{ env.PUSH_ENABLED }}
     steps:
     - uses: actions/checkout@v2
       with:
@@ -64,12 +66,12 @@ jobs:
     # Only push non 'vX.Y.Z' tags as pre-built system test image with versions compiled into image.
     # pr's and releases don't need to be pushed as docker images, because system test is meant to be built 
     # from source locally.
-    if: github.env.PUSH_ENABLED == 'true'
     needs: build
     permissions:
       packages: write
       statuses: write
     runs-on: ubuntu-latest
+    if: needs.build.outputs.push_enabled == 'true'
     steps:
     - uses: actions/checkout@v2
       with:
