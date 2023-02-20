@@ -13,6 +13,8 @@ import (
 	"github.com/go-cmd/cmd"
 
 	"github.com/cucumber/godog"
+	"github.com/stellar/go/strkey"
+	"github.com/stellar/go/xdr"
 	"github.com/stellar/system-test"
 	"github.com/stretchr/testify/assert"
 )
@@ -244,16 +246,21 @@ func queryAccount(ctx context.Context) error {
 	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
 	decoded, err := strkey.Decode(strkey.VersionByteAccountID, testConfig.E2EConfig.TargetNetworkPublicKey)
 	if err != nil {
-		return fmt.Errorf("invalid address: %v", testConfig.E2EConfig.TargetNetworkPublicKey)
+		return fmt.Errorf("invalid account address: %v", err)
 	}
 	var key xdr.Uint256
 	copy(key[:], decoded)
-	key, err := xdr.LedgerEntryKey{
+	keyXdr, err := xdr.LedgerKey{
 		Type: xdr.LedgerEntryTypeAccount,
-		A:    &xdr.LedgerEntryKeyAccount{AccountId: key},
+		Account: &xdr.LedgerKeyAccount{
+			AccountId: xdr.AccountId(xdr.PublicKey{
+				Type:    xdr.PublicKeyTypePublicKeyTypeEd25519,
+				Ed25519: &key,
+			}),
+		},
 	}.MarshalBinaryBase64()
 	if err != nil {
-		return err
+		return fmt.Errorf("error encoding account ledger key xdr: %v", err)
 	}
 
 	getAccountRequest := []byte(`{
@@ -261,7 +268,7 @@ func queryAccount(ctx context.Context) error {
            "id": 10235,
            "method": "getLedgerEntry",
            "params": { 
-               "key": "` + key + `"
+               "key": "` + keyXdr + `"
             }
         }`)
 
