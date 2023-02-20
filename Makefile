@@ -52,6 +52,8 @@ CORE_IMAGE=
 # work those images whether the build host is arm64 or amd64.
 QUICKSTART_IMAGE=
 
+NODE_VERSION?=14.20.0
+
 # if crate version is set, then it overrides SOROBAN_CLI_GIT_REF, cli will be installed from this create instead
 SOROBAN_CLI_CRATE_VERSION=
 
@@ -143,5 +145,5 @@ build: build-quickstart build-soroban-cli
 		--build-arg SOROBAN_CLI_CRATE_VERSION=$(SOROBAN_CLI_CRATE_VERSION) \
 		--build-arg SOROBAN_CLI_IMAGE_REF=$$SOROBAN_CLI_IMAGE_REF \
 		--build-arg RUST_TOOLCHAIN_VERSION=$(RUST_TOOLCHAIN_VERSION) \
+      --build-arg NODE_VERSION=$(NODE_VERSION) \
 		--label org.opencontainers.image.revision="$(SYSTEM_TEST_SHA)" .;
-	
