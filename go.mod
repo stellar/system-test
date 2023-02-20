@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/cucumber/godog v0.12.5
 	github.com/go-cmd/cmd v1.4.1
+	github.com/pkg/errors v0.8.1
 	github.com/stellar/go v0.0.0-20230216182126-bc7f94cc35b6
 	github.com/stretchr/testify v1.7.1
 )

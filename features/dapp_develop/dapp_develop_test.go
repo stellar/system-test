@@ -8,14 +8,15 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"text/template"
 
 	"github.com/cucumber/godog/colors"
 	"github.com/go-cmd/cmd"
 
 	"github.com/cucumber/godog"
+	"github.com/pkg/errors"
 	"github.com/stellar/go/strkey"
 	"github.com/stellar/go/xdr"
-	"github.com/stellar/system-test"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -177,7 +178,7 @@ func installContract(ctx context.Context, compiledContractFileName string) error
 	return nil
 }
 
-func invokeContract(ctx context.Context, functionName string, contractName string, param1 string, tool string) error {
+func invokeContract(ctx context.Context, functionName, contractName, param1, tool string) error {
 
 	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
 
@@ -188,9 +189,12 @@ func invokeContract(ctx context.Context, functionName string, contractName strin
 	var response string
 	var err error
 
-	if tool == "CLI" {
+	switch tool {
+	case "CLI":
 		response, err = invokeContractFromCliTool(testConfig, functionName, contractName, param1)
-	} else {
+	case "NODEJS":
+		response, err = invokeContractFromNodeJSTool(testConfig, functionName, contractName, param1)
+	default:
 		err = fmt.Errorf("%s tool not supported yet", tool)
 	}
 
@@ -202,8 +206,7 @@ func invokeContract(ctx context.Context, functionName string, contractName strin
 	return nil
 }
 
-func invokeContractFromCliTool(testConfig *testConfig, functionName string, contractName string, param1 string) (string, error) {
-
+func invokeContractFromCliTool(testConfig *testConfig, functionName, contractName, param1 string) (string, error) {
 	args := []string{
 		"contract",
 		"invoke",
@@ -229,6 +232,73 @@ func invokeContractFromCliTool(testConfig *testConfig, functionName string, cont
 
 	if len(stdOut) < 1 {
 		return "", fmt.Errorf("soroban cli invoke of example contract %s did not emit successful response", contractName)
+	}
+
+	return stdOut[0], nil
+}
+
+func invokeContractFromNodeJSTool(testConfig *testConfig, functionName, contractName, param1 string) (string, error) {
+	script := `
+		const SorobanClient = require('soroban-client');
+		const xdr = SorobanClient.xdr;
+
+		(async () => {
+			const contract = new SorobanClient.Contract("{{js .contractId}}");
+			const server = new SorobanClient.Server("{{js .rpcUrl}}", { allowHttp: true });
+			const source = await server.getAccount("{{js .account}}")
+			let txn = new SorobanClient.TransactionBuilder(source, {
+					fee: 100,
+					networkPassphrase: "{{js .networkPassphrase}}",
+				})
+				.addOperation(contract.call("{{js .functionName}}", "{{js .param1}}"))
+				.setTimeout(30)
+				.build();
+			txn = await server.prepareTransaction(txn, "{{js .networkPassphrase}}");
+			txn.sign(SorobanClient.Keypair.fromSecret("{{js .secretKey}}"));
+			let response = server.sendTransaction(txn);
+			let i = 0;
+			while (response.status === "pending") {
+				i += 1;
+				if (i > 10) {
+					throw new Error("Transaction timed out");
+				}
+				await new Promise(resolve => setTimeout(resolve, 1000));
+				response = await server.getTransaction(response.id);
+				if (response.status != "pending") {
+					console.log(response.resultXdr);
+					return;
+				}
+			}
+		})();
+	`
+
+	stdin := &bytes.Buffer{}
+	tmpl, err := template.New("script").Parse(script)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to parse javascript template")
+	}
+	err = tmpl.Execute(stdin, map[string]string{
+		"contractId":        testConfig.DeployedContractId,
+		"rpcUrl":            testConfig.E2EConfig.TargetNetworkRPCURL,
+		"account":           testConfig.E2EConfig.TargetNetworkPublicKey,
+		"secretKey":         testConfig.E2EConfig.TargetNetworkSecretKey,
+		"networkPassphrase": testConfig.E2EConfig.TargetNetworkPassPhrase,
+		"functionName":      functionName,
+		"param1":            param1,
+	})
+	if err != nil {
+		return "", errors.Wrap(err, "failed to execute javascript template")
+	}
+
+	envCmd := cmd.NewCmd("node")
+	status, stdOut, err := e2e.RunCommandWithStdin(envCmd, testConfig.E2EConfig, stdin)
+
+	if status != 0 || err != nil {
+		return "", fmt.Errorf("nodejs incoke of example contract %s had error %v, %v", contractName, status, err)
+	}
+
+	if len(stdOut) < 1 {
+		return "", fmt.Errorf("nodejs invoke of example contract %s did not print any response", contractName)
 	}
 
 	return stdOut[0], nil
