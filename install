@@ -1,13 +1,6 @@
 #! /usr/bin/env bash
 set -e
 
-export DEBIAN_FRONTEND=noninteractive
-apt-get update
-apt-get install -y build-essential
-apt-get clean
-
-curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain "$RUST_TOOLCHAIN_VERSION"
-
 if [ ! -z "$SOROBAN_CLI_CRATE_VERSION" ]; then 
   cargo install --config net.git-fetch-with-cli=true --config build.jobs=6 -f --locked soroban-cli --version "$SOROBAN_CLI_SOURCE_FOLDER"
 else 
