@@ -13,8 +13,10 @@ RUN go mod download
 # build each feature folder with go test module.
 # compiles each feature to a binary to be executed, 
 # and copies the .feature file with it for runtime.
-RUN go test -c -o ./bin/dapp_develop_test ./features/dapp_develop/...
+RUN go test -c -o ./bin/dapp_develop_test.bin ./features/dapp_develop/...
 ADD features/dapp_develop/dapp_develop.feature ./bin
+# copy over a dapp develop test specific file, used for expect/tty usage
+ADD features/dapp_develop/soroban_config.exp ./bin
 
 FROM $QUICKSTART_IMAGE_REF as base
 ARG SOROBAN_CLI_CRATE_VERSION

@@ -1,24 +1,75 @@
 package e2e
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/go-cmd/cmd"
+	"github.com/stellar/go/txnbuild"
 )
 
 type E2EConfig struct {
 	// e2e settings
-	SorobanExamplesGitHash    string
-	SorobanExamplesRepoURL    string
-	VerboseOutput             bool
+	SorobanExamplesGitHash string
+	SorobanExamplesRepoURL string
+	VerboseOutput          bool
 
 	// target network that test will use
 	TargetNetworkRPCURL     string
 	TargetNetworkPassPhrase string
 	TargetNetworkSecretKey  string
 	TargetNetworkPublicKey  string
+}
+
+type AccountInfo struct {
+	ID       string `json:"id"`
+	Sequence int64  `json:"sequence,string"`
+}
+
+type RPCAccountResponse struct {
+	Result AccountInfo `json:"result"`
+}
+
+type TransactionResponseError struct {
+	Code    string                 `json:"code"`
+	Message string                 `json:"message"`
+	Data    map[string]interface{} `json:"data"`
+}
+
+type TransactionResponse struct {
+	ID     string `json:"id"`
+	Status string `json:"status"`
+	// Error will be nil unless Status is equal to "error"
+	Error *TransactionResponseError `json:"error"`
+}
+
+type RPCTransactionResponse struct {
+	Result TransactionResponse `json:"result"`
+}
+
+type TransactionStatusResponseError struct {
+	Code    string                 `json:"code"`
+	Message string                 `json:"message"`
+	Data    map[string]interface{} `json:"data"`
+}
+
+type TransactionStatusResponse struct {
+	ID            string `json:"id"`
+	Status        string `json:"status"`
+	EnvelopeXdr   string `json:"envelopeXdr,omitempty"`
+	ResultXdr     string `json:"resultXdr,omitempty"`
+	ResultMetaXdr string `json:"resultMetaXdr,omitempty"`
+	// Error will be nil unless Status is equal to "error"
+	Error *TransactionStatusResponseError `json:"error,omitempty"`
+}
+
+type RPCTransactionStatusResponse struct {
+	Result TransactionStatusResponse `json:"result"`
 }
 
 const TestTmpDirectory = "test_tmp_workspace"
@@ -114,6 +165,109 @@ type Asserter struct {
 // Errorf is used by the called assertion to report an error
 func (a *Asserter) Errorf(format string, args ...interface{}) {
 	a.Err = fmt.Errorf(format, args...)
+}
+
+func QueryAccount(e2eConfig *E2EConfig, publicKey string) (*AccountInfo, error) {
+	getAccountRequest := []byte(`{
+           "jsonrpc": "2.0",
+           "id": 10235,
+           "method": "getAccount",
+           "params": { 
+               "address": "` + publicKey + `"
+            }
+        }`)
+
+	resp, err := http.Post(e2eConfig.TargetNetworkRPCURL, "application/json", bytes.NewBuffer(getAccountRequest))
+	if err != nil {
+		return nil, fmt.Errorf("soroban rpc get account had error %e", err)
+	}
+
+	var rpcResponse RPCAccountResponse
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&rpcResponse)
+	if err != nil {
+		return nil, fmt.Errorf("soroban rpc get account, not able to parse response, %v, %e", resp.Body, err)
+	}
+
+	return &rpcResponse.Result, nil
+}
+
+func QueryTxStatus(e2eConfig *E2EConfig, txHashId string) (*TransactionStatusResponse, error) {
+	getTxStatusRequest := []byte(`{
+           "jsonrpc": "2.0",
+           "id": 10235,
+           "method": "getTransactionStatus",
+           "params": { 
+               "hash": "` + txHashId + `"
+            }
+        }`)
+
+	resp, err := http.Post(e2eConfig.TargetNetworkRPCURL, "application/json", bytes.NewBuffer(getTxStatusRequest))
+	if err != nil {
+		return nil, fmt.Errorf("soroban rpc get tx status had error %e", err)
+	}
+
+	var rpcResponse RPCTransactionStatusResponse
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&rpcResponse)
+	if err != nil {
+		return nil, fmt.Errorf("soroban rpc get tx status, not able to parse response, %v, %e", resp.Body, err)
+	}
+
+	return &rpcResponse.Result, nil
+}
+
+func TxSub(e2eConfig *E2EConfig, tx *txnbuild.Transaction) (*TransactionStatusResponse, error) {
+	b64, err := tx.Base64()
+	if err != nil {
+		return nil, fmt.Errorf("soroban rpc tx sub, not able to serialize tx, %v, %e", tx, err)
+	}
+
+	txsubRequest := []byte(`{
+           "jsonrpc": "2.0",
+           "id": 10235,
+           "method": "sendTransaction",
+           "params": { 
+               "transaction": "` + b64 + `"
+            }
+        }`)
+
+	resp, err := http.Post(e2eConfig.TargetNetworkRPCURL, "application/json", bytes.NewBuffer(txsubRequest))
+	if err != nil {
+		return nil, fmt.Errorf("soroban rpc tx sub had error %e", err)
+	}
+
+	var rpcResponse RPCTransactionResponse
+	decoder := json.NewDecoder(resp.Body)
+
+	err = decoder.Decode(&rpcResponse)
+	if err != nil {
+		return nil, fmt.Errorf("soroban rpc tx sub, not able to parse response, %v, %e", resp.Body, err)
+	}
+
+	if rpcResponse.Result.Error != nil {
+		return nil, fmt.Errorf("soroban rpc tx sub, got bad submission response, %v", rpcResponse)
+	}
+
+	start := time.Now().Unix()
+	for x := range time.NewTicker(3 * time.Second).C {
+		if x.Unix()-start > 30 {
+			break
+		}
+		transactionStatusResponse, err := QueryTxStatus(e2eConfig, rpcResponse.Result.ID)
+		if err != nil {
+			return nil, fmt.Errorf("soroban rpc tx sub, unable to call tx status check, %v, %e", rpcResponse, err)
+		}
+
+		if transactionStatusResponse.Status == "success" {
+			return transactionStatusResponse, nil
+		}
+		if transactionStatusResponse.Status != "pending" {
+			return nil, fmt.Errorf("soroban rpc tx sub, got bad response on tx status check, %v, %v, %e", rpcResponse, transactionStatusResponse, err)
+		}
+	}
+
+	return nil, fmt.Errorf("soroban rpc tx sub, timeout after 30 seconds on tx status check, %v", rpcResponse)
 }
 
 func getEnv(key string) (string, error) {

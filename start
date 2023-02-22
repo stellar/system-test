@@ -76,8 +76,12 @@ function main() {
         ARTIFICIAL_ACCELERATE=--enable-core-artificially-accelerate-time-for-testing
     fi          
 
+    if [ "$VERBOSE_OUTPUT" = "true" ]; then
+        SHOW_SERVER_LOGS=--logs
+    fi    
+
     # using stdbuf to eliminate any buffering between pipe,   
-    stdbuf -o0 /start --$TARGET_NETWORK --enable-soroban-rpc $ARTIFICIAL_ACCELERATE --logs 2>&1 | stdbuf -i0 -o0 tee -a -i $LOG_FILE &
+    stdbuf -o0 /start --$TARGET_NETWORK --enable-soroban-rpc $ARTIFICIAL_ACCELERATE $SHOW_SERVER_LOGS 2>&1 | stdbuf -i0 -o0 tee -a -i $LOG_FILE &
     horizon_status
     soroban_rpc_status 
   else
@@ -112,12 +116,11 @@ function main() {
         break
     fi
 
-    if [[ "$file" =~ ^.*\.feature$ ]]; then
-        continue
+    if [[ "$file" =~ ^.*\.bin$ ]]; then
+        # these bin files were compiled from go feature tests in the Dockerfile during image build
+        print_screen_output "Running test binary ${file} ... "
+        ${file} -test.v ${TEST_FILTER} 2>&1 | tee -a $LOG_FILE
     fi
-    # these bin files were compiled from go feature tests in the Dockerfile during image build
-    print_screen_output "Running test binary ${file} ... "
-    ${file} -test.v ${TEST_FILTER} 2>&1 | tee -a $LOG_FILE
   done
 }
 
