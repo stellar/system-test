@@ -40,7 +40,7 @@ type testConfig struct {
 }
 
 func TestDappDevelop(t *testing.T) {
-   e2eConfig, err := e2e.InitEnvironment()
+	e2eConfig, err := e2e.InitEnvironment()
 
 	if err != nil {
 		t.Fatalf("Failed to setup environment for soroban dapp e2e tests, %v", err)
@@ -187,8 +187,9 @@ func queryAccountStep(ctx context.Context) error {
 	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
 
 	accountInfo, err := e2e.QueryAccount(testConfig.E2EConfig, testConfig.E2EConfig.TargetNetworkPublicKey)
+
 	if err != nil {
-		return fmt.Errorf("soroban rpc get account had error %e", err)
+		return fmt.Errorf("soroban rpc account retrieval had error %e", err)
 	}
 
 	var t e2e.Asserter
@@ -203,6 +204,7 @@ func createTesterAccountStep(ctx context.Context) error {
 	address := kp.Address()
 
 	addressState, err := e2e.QueryAccount(testConfig.E2EConfig, address)
+
 	if err != nil {
 		return fmt.Errorf("unable to query latest account state for %v, had error %e", address, err)
 	}

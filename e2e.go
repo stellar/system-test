@@ -10,7 +10,9 @@ import (
 	"time"
 
 	"github.com/go-cmd/cmd"
+	"github.com/stellar/go/strkey"
 	"github.com/stellar/go/txnbuild"
+	"github.com/stellar/go/xdr"
 )
 
 type E2EConfig struct {
@@ -70,6 +72,14 @@ type TransactionStatusResponse struct {
 
 type RPCTransactionStatusResponse struct {
 	Result TransactionStatusResponse `json:"result"`
+}
+
+type ledgerEntryResult struct {
+	XDR string `json:"xdr"`
+}
+
+type getLedgerEntryResponse struct {
+	Result ledgerEntryResult `json:"result"`
 }
 
 const TestTmpDirectory = "test_tmp_workspace"
@@ -168,12 +178,31 @@ func (a *Asserter) Errorf(format string, args ...interface{}) {
 }
 
 func QueryAccount(e2eConfig *E2EConfig, publicKey string) (*AccountInfo, error) {
+	decoded, err := strkey.Decode(strkey.VersionByteAccountID, publicKey)
+	if err != nil {
+		return nil, fmt.Errorf("invalid account address: %v", err)
+	}
+	var key xdr.Uint256
+	copy(key[:], decoded)
+	keyXdr, err := xdr.LedgerKey{
+		Type: xdr.LedgerEntryTypeAccount,
+		Account: &xdr.LedgerKeyAccount{
+			AccountId: xdr.AccountId(xdr.PublicKey{
+				Type:    xdr.PublicKeyTypePublicKeyTypeEd25519,
+				Ed25519: &key,
+			}),
+		},
+	}.MarshalBinaryBase64()
+	if err != nil {
+		return nil, fmt.Errorf("error encoding account ledger key xdr: %v", err)
+	}
+
 	getAccountRequest := []byte(`{
            "jsonrpc": "2.0",
            "id": 10235,
-           "method": "getAccount",
+           "method": "getLedgerEntry",
            "params": { 
-               "address": "` + publicKey + `"
+               "key": "` + keyXdr + `"
             }
         }`)
 
@@ -182,14 +211,20 @@ func QueryAccount(e2eConfig *E2EConfig, publicKey string) (*AccountInfo, error) 
 		return nil, fmt.Errorf("soroban rpc get account had error %e", err)
 	}
 
-	var rpcResponse RPCAccountResponse
+	var rpcResponse getLedgerEntryResponse
 	decoder := json.NewDecoder(resp.Body)
 	err = decoder.Decode(&rpcResponse)
 	if err != nil {
-		return nil, fmt.Errorf("soroban rpc get account, not able to parse response, %v, %e", resp.Body, err)
+		return nil, fmt.Errorf("soroban rpc get account, not able to parse ledger entry response, %v, %e", resp.Body, err)
 	}
 
-	return &rpcResponse.Result, nil
+	var entry xdr.LedgerEntryData
+	err = xdr.SafeUnmarshalBase64(rpcResponse.Result.XDR, &entry)
+	if err != nil {
+		return nil, fmt.Errorf("soroban rpc get account, not able to parse XDR from ledger entry response, %v, %e", resp.Body, err)
+	}
+
+	return &AccountInfo{ID: entry.Account.AccountId.Address(), Sequence: int64(entry.Account.SeqNum)}, nil
 }
 
 func QueryTxStatus(e2eConfig *E2EConfig, txHashId string) (*TransactionStatusResponse, error) {
