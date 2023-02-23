@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/cucumber/godog v0.12.5
 	github.com/go-cmd/cmd v1.4.1
+	github.com/stellar/go v0.0.0-20230216182126-bc7f94cc35b6
 	github.com/stretchr/testify v1.7.1
 )
 
@@ -19,7 +20,6 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/stellar/go v0.0.0-20230216182126-bc7f94cc35b6 // indirect
 	github.com/stellar/go-xdr v0.0.0-20211103144802-8017fc4bdfee // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 )
