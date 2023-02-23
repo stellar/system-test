@@ -27,8 +27,8 @@ FRIENDBOT_STAGE_IMAGE=$(DOCKER_REGISTRY_PATH)stellar/system-test-friendbot:dev
 SOROBAN_RPC_STAGE_IMAGE=$(DOCKER_REGISTRY_PATH)stellar/system-test-soroban-rpc:dev
 
 ifeq ($(strip $(DOCKER_CACHE)),gha)
-	DOCKER_CACHE_TO=type=gha,mode=max,scope=<SCOPE>
-	DOCKER_CACHE_FROM=type=gha,scope=<SCOPE>
+	DOCKER_CACHE_TO=type=gha,mode=max
+	DOCKER_CACHE_FROM=type=gha
 else
 	DOCKER_CACHE_TO=type=registry,ref=$(DOCKER_REGISTRY_PATH)stellar/system-test:cache
 	DOCKER_CACHE_FROM=type=registry,ref=$(DOCKER_REGISTRY_PATH)stellar/system-test:cache
