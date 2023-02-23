@@ -13,6 +13,8 @@ import (
 	"github.com/go-cmd/cmd"
 
 	"github.com/cucumber/godog"
+	"github.com/stellar/go/strkey"
+	"github.com/stellar/go/xdr"
 	"github.com/stellar/system-test"
 	"github.com/stretchr/testify/assert"
 )
@@ -33,13 +35,12 @@ type testConfig struct {
 	TestWorkingDir           string
 }
 
-type accountInfo struct {
-	ID       string `json:"id"`
-	Sequence int64  `json:"sequence,string"`
+type ledgerEntryResult struct {
+	XDR string `json:"xdr"`
 }
 
-type accountResponse struct {
-	Result accountInfo `json:"result"`
+type getLedgerEntryResponse struct {
+	Result ledgerEntryResult `json:"result"`
 }
 
 func TestDappDevelop(t *testing.T) {
@@ -243,13 +244,31 @@ func theResultShouldBe(ctx context.Context, expectedResult string) error {
 
 func queryAccount(ctx context.Context) error {
 	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
+	decoded, err := strkey.Decode(strkey.VersionByteAccountID, testConfig.E2EConfig.TargetNetworkPublicKey)
+	if err != nil {
+		return fmt.Errorf("invalid account address: %v", err)
+	}
+	var key xdr.Uint256
+	copy(key[:], decoded)
+	keyXdr, err := xdr.LedgerKey{
+		Type: xdr.LedgerEntryTypeAccount,
+		Account: &xdr.LedgerKeyAccount{
+			AccountId: xdr.AccountId(xdr.PublicKey{
+				Type:    xdr.PublicKeyTypePublicKeyTypeEd25519,
+				Ed25519: &key,
+			}),
+		},
+	}.MarshalBinaryBase64()
+	if err != nil {
+		return fmt.Errorf("error encoding account ledger key xdr: %v", err)
+	}
 
 	getAccountRequest := []byte(`{
            "jsonrpc": "2.0",
            "id": 10235,
-           "method": "getAccount",
+           "method": "getLedgerEntry",
            "params": { 
-               "address": "` + testConfig.E2EConfig.TargetNetworkPublicKey + `"
+               "key": "` + keyXdr + `"
             }
         }`)
 
@@ -258,7 +277,7 @@ func queryAccount(ctx context.Context) error {
 		return fmt.Errorf("soroban rpc get account had error %e", err)
 	}
 
-	var rpcResponse accountResponse
+	var rpcResponse getLedgerEntryResponse
 	decoder := json.NewDecoder(resp.Body)
 	err = decoder.Decode(&rpcResponse)
 	if err != nil {
@@ -266,7 +285,7 @@ func queryAccount(ctx context.Context) error {
 	}
 
 	var t e2e.Asserter
-	assert.Equal(&t, testConfig.E2EConfig.TargetNetworkPublicKey, rpcResponse.Result.ID, "RPC get account, Expected %v but got %v", testConfig.E2EConfig.TargetNetworkPublicKey, rpcResponse.Result.ID)
+	assert.NotEmpty(&t, rpcResponse.Result.XDR, "RPC get account, account not found")
 	return t.Err
 }
 
