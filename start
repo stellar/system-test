@@ -78,10 +78,8 @@ function main() {
 
     # using stdbuf to eliminate any buffering between pipe,   
     stdbuf -o0 /start --$TARGET_NETWORK --enable-soroban-rpc $ARTIFICIAL_ACCELERATE --logs 2>&1 | stdbuf -i0 -o0 tee -a -i $LOG_FILE &
-    soroban_rpc_status 
-  else
-    soroban_rpc_status     
   fi
+  soroban_rpc_status
   
   print_screen_output "  RUST_TOOLCHAIN_VERSION=$(rustc --version 2>/dev/null || echo"n/a" )"
   print_screen_output "  SOROBAN_CLI_CRATE_VERSION=$(soroban version 2>/dev/null || echo "n/a" )"
