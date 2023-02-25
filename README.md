@@ -51,6 +51,11 @@ To run tests, requires two steps:
   # this will override SOROBAN_CLI_GIT_REF, and install soroban cli from crates repo instead
   SOROBAN_CLI_CRATE_VERSION=0.4.0  
 
+  # Image overrides. 
+  # If using these, the image ref should provide a manifiest version for same 
+  # platform arch as the build host is running on, i.e. linux/amd64 or linux/arm64. 
+  # Otherwise, build will fail if image is not available for matching host platform.
+  #
   # this will skip building core, horizon, rpc and quickstart from git source and instead 
   # will use the versions already compiled in the existing quickstart docker image provided: 
   QUICKSTART_IMAGE=<docker registry>/<docker image name>:<docker tag>

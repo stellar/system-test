@@ -52,16 +52,6 @@ CORE_IMAGE=
 # work those images whether the build host is arm64 or amd64.
 QUICKSTART_IMAGE=
 
-# using external core image will require running the build on linux/amd64 host
-# as the core image is only published on linux/amd64
-# otherwise, using docker qemu to run on different arch from host usually doesn't work out, 
-# cargo builds take very long and tend to time out
-ifneq ($(strip $(CORE_IMAGE)),)
-ifeq ($(NON_AMD_ARCH),true)
-$(error Invalid config, can only build with external core image reference when host platform is x86_64)
-endif	
-endif
-
 # if crate version is set, then it overrides SOROBAN_CLI_GIT_REF, cli will be installed from this create instead
 SOROBAN_CLI_CRATE_VERSION=
 
