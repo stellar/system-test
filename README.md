@@ -4,7 +4,8 @@
 To run tests, requires two steps: 
   (1) First build the system test docker image with the correct versions of core,  
   horizon, soroban rpc, rust toolchain, soroban cli, this will create a docker image named 
-  `stellar/system-test:dev`. All `GIT_REF` variables can refer to either a fully qualified local path to checked out git repo, or a fully qualified github remote repo url `https://github.com/repo#<ref>`  
+  `stellar/system-test:dev`.  
+  All `GIT_REF` variables can refer to either a fully qualified local path to checked out git repo, or a fully qualified github remote repo url `https://github.com/repo#<ref>`  
   ```
   make 
        QUICKSTART_GIT_REF=? \
@@ -28,11 +29,11 @@ To run tests, requires two steps:
          QUICKSTART_GIT_REF=https://github.com/stellar/quickstart#master build
   ```  
 
-  example of build using the existing quickstart:soroban-dev image which has latest released versions:  
+  example of build using the existing quickstart:soroban-dev image which has latest released soroban server versions and builds soroban cli from local directory of checked out soroban-tools repo:  
   ```
   $ make QUICKSTART_IMAGE=stellar/quickstart:soroban-dev \
          RUST_TOOLCHAIN_VERSION=1.66.0 \
-         SOROBAN_CLI_GIT_REF=main build
+         SOROBAN_CLI_GIT_REF=/Users/user/soroban-tools build
   ```  
 
   some settings have defaults pre-set, and optionally be overriden:  
