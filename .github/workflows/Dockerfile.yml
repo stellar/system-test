@@ -21,10 +21,7 @@ concurrency:
 env:
   HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
   IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository,  github.event.ref || 'latest') }}
-  # the core image was compiled from https://github.com/stellar/stellar-core.git#871accefc0c4a703c1321b4f0e48cf6e03b41960
-  # referring to image instead of CORE_GIT_REF which would build from source to save time on ci builds
-  CORE_IMAGE: sreuland/stellar-core:19.7.1-1204.871accefc.focal-soroban
-  CORE_GIT_REF: https://github.com/stellar/stellar-core.git#871accefc0c4a703c1321b4f0e48cf6e03b41960
+  CORE_GIT_REF: https://github.com/stellar/stellar-core.git#master
   CORE_COMPILE_CONFIGURE_FLAGS: "--disable-tests --enable-next-protocol-version-unsafe-for-production"
   SOROBAN_RPC_GIT_REF: https://github.com/stellar/soroban-tools.git#main
   RUST_TOOLCHAIN_VERSION: stable
@@ -47,7 +44,7 @@ jobs:
         ref: ${{ env.HEAD_SHA }}
     - name: Build System Test Image
       run: |
-        make CORE_IMAGE=${{ env.CORE_IMAGE }} \
+        make CORE_GIT_REF=${{ env.CORE_GIT_REF }} \
              CORE_COMPILE_CONFIGURE_FLAGS="${{ env.CORE_COMPILE_CONFIGURE_FLAGS }}" \
              SOROBAN_RPC_GIT_REF=${{ env.SOROBAN_RPC_GIT_REF }} \
              RUST_TOOLCHAIN_VERSION=${{ env.RUST_TOOLCHAIN_VERSION }} \
