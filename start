@@ -13,7 +13,6 @@ TARGET_NETWORK_PASSPHRASE="Standalone Network ; February 2017"
 TARGET_NETWORK_SECRET_KEY="SC5O7VZUXDJ6JBDSZ74DSERXL7W3Y5LTOAMRF7RQRL3TAGAPS7LUVG3L"
 TARGET_NETWORK_PUBLIC_KEY="GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI"
 TARGET_NETWORK_RPC_URL=
-LOG_FILE=/var/log/system-test.log
 QUICKSTART_LOG_FILE=/var/log/system-test-quickstart.log
 
 # example filter for all combos of one scenario outline: ^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$
@@ -24,7 +23,7 @@ VERBOSE_OUTPUT=false
 CANCELLED=false
 
 function print_screen_output() {
-  echo "$1" | tee -a $LOG_FILE
+  echo "$1"
 }
 
 print_screen_output "Starting system test ..." 
@@ -88,7 +87,7 @@ function main() {
         stdbuf -o0 -e0 /start --$TARGET_NETWORK --enable-soroban-rpc $ARTIFICIAL_ACCELERATE --logs >> $QUICKSTART_LOG_FILE 2>&1 &
     fi
   fi
-  
+
   soroban_rpc_status 
 
   print_screen_output "  RUST_TOOLCHAIN_VERSION=$(rustc --version 2>/dev/null || echo"n/a" )"
@@ -122,7 +121,7 @@ function main() {
     if [[ "$file" =~ ^.*\.bin$ ]]; then
         # these bin files were compiled from go feature tests in the Dockerfile during image build
         print_screen_output "Running test binary ${file} ... "
-        ${file} -test.v ${TEST_FILTER} 2>&1 | tee -a $LOG_FILE
+        ${file} -test.v ${TEST_FILTER}
     fi
   done
 }
