@@ -240,12 +240,9 @@ func createTesterAccountStep(ctx context.Context) error {
 		return fmt.Errorf("signing transaction to create tester account had error %v, %e", tx, err)
 	}
 
-	txStatus, err := e2e.TxSub(testConfig.E2EConfig, tx)
+	_, err = e2e.TxSub(testConfig.E2EConfig, tx)
 	if err != nil {
 		return fmt.Errorf("not able to submit transaction to create tester account %e", err)
-	}
-	if txStatus.Error != nil {
-		return fmt.Errorf("submission of tx to create tester account had error %v", txStatus.Error)
 	}
 
 	if testConfig.E2EConfig.VerboseOutput {

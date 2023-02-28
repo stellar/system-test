@@ -28,36 +28,30 @@ type E2EConfig struct {
 	TargetNetworkPublicKey  string
 }
 
+const (
+	TX_SUCCESS = "SUCCESS"
+	TX_PENDING = "PENDING"
+)
+
+type RPCError struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+	Data    string `json:"data"`
+}
+
 type AccountInfo struct {
 	ID       string `json:"id"`
 	Sequence int64  `json:"sequence,string"`
 }
 
-type RPCAccountResponse struct {
-	Result AccountInfo `json:"result"`
-}
-
-type TransactionResponseError struct {
-	Code    string                 `json:"code"`
-	Message string                 `json:"message"`
-	Data    map[string]interface{} `json:"data"`
-}
-
 type TransactionResponse struct {
 	ID     string `json:"id"`
 	Status string `json:"status"`
-	// Error will be nil unless Status is equal to "error"
-	Error *TransactionResponseError `json:"error"`
 }
 
 type RPCTransactionResponse struct {
 	Result TransactionResponse `json:"result"`
-}
-
-type TransactionStatusResponseError struct {
-	Code    string                 `json:"code"`
-	Message string                 `json:"message"`
-	Data    map[string]interface{} `json:"data"`
+	Error  *RPCError           `json:"error,omitempty"`
 }
 
 type TransactionStatusResponse struct {
@@ -66,20 +60,20 @@ type TransactionStatusResponse struct {
 	EnvelopeXdr   string `json:"envelopeXdr,omitempty"`
 	ResultXdr     string `json:"resultXdr,omitempty"`
 	ResultMetaXdr string `json:"resultMetaXdr,omitempty"`
-	// Error will be nil unless Status is equal to "error"
-	Error *TransactionStatusResponseError `json:"error,omitempty"`
 }
 
 type RPCTransactionStatusResponse struct {
 	Result TransactionStatusResponse `json:"result"`
+	Error  *RPCError                 `json:"error,omitempty"`
 }
 
-type ledgerEntryResult struct {
+type LedgerEntryResult struct {
 	XDR string `json:"xdr"`
 }
 
-type getLedgerEntryResponse struct {
-	Result ledgerEntryResult `json:"result"`
+type RPCLedgerEntryResponse struct {
+	Result LedgerEntryResult `json:"result"`
+	Error  *RPCError         `json:"error,omitempty"`
 }
 
 const TestTmpDirectory = "test_tmp_workspace"
@@ -211,17 +205,20 @@ func QueryAccount(e2eConfig *E2EConfig, publicKey string) (*AccountInfo, error) 
 		return nil, fmt.Errorf("soroban rpc get account had error %e", err)
 	}
 
-	var rpcResponse getLedgerEntryResponse
+	var rpcResponse RPCLedgerEntryResponse
 	decoder := json.NewDecoder(resp.Body)
 	err = decoder.Decode(&rpcResponse)
 	if err != nil {
-		return nil, fmt.Errorf("soroban rpc get account, not able to parse ledger entry response, %v, %e", resp.Body, err)
+		return nil, fmt.Errorf("soroban rpc get account, not able to parse ledger entry response, %v, %e", resp, err)
+	}
+	if rpcResponse.Error != nil {
+		return nil, fmt.Errorf("soroban rpc get account, error on ledger entry response, %v, %e", resp, err)
 	}
 
 	var entry xdr.LedgerEntryData
 	err = xdr.SafeUnmarshalBase64(rpcResponse.Result.XDR, &entry)
 	if err != nil {
-		return nil, fmt.Errorf("soroban rpc get account, not able to parse XDR from ledger entry response, %v, %e", resp.Body, err)
+		return nil, fmt.Errorf("soroban rpc get account, not able to parse XDR from ledger entry response, %v, %e", rpcResponse.Result.XDR, err)
 	}
 
 	return &AccountInfo{ID: entry.Account.AccountId.Address(), Sequence: int64(entry.Account.SeqNum)}, nil
@@ -231,7 +228,7 @@ func QueryTxStatus(e2eConfig *E2EConfig, txHashId string) (*TransactionStatusRes
 	getTxStatusRequest := []byte(`{
            "jsonrpc": "2.0",
            "id": 10235,
-           "method": "getTransactionStatus",
+           "method": "getTransaction",
            "params": { 
                "hash": "` + txHashId + `"
             }
@@ -245,8 +242,13 @@ func QueryTxStatus(e2eConfig *E2EConfig, txHashId string) (*TransactionStatusRes
 	var rpcResponse RPCTransactionStatusResponse
 	decoder := json.NewDecoder(resp.Body)
 	err = decoder.Decode(&rpcResponse)
+
 	if err != nil {
 		return nil, fmt.Errorf("soroban rpc get tx status, not able to parse response, %v, %e", resp.Body, err)
+	}
+
+	if rpcResponse.Error != nil {
+		return nil, fmt.Errorf("soroban rpc get tx status, got error response, %v", rpcResponse)
 	}
 
 	return &rpcResponse.Result, nil
@@ -280,8 +282,13 @@ func TxSub(e2eConfig *E2EConfig, tx *txnbuild.Transaction) (*TransactionStatusRe
 		return nil, fmt.Errorf("soroban rpc tx sub, not able to parse response, %v, %e", resp.Body, err)
 	}
 
-	if rpcResponse.Result.Error != nil {
+	if rpcResponse.Error != nil {
 		return nil, fmt.Errorf("soroban rpc tx sub, got bad submission response, %v", rpcResponse)
+	}
+
+	txHashId, err := tx.HashHex(e2eConfig.TargetNetworkPassPhrase)
+	if err != nil {
+		return nil, fmt.Errorf("soroban rpc tx sub, not able to generate tx hash id, %v, %e", tx, err)
 	}
 
 	start := time.Now().Unix()
@@ -289,16 +296,17 @@ func TxSub(e2eConfig *E2EConfig, tx *txnbuild.Transaction) (*TransactionStatusRe
 		if x.Unix()-start > 30 {
 			break
 		}
-		transactionStatusResponse, err := QueryTxStatus(e2eConfig, rpcResponse.Result.ID)
+
+		transactionStatusResponse, err := QueryTxStatus(e2eConfig, txHashId)
 		if err != nil {
 			return nil, fmt.Errorf("soroban rpc tx sub, unable to call tx status check, %v, %e", rpcResponse, err)
 		}
 
-		if transactionStatusResponse.Status == "success" {
+		if transactionStatusResponse.Status == TX_SUCCESS {
 			return transactionStatusResponse, nil
 		}
-		if transactionStatusResponse.Status != "pending" {
-			return nil, fmt.Errorf("soroban rpc tx sub, got bad response on tx status check, %v, %v, %e", rpcResponse, transactionStatusResponse, err)
+		if transactionStatusResponse.Status != TX_PENDING {
+			return nil, fmt.Errorf("soroban rpc tx sub, got bad response on tx status check, %v, %v", rpcResponse, transactionStatusResponse)
 		}
 	}
 
