@@ -4,52 +4,47 @@
 To run tests, requires two steps: 
   (1) First build the system test docker image with the correct versions of core,  
   horizon, soroban rpc, rust toolchain, soroban cli, this will create a docker image named 
-  `stellar/system-test:dev`:
+  `stellar/system-test:dev`.  
+  All `GIT_REF` variables can refer to either a fully qualified local path to checked out git repo, or a fully qualified github remote repo url `https://github.com/repo#<ref>`  
   ```
   make 
        QUICKSTART_GIT_REF=? \
-       QUICKSTART_GIT_REPO=?
        CORE_GIT_REF=? \
        CORE_COMPILE_CONFIGURE_FLAGS=? \
        SOROBAN_RPC_GIT_REF=? \
+       SOROBAN_CLI_GIT_REF=? \
+       GO_GIT_REF=? \
        RUST_TOOLCHAIN_VERSION=? \
        SOROBAN_CLI_CRATE_VERSION=? \
-       GO_GIT_REF=? \
-       SOROBAN_CLI_GIT_REF=? build     
+       build     
   ```  
 
   example of build using specific git branches, latest in this case, or use tag names for releases:  
   ```
-  $ make CORE_GIT_REF=f1dc39f0f146815e5e3a94ed162e2f0639cb433f \
+  $ make CORE_GIT_REF=https://github.com/stellar/stellar-core#f1dc39f0f146815e5e3a94ed162e2f0639cb433f \
          CORE_COMPILE_CONFIGURE_FLAGS="--disable-tests --enable-next-protocol-version-unsafe-for-production" \
-         SOROBAN_RPC_GIT_REF=main \
+         SOROBAN_RPC_GIT_REF=https://github.com/stellar/soroban-tools#main \
          RUST_TOOLCHAIN_VERSION=stable \
-         SOROBAN_CLI_GIT_REF=main \
-         QUICKSTART_GIT_REF=master build
+         SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools#main \
+         QUICKSTART_GIT_REF=https://github.com/stellar/quickstart#master build
   ```  
 
-  example of build using the existing quickstart:soroban-dev image which has latest released versions:  
+  example of build using the existing quickstart:soroban-dev image which has latest released soroban server versions and builds soroban cli from local directory of checked out soroban-tools repo:  
   ```
   $ make QUICKSTART_IMAGE=stellar/quickstart:soroban-dev \
          RUST_TOOLCHAIN_VERSION=1.66.0 \
-         SOROBAN_CLI_GIT_REF=main build
+         SOROBAN_CLI_GIT_REF=/Users/user/soroban-tools build
   ```  
-
 
   some settings have defaults pre-set, and optionally be overriden:  
   ```
-  SOROBAN_CLI_GIT_REF=main  
-  SOROBAN_RPC_GIT_REF=main  
+  SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git#main  
+  SOROBAN_RPC_GIT_REF=https://github.com/stellar/soroban-tools.git#main  
   RUST_TOOLCHAIN_VERSION=stable   
-  QUICKSTART_GIT_REF=master
-  GO_GIT_REF=soroban-xdr-next
-  QUICKSTART_GIT_REPO=https://github.com/stellar/quickstart.git
-  ```  
-
-  some are required to be set:
-  ```
-  CORE_GIT_REF=latest git commit for core with soroban support
+  QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git#master
+  GO_GIT_REF=https://github.com/stellar/go.git#soroban-xdr-next
   CORE_COMPILE_CONFIGURE_FLAGS="--disable-tests --enable-next-protocol-version-unsafe-for-production"
+  CORE_GIT_REF=https://github.com/stellar/stellar-core.git#master
   ```  
 
   optional to set:  
@@ -57,8 +52,34 @@ To run tests, requires two steps:
   # this will override SOROBAN_CLI_GIT_REF, and install soroban cli from crates repo instead
   SOROBAN_CLI_CRATE_VERSION=0.4.0  
 
-  # this will skip building core, horion, rpc from source and instead will use the versions already compiled in the existing quickstart image provided: 
-  QUICKSTART_IMAGE=stellar/quickstart:soroban-dev
+  # Image overrides. 
+  # If using these, the image ref should provide a manifiest version for same 
+  # platform arch as the build host is running on, i.e. linux/amd64 or linux/arm64. 
+  # Otherwise, build will fail if image is not available for matching host platform.
+  #
+  # this will skip building core, horizon, rpc and quickstart from git source and instead 
+  # will use the versions already compiled in the existing quickstart docker image provided: 
+  QUICKSTART_IMAGE=<docker registry>/<docker image name>:<docker tag>
+
+  # this will skip building core from git source and instead 
+  # will use the bin already compiled at /usr/local/bin/stellar-core in the existing docker image provided: 
+  CORE_IMAGE=<docker registry>/<docker image name>:<docker tag>
+
+  # this will skip building soroban-rpc from git source and instead 
+  # will use the bin already compiled at /bin/soroban-rpc in the existing docker image provided: 
+  SOROBAN_RPC_IMAGE=<docker registry>/<docker image name>:<docker tag>
+
+  # this will skip building soroban-cli from git source and instead 
+  # will use the bin already compiled at /usr/local/cargo/bin/soroban in the existing docker image provided: 
+  SOROBAN_CLI_IMAGE=<docker registry>/<docker image name>:<docker tag>
+
+  # this will skip building horizon from git source and instead 
+  # will use the bin already compiled at /go/bin/horizon in the existing docker image provided: 
+  HORIZON_IMAGE=<docker registry>/<docker image name>:<docker tag>
+
+  # this will skip building friendbot from git source and instead 
+  # will use the bin already compiled at /app/friendbot in the existing docker image provided: 
+  FRIENDBOT_IMAGE=<docker registry>/<docker image name>:<docker tag>
   ```
 
   (2) Run the system test docker image:

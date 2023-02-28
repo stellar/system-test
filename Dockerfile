@@ -1,4 +1,5 @@
 ARG QUICKSTART_IMAGE_REF=stellar/quickstart:soroban-dev
+ARG SOROBAN_CLI_IMAGE_REF=stellar/system-test-soroban-cli:dev
 
 FROM golang:1.19 as go
 
@@ -19,9 +20,9 @@ ADD features/dapp_develop/dapp_develop.feature ./bin
 # copy over a dapp develop test specific file, used for expect/tty usage
 ADD features/dapp_develop/soroban_config.exp ./bin
 
+FROM $SOROBAN_CLI_IMAGE_REF as soroban-cli
+
 FROM $QUICKSTART_IMAGE_REF as base
-ARG SOROBAN_CLI_CRATE_VERSION
-ARG SOROBAN_CLI_GIT_REF
 ARG RUST_TOOLCHAIN_VERSION
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -36,11 +37,7 @@ ENV PATH="/usr/local/go/bin:$CARGO_HOME/bin:${PATH}"
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain "$RUST_TOOLCHAIN_VERSION"
 
 # Install soroban-cli
-ENV SOROBAN_CLI_CRATE_VERSION=$SOROBAN_CLI_CRATE_VERSION
-ENV SOROBAN_CLI_GIT_REF=$SOROBAN_CLI_GIT_REF
-ADD install /
-RUN ["chmod", "+x", "install"]
-RUN /install 
+COPY --from=soroban-cli /usr/local/cargo/bin/soroban $CARGO_HOME/bin/
 
 FROM base as build
 RUN ["mkdir", "-p", "/opt/test"] 
