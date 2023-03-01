@@ -1,8 +1,18 @@
 # System Test Releases
 
-#### pending
+#### 1.0.7
 
-* Auth Next Test coverage with new scenario 'DApp developer uses config states, compiles, deploys and invokes contract with authorizations'
+* Reorg the dockerfile for better cache-ability. [system-test, #31](https://github.com/stellar/system-test/pull/31).
+* soroban-rpc: do not wait for Horizon since it does no longer depend on it. [system-test, #36](https://github.com/stellar/system-test/pull/36).
+* local source path for git refs and/or image overrides during build. [system-test, #37](https://github.com/stellar/system-test/pull/37).
+* Update system tests for new contract invoke. [system-test, #38](https://github.com/stellar/system-test/pull/38).
+* Added Auth Next Scenario Test. [system-test, #34](https://github.com/stellar/system-test/pull/34).
+
+
+#### 1.0.6
+
+* Remove usage of soroban-rpc method getAccount, because it is deprecated, and will be removed in the next release. Use getLedgerEntry instead. [system-test, #30](https://github.com/stellar/system-test/pull/30).
+
 
 #### 1.0.5
 
