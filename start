@@ -13,7 +13,7 @@ TARGET_NETWORK_PASSPHRASE="Standalone Network ; February 2017"
 TARGET_NETWORK_SECRET_KEY="SC5O7VZUXDJ6JBDSZ74DSERXL7W3Y5LTOAMRF7RQRL3TAGAPS7LUVG3L"
 TARGET_NETWORK_PUBLIC_KEY="GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI"
 TARGET_NETWORK_RPC_URL=
-LOG_FILE=/var/log/system-test.log
+QUICKSTART_LOG_FILE=/var/log/system-test-quickstart.log
 
 # example filter for all combos of one scenario outline: ^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$
 # each row in example data for a scenario outline is postfixed with '#01', '#02', example:
@@ -23,7 +23,7 @@ VERBOSE_OUTPUT=false
 CANCELLED=false
 
 function print_screen_output() {
-  echo "$1" | tee -a $LOG_FILE
+  echo "$1"
 }
 
 print_screen_output "Starting system test ..." 
@@ -36,14 +36,15 @@ printout() {
 
 trap finish EXIT
 function finish {
-  if [ $? -ne 0 ]; then
+  if [ $? -ne 0 ] && [ "$VERBOSE_OUTPUT" != "true" ]; then
     echo "" >&2
     echo "" >&2
-    echo "dumping $LOG_FILE ..." >&2
+    echo "dumping system log output $QUICKSTART_LOG_FILE ..." >&2
     echo "" >&2
     echo "" >&2
-    cat $LOG_FILE >&2
+    cat $QUICKSTART_LOG_FILE >&2
   fi  
+  
   CANCELLED=true
   if [ "$DEBUG_MODE" = "true" ]; then
       print_screen_output "** DEBUG MODE Enabled **"
@@ -76,11 +77,19 @@ function main() {
         ARTIFICIAL_ACCELERATE=--enable-core-artificially-accelerate-time-for-testing
     fi          
 
-    # using stdbuf to eliminate any buffering between pipe,   
-    stdbuf -o0 /start --$TARGET_NETWORK --enable-soroban-rpc $ARTIFICIAL_ACCELERATE --logs 2>&1 | stdbuf -i0 -o0 tee -a -i $LOG_FILE &
+    if [ "$VERBOSE_OUTPUT" = "true" ]; then
+        # redirects all quickstart output to console during test execution
+        /start --$TARGET_NETWORK --enable-soroban-rpc $ARTIFICIAL_ACCELERATE --logs 2>&1 &
+    else
+        # don't show any quickstart output on console during test execution
+        # all quickstart output is redirected(buffering disabled) to log file, which will be dumped to
+        # console if tests fail.
+        stdbuf -o0 -e0 /start --$TARGET_NETWORK --enable-soroban-rpc $ARTIFICIAL_ACCELERATE --logs >> $QUICKSTART_LOG_FILE 2>&1 &
+    fi
   fi
-  soroban_rpc_status
-  
+
+  soroban_rpc_status 
+
   print_screen_output "  RUST_TOOLCHAIN_VERSION=$(rustc --version 2>/dev/null || echo"n/a" )"
   print_screen_output "  SOROBAN_CLI_CRATE_VERSION=$(soroban version 2>/dev/null || echo "n/a" )"
   print_screen_output "  SOROBAN_EXAMPLES_GIT_HASH=$SOROBAN_EXAMPLES_GIT_HASH"
@@ -109,12 +118,11 @@ function main() {
         break
     fi
 
-    if [[ "$file" =~ ^.*\.feature$ ]]; then
-        continue
+    if [[ "$file" =~ ^.*\.bin$ ]]; then
+        # these bin files were compiled from go feature tests in the Dockerfile during image build
+        print_screen_output "Running test binary ${file} ... "
+        ${file} -test.v ${TEST_FILTER}
     fi
-    # these bin files were compiled from go feature tests in the Dockerfile during image build
-    print_screen_output "Running test binary ${file} ... "
-    ${file} -test.v ${TEST_FILTER} 2>&1 | tee -a $LOG_FILE
   done
 }
 

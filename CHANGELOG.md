@@ -1,5 +1,8 @@
 # System Test Releases
 
+#### pending
+
+* Auth Next Test coverage with new scenario 'DApp developer uses config states, compiles, deploys and invokes contract with authorizations'
 
 #### 1.0.5
 
