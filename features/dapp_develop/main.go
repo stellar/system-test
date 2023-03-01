@@ -173,7 +173,6 @@ func invokeContract(deployedContractId string, contractName string, functionName
 // return the fn response as a serialized string
 // uses secret-key and network-passphrase directly on command
 func invokeContractFromCliTool(deployedContractId string, contractName string, functionName string, param1 string, e2eConfig *e2e.E2EConfig) (string, error) {
-
 	args := []string{
 		"contract",
 		"invoke",
@@ -181,9 +180,9 @@ func invokeContractFromCliTool(deployedContractId string, contractName string, f
 		"--rpc-url", e2eConfig.TargetNetworkRPCURL,
 		"--secret-key", e2eConfig.TargetNetworkSecretKey,
 		"--network-passphrase", e2eConfig.TargetNetworkPassPhrase,
-		"--fn",
+		"--",
 		functionName,
-		"--"}
+	}
 
 	if param1 != "" {
 		args = append(args, param1)
@@ -231,9 +230,9 @@ func invokeContractFromCliToolWithConfig(deployedContractId string, contractName
 		"--id", deployedContractId,
 		"--identity", identity,
 		"--network", networkConfig,
-		"--fn",
+		"--",
 		functionName,
-		"--"}
+	}
 
 	if parameters != "" {
 		args = append(args, strings.Split(parameters, " ")...)
