@@ -10,14 +10,15 @@ import (
 	"testing"
 	"text/template"
 
+	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 	"github.com/go-cmd/cmd"
-
-	"github.com/cucumber/godog"
 	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/stellar/go/strkey"
 	"github.com/stellar/go/xdr"
-	"github.com/stretchr/testify/assert"
+	"github.com/stellar/system-test"
 )
 
 /*
@@ -250,10 +251,12 @@ func invokeContractFromNodeJSTool(testConfig *testConfig, functionName, contract
 					fee: 100,
 					networkPassphrase: "{{js .networkPassphrase}}",
 				})
-				.addOperation(contract.call("{{js .functionName}}", "{{js .param1}}"))
+				.addOperation(contract.call("{{js .functionName}}", xdr.ScVal.scvSymbol("{{js .param1}}")))
 				.setTimeout(30)
 				.build();
-			txn = await server.prepareTransaction(txn, "{{js .networkPassphrase}}");
+			// txn = await server.prepareTransaction(txn, "{{js .networkPassphrase}}");
+			const sim = await server.simulateTransaction(txn, "{{js .networkPassphrase}}");
+			console.log("sim:", sim);
 			txn.sign(SorobanClient.Keypair.fromSecret("{{js .secretKey}}"));
 			let response = server.sendTransaction(txn);
 			let i = 0;
@@ -263,7 +266,7 @@ func invokeContractFromNodeJSTool(testConfig *testConfig, functionName, contract
 					throw new Error("Transaction timed out");
 				}
 				await new Promise(resolve => setTimeout(resolve, 1000));
-				response = await server.getTransaction(response.id);
+				response = await server.getTransactionStatus(response.id);
 				if (response.status != "pending") {
 					console.log(response.resultXdr);
 					return;
