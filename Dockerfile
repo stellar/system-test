@@ -15,8 +15,10 @@ ADD features ./features
 # build each feature folder with go test module.
 # compiles each feature to a binary to be executed, 
 # and copies the .feature file with it for runtime.
-RUN go test -c -o ./bin/dapp_develop_test ./features/dapp_develop/...
+RUN go test -c -o ./bin/dapp_develop_test.bin ./features/dapp_develop/...
 ADD features/dapp_develop/dapp_develop.feature ./bin
+# copy over a dapp develop test specific file, used for expect/tty usage
+ADD features/dapp_develop/soroban_config.exp ./bin
 
 FROM $SOROBAN_CLI_IMAGE_REF as soroban-cli
 
@@ -25,7 +27,7 @@ ARG RUST_TOOLCHAIN_VERSION
 ARG NODE_VERSION
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y build-essential && apt-get clean
+RUN apt-get update && apt-get install -y build-essential expect && apt-get clean
 
 # Install Rust
 RUN ["mkdir", "-p", "/rust"] 
