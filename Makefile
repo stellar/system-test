@@ -145,5 +145,5 @@ build: build-quickstart build-soroban-cli
 		--build-arg SOROBAN_CLI_CRATE_VERSION=$(SOROBAN_CLI_CRATE_VERSION) \
 		--build-arg SOROBAN_CLI_IMAGE_REF=$$SOROBAN_CLI_IMAGE_REF \
 		--build-arg RUST_TOOLCHAIN_VERSION=$(RUST_TOOLCHAIN_VERSION) \
-      --build-arg NODE_VERSION=$(NODE_VERSION) \
+		--build-arg NODE_VERSION=$(NODE_VERSION) \
 		--label org.opencontainers.image.revision="$(SYSTEM_TEST_SHA)" .;
