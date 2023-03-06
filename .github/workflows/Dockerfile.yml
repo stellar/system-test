@@ -18,13 +18,13 @@ env:
   HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
   # the only time system test image needs to be defined for a push is when it's a non 'v' tag creation
   PUSH_ENABLED: ${{ secrets.DOCKERHUB_TOKEN && github.ref_type == 'tag' && startsWith(github.ref_name, 'v') != true && 'true' || 'false' }}
-  IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository,  github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name ) }}
-  CORE_GIT_REF: master
+  IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository,  github.event.ref || 'latest') }}
+  CORE_GIT_REF: https://github.com/stellar/stellar-core.git#master
   CORE_COMPILE_CONFIGURE_FLAGS: "--disable-tests --enable-next-protocol-version-unsafe-for-production"
-  SOROBAN_RPC_GIT_REF: main
+  SOROBAN_RPC_GIT_REF: https://github.com/stellar/soroban-tools.git#main
   RUST_TOOLCHAIN_VERSION: stable
-  SOROBAN_CLI_GIT_REF: main
-  QUICKSTART_GIT_REF: master
+  SOROBAN_CLI_GIT_REF: https://github.com/stellar/soroban-tools.git#main
+  QUICKSTART_GIT_REF: https://github.com/stellar/quickstart.git#master
 jobs:
   complete:
     if: always()
