@@ -35,7 +35,7 @@ jobs:
       run: exit 1
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-16-cores
     outputs:
       push_enabled: ${{ env.PUSH_ENABLED }}
     steps:
