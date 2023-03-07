@@ -19,11 +19,18 @@ const script = `
 		const contract = new SorobanClient.Contract("{{js .contractId}}");
 		const server = new SorobanClient.Server("{{js .rpcUrl}}", { allowHttp: true });
 		const source = await server.getAccount("{{js .account}}")
+
+		// Some hacky param-parsing. Generated Typescript bindings would be better
+		// here. But those don't exist yet as I'm writing this.
+		const params = [
+			"{{js .param1}}" && xdr.ScVal.scvSymbol("{{js .param1}}")
+		].filter(x => !!x);
+
 		let txn = new SorobanClient.TransactionBuilder(source, {
 				fee: 100,
 				networkPassphrase: "{{js .networkPassphrase}}",
 			})
-			.addOperation(contract.call("{{js .functionName}}", xdr.ScVal.scvSymbol("{{js .param1}}")))
+			.addOperation(contract.call("{{js .functionName}}", ...params))
 			.setTimeout(30)
 			.build();
 
@@ -56,8 +63,31 @@ const script = `
 				// TODO: Move this scval serializing stuff to stellar-base
 				const result = xdr.TransactionResult.fromXDR(response.resultXdr, "base64");
 				const scval = result.result().results()[0].tr().invokeHostFunctionResult().success();
-				const vec = scval.obj().vec().map(v => v.sym().toString());
-				console.log(JSON.stringify(vec));
+
+				// Hacky result parsing. We should have some helpers from the
+				// js-stellar-base, or the generated Typescript bindings. But we don't yet as
+				// I'm writing this.
+				let parsed = null;
+				console.log("scval.switch():", scval.switch());
+				console.log("scval.switch().name:", scval.switch().name);
+				switch (scval.switch()) {
+				case xdr.ScValType.scvU32(): {
+					parsed = scval.u32();
+					break;
+				}
+				case xdr.ScValType.scvI32(): {
+					parsed = scval.i32();
+					break;
+				}
+				case xdr.ScValType.scvObject(): {
+					// Total hack, we just assume the object is a vec. Good enough for now.
+					parsed = scval.obj().vec().map(v => v.sym().toString());
+					break;
+				}
+				default:
+					throw new Error("Unexpected scval type:", scval.switch().name);
+				}
+				console.log(JSON.stringify(parsed));
 				return;
 			}
 			case "error": {
