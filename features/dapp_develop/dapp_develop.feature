@@ -10,7 +10,7 @@ Given I used cargo to compile example contract <ContractExampleSubPath>
 
   Examples: 
         | Tool         | ContractExampleSubPath | ContractName                  | ContractCompiledFileName             | FunctionName | Param1         | Result             |
-#       | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | --to=Aloha     | ["Hello","Aloha"]  |
+        | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | Aloha          | ["Hello","Aloha"]  |
         | CLI          | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | --to=Aloha     | ["Hello","Aloha"]  |
 #       | NODEJS       | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  | 
         | CLI          | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  |
@@ -25,7 +25,7 @@ Scenario Outline: DApp developer compiles, deploys and invokes a contract
 
   Examples: 
         | Tool         | ContractExampleSubPath | ContractName                  | ContractCompiledFileName             | FunctionName | Param1     | Result             |
-#       | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | --to=Aloha | ["Hello","Aloha"]  |
+#       | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | Aloha      | ["Hello","Aloha"]  |
         | CLI          | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | --to=Aloha | ["Hello","Aloha"]  |
 #       | NODEJS       | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |            | 1                  |
         | CLI          | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |            | 1                  |

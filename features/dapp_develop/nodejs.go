@@ -26,24 +26,48 @@ const script = `
 			.addOperation(contract.call("{{js .functionName}}", xdr.ScVal.scvSymbol("{{js .param1}}")))
 			.setTimeout(30)
 			.build();
+
+		// TODO: This is a workaround for
+		// https://github.com/stellar/js-soroban-client/pull/57, which should be
+		// fixed in the next release.
+		// Once that is fixed, we could simply do:
 		// txn = await server.prepareTransaction(txn, "{{js .networkPassphrase}}");
 		const sim = await server.simulateTransaction(txn, "{{js .networkPassphrase}}");
-		console.log("sim:", sim);
+		const { footprint } = sim.results[0];
+		txn = SorobanClient.assembleTransaction(txn, "{{js .networkPassphrase}}", [{auth: [], footprint}]);
+
 		txn.sign(SorobanClient.Keypair.fromSecret("{{js .secretKey}}"));
-		let response = server.sendTransaction(txn);
+		let response = await server.sendTransaction(txn);
 		let i = 0;
 		while (response.status === "pending") {
 			i += 1;
-			if (i > 10) {
+			if (i > 50) {
 				throw new Error("Transaction timed out");
 			}
-			await new Promise(resolve => setTimeout(resolve, 1000));
+			await new Promise(resolve => setTimeout(resolve, 100));
 			response = await server.getTransactionStatus(response.id);
-			if (response.status != "pending") {
-				console.log(response.resultXdr);
+			switch (response.status) {
+			case "pending": {
+				// noop
+				break;
+			}
+			case "success": {
+				// parse and print the response (assuming it is a vec)
+				// TODO: Move this scval serializing stuff to stellar-base
+				const result = xdr.TransactionResult.fromXDR(response.resultXdr, "base64");
+				const scval = result.result().results()[0].tr().invokeHostFunctionResult().success();
+				const vec = scval.obj().vec().map(v => v.sym().toString());
+				console.log(JSON.stringify(vec));
 				return;
 			}
+			case "error": {
+				throw new Error("Transaction failed:", response);
+			}
+			default:
+				throw new Error("Unknown transaction status: " + response.status);
+			}
 		}
+		throw new Error("Transaction failed:", response);
 	})();
 `
 
