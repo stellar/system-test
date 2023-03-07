@@ -3,6 +3,7 @@ package dapp_develop
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"text/template"
 
 	"github.com/go-cmd/cmd"
@@ -68,8 +69,6 @@ const script = `
 				// js-stellar-base, or the generated Typescript bindings. But we don't yet as
 				// I'm writing this.
 				let parsed = null;
-				console.log("scval.switch():", scval.switch());
-				console.log("scval.switch().name:", scval.switch().name);
 				switch (scval.switch()) {
 				case xdr.ScValType.scvU32(): {
 					parsed = scval.u32();
@@ -123,17 +122,18 @@ func invokeContractFromNodeJSTool(deployedContractId, contractName, functionName
 	}
 
 	envCmd := cmd.NewCmd("node")
-	status, stdOut, err := e2e.RunCommandWithStdin(envCmd, e2eConfig, stdin)
+	status, stdOutLines, err := e2e.RunCommandWithStdin(envCmd, e2eConfig, stdin)
 
 	if status != 0 || err != nil {
 		return "", fmt.Errorf("nodejs invoke of example contract %s had error %v, %v", contractName, status, err)
 	}
 
-	if len(stdOut) < 1 {
+	stdOut := strings.TrimSpace(strings.Join(stdOutLines, "\n"))
+	if stdOut == "" {
 		return "", fmt.Errorf("nodejs invoke of example contract %s did not print any response", contractName)
 	}
 
-	return stdOut[0], nil
+	return stdOut, nil
 }
 
 // invokes the contract using identities and network from prior setup of config state in cli
