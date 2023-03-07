@@ -50,7 +50,9 @@ RUN npm i -g yarn
 COPY --from=soroban-cli /usr/local/cargo/bin/soroban $CARGO_HOME/bin/
 
 # Install js-soroban-client
+ARG JS_SOROBAN_CLIENT_VERSION
 ADD package.json yarn.lock /opt/test/
+RUN cd /opt/test && yarn add "soroban-client@${JS_SOROBAN_CLIENT_VERSION}"
 RUN cd /opt/test && yarn install
 
 FROM base as build
