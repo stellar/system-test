@@ -48,7 +48,7 @@ func deployContract(compiledContractFileName string, contractWorkingDirectory st
 			"deploy",
 			"--wasm-hash", installedContractId,
 			"--rpc-url", e2eConfig.TargetNetworkRPCURL,
-			"--secret-key", e2eConfig.TargetNetworkSecretKey,
+			"--source", e2eConfig.TargetNetworkSecretKey,
 			"--network-passphrase", e2eConfig.TargetNetworkPassPhrase)
 	} else {
 		envCmd = cmd.NewCmd("soroban",
@@ -56,7 +56,7 @@ func deployContract(compiledContractFileName string, contractWorkingDirectory st
 			"deploy",
 			"--wasm", fmt.Sprintf("./%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, compiledContractFileName),
 			"--rpc-url", e2eConfig.TargetNetworkRPCURL,
-			"--secret-key", e2eConfig.TargetNetworkSecretKey,
+			"--source", e2eConfig.TargetNetworkSecretKey,
 			"--network-passphrase", e2eConfig.TargetNetworkPassPhrase)
 	}
 
@@ -101,7 +101,7 @@ func installContract(compiledContractFileName string, contractWorkingDirectory s
 		"install",
 		"--wasm", fmt.Sprintf("./%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, compiledContractFileName),
 		"--rpc-url", e2eConfig.TargetNetworkRPCURL,
-		"--secret-key", e2eConfig.TargetNetworkSecretKey,
+		"--source", e2eConfig.TargetNetworkSecretKey,
 		"--network-passphrase", e2eConfig.TargetNetworkPassPhrase)
 
 	status, stdOut, err := e2e.RunCommand(envCmd, e2eConfig)

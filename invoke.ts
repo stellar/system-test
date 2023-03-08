@@ -7,8 +7,7 @@ async function main() {
 
   parser.add_argument('--id', { dest: 'contractId', required: true, help: 'Contract ID' });
   parser.add_argument('--rpc-url', { dest: 'rpcUrl', required: true, help: 'RPC URL' });
-  parser.add_argument('--account', { dest: 'account', required: true, help: 'Account ID' });
-  parser.add_argument('--secret-key', { dest: 'secretKey', required: true, help: 'Secret key' });
+  parser.add_argument('--source', { dest: 'source', required: true, help: 'Secret key' });
   parser.add_argument('--network-passphrase', { dest: 'networkPassphrase', required: true, help: 'Network passphrase' });
   parser.add_argument('--fn', { dest: 'functionName', required: true, help: 'Function name' });
   parser.add_argument('--param1', { dest: 'param1', help: 'Param 1' });
@@ -16,22 +15,23 @@ async function main() {
   const {
     contractId,
     rpcUrl,
-    account,
     param1,
     networkPassphrase,
-    secretKey,
+    source,
     functionName,
   } = parser.parse_args() as Record<string, string>;
 
   const contract = new SorobanClient.Contract(contractId);
   const server = new SorobanClient.Server(rpcUrl, { allowHttp: true });
-  const source = await server.getAccount(account)
+  const secretKey = SorobanClient.Keypair.fromSecret(source);
+  const account = secretKey.publicKey();
+  const sourceAccount = await server.getAccount(account);
 
   // Some hacky param-parsing. Generated Typescript bindings would be better
   // here. But those don't exist yet as I'm writing this.
   const params = param1 ? [xdr.ScVal.scvSymbol(param1)] : [];
 
-  let txn = new SorobanClient.TransactionBuilder(source, {
+  let txn = new SorobanClient.TransactionBuilder(sourceAccount, {
       fee: "100",
       networkPassphrase,
     })
@@ -51,7 +51,7 @@ async function main() {
   const { footprint } = sim.results[0];
   txn = SorobanClient.assembleTransaction(txn, networkPassphrase, [{auth: [], footprint}]);
 
-  txn.sign(SorobanClient.Keypair.fromSecret(secretKey));
+  txn.sign(secretKey);
   const send = await server.sendTransaction(txn);
   if (send.error) {
     throw new Error(`Transaction failed: ${send.error}`);

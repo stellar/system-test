@@ -19,8 +19,7 @@ func invokeContractFromNodeJSTool(deployedContractId, contractName, functionName
 		"--",
 		"--id", deployedContractId,
 		"--rpc-url", e2eConfig.TargetNetworkRPCURL,
-		"--account", e2eConfig.TargetNetworkPublicKey,
-		"--secret-key", e2eConfig.TargetNetworkSecretKey,
+		"--source", e2eConfig.TargetNetworkSecretKey,
 		"--network-passphrase", e2eConfig.TargetNetworkPassPhrase,
 		"--fn", functionName,
 	}
@@ -43,6 +42,6 @@ func invokeContractFromNodeJSTool(deployedContractId, contractName, functionName
 }
 
 // invokes the contract using identities and network from prior setup of config state in cli
-func invokeContractFromNodeJSToolWithConfig(deployedContractId string, contractName string, functionName string, parameters string, identity string, networkConfig string, e2eConfig *e2e.E2EConfig) (string, error) {
+func invokeContractFromNodeJSToolWithConfig(deployedContractId, contractName, functionName, parameters, identity, networkConfig string, e2eConfig *e2e.E2EConfig) (string, error) {
 	return "", fmt.Errorf("invoke with named identity not supported for NODEJS tool")
 }
