@@ -10,9 +10,9 @@ Given I used cargo to compile example contract <ContractExampleSubPath>
 
   Examples: 
         | Tool         | ContractExampleSubPath | ContractName                  | ContractCompiledFileName             | FunctionName | Param1         | Result             |
-#       | JSSDK        | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | --to=Aloha     | ["Hello","Aloha"]  |
+        | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | Aloha          | ["Hello","Aloha"]  |
         | CLI          | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | --to=Aloha     | ["Hello","Aloha"]  |
-#       | JSSDK        | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  | 
+        | NODEJS       | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  |
         | CLI          | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  |
 
 
@@ -25,9 +25,9 @@ Scenario Outline: DApp developer compiles, deploys and invokes a contract
 
   Examples: 
         | Tool         | ContractExampleSubPath | ContractName                  | ContractCompiledFileName             | FunctionName | Param1     | Result             |
-#       | JSSDK        | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | --to=Aloha | ["Hello","Aloha"]  |
+        | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | Aloha      | ["Hello","Aloha"]  |
         | CLI          | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | --to=Aloha | ["Hello","Aloha"]  |
-#       | JSSDK        | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |            | 1                  | 
+        | NODEJS       | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |            | 1                  |
         | CLI          | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |            | 1                  |
 
 
@@ -44,5 +44,5 @@ Scenario Outline: DApp developer uses config states, compiles, deploys and invok
 
   Examples: 
         | Tool         | ContractExampleSubPath | ContractName                  | ContractCompiledFileName      | FunctionName     | FunctionParams                              | RootIdentityName  | TesterIdentityName  | NetworkConfigName   | Result |
-#       | JSSDK        | auth                   | soroban-auth-contract         | soroban_auth_contract.wasm    | increment        | --user <tester_identity_pub_key> --value 2  | r1                | t1                  | standalone          | 2      |
+#       | NODEJS       | auth                   | soroban-auth-contract         | soroban_auth_contract.wasm    | increment        | --user <tester_identity_pub_key> --value 2  | r1                | t1                  | standalone          | 2      |
         | CLI          | auth                   | soroban-auth-contract         | soroban_auth_contract.wasm    | increment        | --user <tester_identity_pub_key> --value 2  | r1                | t1                  | standalone          | 2      |

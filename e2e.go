@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -112,6 +113,10 @@ type TestContextKey string
 var TestConfigContextKey = TestContextKey("TestConfig")
 
 func RunCommand(testCmd *cmd.Cmd, config *E2EConfig) (int, []string, error) {
+	return RunCommandWithStdin(testCmd, config, nil)
+}
+
+func RunCommandWithStdin(testCmd *cmd.Cmd, config *E2EConfig, stdin io.Reader) (int, []string, error) {
 	// Run, stream output, and wait for Cmd to return Status
 	if config.VerboseOutput {
 		fmt.Printf("running command %s %v \n\n", testCmd.Name, testCmd.Args)
@@ -153,7 +158,11 @@ func RunCommand(testCmd *cmd.Cmd, config *E2EConfig) (int, []string, error) {
 	}()
 
 	// Run and wait for Cmd to return, discard Status
-	<-envCmd.Start()
+	if stdin != nil {
+		<-envCmd.StartWithStdin(stdin)
+	} else {
+		<-envCmd.Start()
+	}
 
 	// Wait for goroutine to print everything
 	<-doneChan
