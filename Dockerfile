@@ -54,6 +54,7 @@ ARG JS_SOROBAN_CLIENT_NPM_VERSION
 ADD package.json yarn.lock /opt/test/
 RUN cd /opt/test && yarn add "soroban-client@${JS_SOROBAN_CLIENT_NPM_VERSION}"
 RUN cd /opt/test && yarn install
+ADD invoke.ts /opt/test/
 
 FROM base as build
 RUN ["mkdir", "-p", "/opt/test"] 
