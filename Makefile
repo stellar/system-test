@@ -21,7 +21,7 @@ SOROBAN_RPC_GIT_REF=https://github.com/stellar/soroban-tools.git\#main
 SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git\#main
 GO_GIT_REF=https://github.com/stellar/go.git\#soroban-xdr-next
 QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git\#master
-JS_SOROBAN_CLIENT_NPM_VERSION=^0.4.0
+JS_SOROBAN_CLIENT_NPM_VERSION=https://github.com/stellar/js-soroban-client.git\#main
 
 NON_AMD_ARCH=false 
 ifneq ($(shell uname -p),x86_64)
