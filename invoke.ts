@@ -108,4 +108,7 @@ async function main() {
   throw new Error("Transaction timed out");
 }
 
-main();
+main().catch(err => {
+  console.error(JSON.stringify(err));
+  throw err;
+});
