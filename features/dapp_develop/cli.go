@@ -29,17 +29,18 @@ func invokeContractFromCliTool(deployedContractId string, contractName string, f
 
 	envCmd := cmd.NewCmd("soroban", args...)
 
-	status, stdOut, err := e2e.RunCommand(envCmd, e2eConfig)
+	status, stdOutLines, err := e2e.RunCommand(envCmd, e2eConfig)
+	stdOut := strings.TrimSpace(strings.Join(stdOutLines, "\n"))
 
 	if status != 0 || err != nil {
-		return "", fmt.Errorf("soroban cli invoke of example contract %s had error %v, %v", contractName, status, err)
+		return "", fmt.Errorf("soroban cli invoke of example contract %s had error %v, %v, stdout: %v", contractName, status, err, stdOut)
 	}
 
-	if len(stdOut) < 1 {
+	if stdOut == "" {
 		return "", fmt.Errorf("soroban cli invoke of example contract %s did not emit successful response", contractName)
 	}
 
-	return stdOut[0], nil
+	return stdOut, nil
 }
 
 // invokes the contract using identities and network from prior setup of config state in cli
@@ -60,15 +61,16 @@ func invokeContractFromCliToolWithConfig(deployedContractId string, contractName
 
 	envCmd := cmd.NewCmd("soroban", args...)
 
-	status, stdOut, err := e2e.RunCommand(envCmd, e2eConfig)
+	status, stdOutLines, err := e2e.RunCommand(envCmd, e2eConfig)
+	stdOut := strings.TrimSpace(strings.Join(stdOutLines, "\n"))
 
 	if status != 0 || err != nil {
-		return "", fmt.Errorf("soroban cli invoke of example contract with config states, %s had error %v, %v", contractName, status, err)
+		return "", fmt.Errorf("soroban cli invoke of example contract with config states, %s had error %v, %v, stdout: %v", contractName, status, err, stdOut)
 	}
 
-	if len(stdOut) < 1 {
+	if stdOut == "" {
 		return "", fmt.Errorf("soroban cli invoke of example contract with config states, %s did not emit successful response", contractName)
 	}
 
-	return stdOut[0], nil
+	return stdOut, nil
 }

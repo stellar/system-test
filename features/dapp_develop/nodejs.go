@@ -123,12 +123,12 @@ func invokeContractFromNodeJSTool(deployedContractId, contractName, functionName
 
 	envCmd := cmd.NewCmd("node")
 	status, stdOutLines, err := e2e.RunCommandWithStdin(envCmd, e2eConfig, stdin)
+	stdOut := strings.TrimSpace(strings.Join(stdOutLines, "\n"))
 
 	if status != 0 || err != nil {
-		return "", fmt.Errorf("nodejs invoke of example contract %s had error %v, %v", contractName, status, err)
+		return "", fmt.Errorf("nodejs invoke of example contract %s had error %v, %v, stdout: %v", contractName, status, err, stdOut)
 	}
 
-	stdOut := strings.TrimSpace(strings.Join(stdOutLines, "\n"))
 	if stdOut == "" {
 		return "", fmt.Errorf("nodejs invoke of example contract %s did not print any response", contractName)
 	}
