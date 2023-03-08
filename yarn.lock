@@ -219,10 +219,9 @@ sodium-native@^3.3.0:
   dependencies:
     node-gyp-build "^4.3.0"
 
-soroban-client@^0.4.0:
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/soroban-client/-/soroban-client-0.4.0.tgz#738a402ab440cd9c34d14380150192f309866263"
-  integrity sha512-4t+SioFeUnG9dptkEzRzSgFKXTuRMz1abtxmzE461QVUCLIDayMIjY8B3vloKiWNSx9y/wNBIA5IA8PtAIm8rQ==
+"soroban-client@https://github.com/stellar/js-soroban-client.git#main":
+  version "0.4.1"
+  resolved "https://github.com/stellar/js-soroban-client.git#0537663dc2757b9571bb77c10fc8894e97223cf6"
   dependencies:
     "@types/eventsource" "^1.1.2"
     "@types/node" "18.11.9"

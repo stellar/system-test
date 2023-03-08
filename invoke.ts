@@ -53,19 +53,19 @@ async function main() {
 
   txn.sign(SorobanClient.Keypair.fromSecret(secretKey));
   const send = await server.sendTransaction(txn);
-  if (send.error) {
-    throw new Error(`Transaction failed: ${send.error}`);
+  if (send.errorResultXdr) {
+    throw new Error(`Transaction failed: ${JSON.stringify(send)}`);
   }
-  let response = await server.getTransactionStatus(send.id);
+  let response = await server.getTransaction(send.hash);
   for (let i = 0; i < 50; i++) {
     switch (response.status) {
-    case "pending": {
+    case "NOT_FOUND": {
       // retry
       await new Promise(resolve => setTimeout(resolve, 100));
-      response = await server.getTransactionStatus(response.id);
+      response = await server.getTransaction(send.hash);
       break;
     }
-    case "success": {
+    case "SUCCESS": {
       // parse and print the response (assuming it is a vec)
       // TODO: Move this scval serializing stuff to stellar-base
       if (!response.resultXdr) {
@@ -98,7 +98,7 @@ async function main() {
       console.log(JSON.stringify(parsed));
       return;
     }
-    case "error": {
+    case "FAILED": {
       throw new Error(`Transaction failed: ${response}`);
     }
     default:
