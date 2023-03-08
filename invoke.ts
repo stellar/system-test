@@ -31,25 +31,16 @@ async function main() {
   // here. But those don't exist yet as I'm writing this.
   const params = param1 ? [xdr.ScVal.scvSymbol(param1)] : [];
 
-  let txn = new SorobanClient.TransactionBuilder(source, {
+  const txn = await server.prepareTransaction(
+    new SorobanClient.TransactionBuilder(source, {
       fee: "100",
       networkPassphrase,
     })
     .addOperation(contract.call(functionName, ...params))
     .setTimeout(30)
-    .build();
-
-  // TODO: This is a workaround for
-  // https://github.com/stellar/js-soroban-client/pull/57, which should be
-  // fixed in the next release.
-  // Once that is fixed, we could simply do:
-  // txn = await server.prepareTransaction(txn, networkPassphrase);
-  const sim = await server.simulateTransaction(txn);
-  if (!sim.results || sim.results.length !== 1) {
-    throw new Error(`Simulation failed: ${JSON.stringify(sim)}`);
-  }
-  const { footprint } = sim.results[0];
-  txn = SorobanClient.assembleTransaction(txn, networkPassphrase, [{auth: [], footprint}]);
+    .build(),
+    networkPassphrase
+  );
 
   txn.sign(SorobanClient.Keypair.fromSecret(secretKey));
   const send = await server.sendTransaction(txn);
@@ -99,7 +90,7 @@ async function main() {
       return;
     }
     case "FAILED": {
-      throw new Error(`Transaction failed: ${response}`);
+      throw new Error(`Transaction failed: ${JSON.stringify(response)}`);
     }
     default:
       throw new Error(`Unknown transaction status: ${response.status}`);
