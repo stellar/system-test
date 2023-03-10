@@ -184,7 +184,7 @@ function process_args() {
 function soroban_rpc_status () {
   print_screen_output "waiting for soroban rpc to report ready state..." 
   COUNTER=1
-  while ! $(curl --silent --location --request POST 'http://localhost:8000/soroban/rpc' \
+  while ! $(curl --silent --location --request POST "$TARGET_NETWORK_RPC_URL" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "jsonrpc": "2.0",
