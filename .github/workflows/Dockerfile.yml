@@ -4,22 +4,20 @@ on:
   push:
     branches:
       - master
-  create:
-    tags:      
+    tags:
+      - '*'     
   pull_request:
   release:
     types: [published]
 
-# Prevent more than one build of this workflow for a branch to be running at the
-# same time, and if multiple are queued, only run the latest, cancelling any
-# already running build. The exception being any protected branch, such as
-# master, where a build for every commit will run.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_protected == 'true' && github.sha || github.ref }}
   cancel-in-progress: true
 
 env:
   HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+  # the only time system test image needs to be defined for a push is when it's a non 'v' tag creation
+  PUSH_ENABLED: ${{ secrets.DOCKERHUB_TOKEN && github.ref_type == 'tag' && startsWith(github.ref_name, 'v') != true && 'true' || 'false' }}
   IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository,  github.event.ref || 'latest') }}
   CORE_GIT_REF: https://github.com/stellar/stellar-core.git#master
   CORE_COMPILE_CONFIGURE_FLAGS: "--disable-tests --enable-next-protocol-version-unsafe-for-production"
@@ -37,7 +35,9 @@ jobs:
       run: exit 1
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-16-cores
+    outputs:
+      push_enabled: ${{ env.PUSH_ENABLED }}
     steps:
     - uses: actions/checkout@v2
       with:
@@ -49,9 +49,14 @@ jobs:
              SOROBAN_RPC_GIT_REF=${{ env.SOROBAN_RPC_GIT_REF }} \
              RUST_TOOLCHAIN_VERSION=${{ env.RUST_TOOLCHAIN_VERSION }} \
              SOROBAN_CLI_GIT_REF=${{ env.SOROBAN_CLI_GIT_REF }} \
+             SYSTEM_TEST_IMAGE=${{ env.PUSH_ENABLED == 'true' && env.IMAGE || 'stellar/system-test:dev' }} \
              QUICKSTART_GIT_REF=${{ env.QUICKSTART_GIT_REF }} build;
-        docker save stellar/system-test:dev -o /tmp/image;
-    - name: Upload System Test Image
+    - if: ${{ env.PUSH_ENABLED == 'true' }}
+      name: Save Docker Image to file
+      run: |
+        docker save ${{ env.IMAGE }} -o /tmp/image; 
+    - if: ${{ env.PUSH_ENABLED == 'true' }}
+      name: Upload System Test Image
       uses: actions/upload-artifact@v2
       with:
         name: image-Dockerfile
@@ -61,12 +66,12 @@ jobs:
     # Only push non 'vX.Y.Z' tags as pre-built system test image with versions compiled into image.
     # pr's and releases don't need to be pushed as docker images, because system test is meant to be built 
     # from source locally.
-    if: (github.event_name == 'create' && github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v') != true)
     needs: build
     permissions:
       packages: write
       statuses: write
     runs-on: ubuntu-latest
+    if: needs.build.outputs.push_enabled == 'true'
     steps:
     - uses: actions/checkout@v2
       with:
