@@ -31,41 +31,32 @@ async function main() {
   // here. But those don't exist yet as I'm writing this.
   const params = param1 ? [xdr.ScVal.scvSymbol(param1)] : [];
 
-  let txn = new SorobanClient.TransactionBuilder(sourceAccount, {
+  const txn = await server.prepareTransaction(
+    new SorobanClient.TransactionBuilder(sourceAccount, {
       fee: "100",
       networkPassphrase,
     })
     .addOperation(contract.call(functionName, ...params))
     .setTimeout(30)
-    .build();
-
-  // TODO: This is a workaround for
-  // https://github.com/stellar/js-soroban-client/pull/57, which should be
-  // fixed in the next release.
-  // Once that is fixed, we could simply do:
-  // txn = await server.prepareTransaction(txn, networkPassphrase);
-  const sim = await server.simulateTransaction(txn);
-  if (!sim.results || sim.results.length !== 1) {
-    throw new Error(`Simulation failed: ${JSON.stringify(sim)}`);
-  }
-  const { footprint } = sim.results[0];
-  txn = SorobanClient.assembleTransaction(txn, networkPassphrase, [{auth: [], footprint}]);
+    .build(),
+    networkPassphrase
+  );
 
   txn.sign(secretKey);
   const send = await server.sendTransaction(txn);
-  if (send.error) {
-    throw new Error(`Transaction failed: ${send.error}`);
+  if (send.errorResultXdr) {
+    throw new Error(`Transaction failed: ${JSON.stringify(send)}`);
   }
-  let response = await server.getTransactionStatus(send.id);
+  let response = await server.getTransaction(send.hash);
   for (let i = 0; i < 50; i++) {
     switch (response.status) {
-    case "pending": {
+    case "NOT_FOUND": {
       // retry
       await new Promise(resolve => setTimeout(resolve, 100));
-      response = await server.getTransactionStatus(response.id);
+      response = await server.getTransaction(send.hash);
       break;
     }
-    case "success": {
+    case "SUCCESS": {
       // parse and print the response (assuming it is a vec)
       // TODO: Move this scval serializing stuff to stellar-base
       if (!response.resultXdr) {
@@ -98,8 +89,8 @@ async function main() {
       console.log(JSON.stringify(parsed));
       return;
     }
-    case "error": {
-      throw new Error(`Transaction failed: ${response}`);
+    case "FAILED": {
+      throw new Error(`Transaction failed: ${JSON.stringify(response)}`);
     }
     default:
       throw new Error(`Unknown transaction status: ${response.status}`);

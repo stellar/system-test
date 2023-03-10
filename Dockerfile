@@ -44,16 +44,18 @@ RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
 RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
 RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
 ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
-RUN npm i -g yarn
 
 # Install soroban-cli
 COPY --from=soroban-cli /usr/local/cargo/bin/soroban $CARGO_HOME/bin/
 
+# Install phantomjs
+RUN apt -y install phantomjs
+ENV QT_QPA_PLATFORM=offscreen
+
 # Install js-soroban-client
 ARG JS_SOROBAN_CLIENT_NPM_VERSION
-ADD package.json yarn.lock /opt/test/
-RUN cd /opt/test && yarn add "soroban-client@${JS_SOROBAN_CLIENT_NPM_VERSION}"
-RUN cd /opt/test && yarn install
+ADD package.json package-lock.json /opt/test/
+RUN npm install "soroban-client@${JS_SOROBAN_CLIENT_NPM_VERSION}" && npm install
 ADD invoke.ts /opt/test/
 
 FROM base as build
