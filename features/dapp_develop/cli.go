@@ -11,13 +11,13 @@ import (
 
 // return the fn response as a serialized string
 // uses secret-key and network-passphrase directly on command
-func invokeContractFromCliTool(deployedContractId string, contractName string, functionName string, param1 string, e2eConfig *e2e.E2EConfig) (string, error) {
+func invokeContractFromCliTool(deployedContractId, contractName, functionName, param1 string, e2eConfig *e2e.E2EConfig) (string, error) {
 	args := []string{
 		"contract",
 		"invoke",
 		"--id", deployedContractId,
 		"--rpc-url", e2eConfig.TargetNetworkRPCURL,
-		"--secret-key", e2eConfig.TargetNetworkSecretKey,
+		"--source", e2eConfig.TargetNetworkSecretKey,
 		"--network-passphrase", e2eConfig.TargetNetworkPassPhrase,
 		"--",
 		functionName,
@@ -44,12 +44,12 @@ func invokeContractFromCliTool(deployedContractId string, contractName string, f
 }
 
 // invokes the contract using identities and network from prior setup of config state in cli
-func invokeContractFromCliToolWithConfig(deployedContractId string, contractName string, functionName string, parameters string, identity string, networkConfig string, e2eConfig *e2e.E2EConfig) (string, error) {
+func invokeContractFromCliToolWithConfig(deployedContractId, contractName, functionName, parameters, identity, networkConfig string, e2eConfig *e2e.E2EConfig) (string, error) {
 	args := []string{
 		"contract",
 		"invoke",
 		"--id", deployedContractId,
-		"--identity", identity,
+		"--source", identity,
 		"--network", networkConfig,
 		"--",
 		functionName,
