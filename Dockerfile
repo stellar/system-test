@@ -50,14 +50,17 @@ RUN apt -y install phantomjs
 ENV QT_QPA_PLATFORM=offscreen
 RUN npm i -g ts-node
 
+# Create our workdir
+RUN ["mkdir", "-p", "/opt/test"]
+WORKDIR /opt/test
+
 # Install js-soroban-client
 ARG JS_SOROBAN_CLIENT_NPM_VERSION
-ADD package.json package-lock.json /opt/test/
-RUN npm install "soroban-client@${JS_SOROBAN_CLIENT_NPM_VERSION}" && npm install
+ADD package*.json /opt/test/
+RUN npm install "soroban-client@${JS_SOROBAN_CLIENT_NPM_VERSION}" && npm ci --only=production
 ADD invoke.ts /opt/test/
 
 FROM base as build
-RUN ["mkdir", "-p", "/opt/test"] 
 ADD start /opt/test
 COPY --from=soroban-cli /usr/local/cargo/bin/soroban $CARGO_HOME/bin/
 COPY --from=go /test/bin/ /opt/test/bin
