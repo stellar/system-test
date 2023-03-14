@@ -1,3 +1,5 @@
+#!/usr/bin/env ts-node-script
+
 import { ArgumentParser } from 'argparse';
 import * as SorobanClient from 'soroban-client';
 const xdr = SorobanClient.xdr;

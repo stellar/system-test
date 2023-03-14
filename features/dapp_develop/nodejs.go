@@ -13,9 +13,6 @@ import (
 // uses secret-key and network-passphrase directly on command
 func invokeContractFromNodeJSTool(deployedContractId, contractName, functionName, param1 string, e2eConfig *e2e.E2EConfig) (string, error) {
 	args := []string{
-		"ts-node",
-		"invoke.ts",
-		"--",
 		"--id", deployedContractId,
 		"--rpc-url", e2eConfig.TargetNetworkRPCURL,
 		"--source", e2eConfig.TargetNetworkSecretKey,
@@ -25,7 +22,7 @@ func invokeContractFromNodeJSTool(deployedContractId, contractName, functionName
 	if param1 != "" {
 		args = append(args, "--param1", param1)
 	}
-	envCmd := cmd.NewCmd("npx", args...)
+	envCmd := cmd.NewCmd("./invoke.ts", args...)
 	status, stdOutLines, err := e2e.RunCommand(envCmd, e2eConfig)
 	stdOut := strings.TrimSpace(strings.Join(stdOutLines, "\n"))
 
