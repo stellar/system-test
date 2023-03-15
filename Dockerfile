@@ -38,7 +38,7 @@ ENV PATH="/usr/local/go/bin:$CARGO_HOME/bin:${PATH}"
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain "$RUST_TOOLCHAIN_VERSION"
 
 # Install phantomjs
-RUN apt -y install phantomjs
+RUN test "$(dpkg --print-architecture)" == *"arm"* && apt -y install phantomjs=2.1.1+dfsg-2ubuntu1 || apt -y install phantomjs
 ENV QT_QPA_PLATFORM=offscreen
 
 # Use a non-root user
@@ -63,9 +63,6 @@ RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
 RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
 ENV PATH="/home/tester/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
 RUN npm i -g ts-node
-
-# Create our workdir
-WORKDIR /home/tester
 
 # Install js-soroban-client
 ARG JS_SOROBAN_CLIENT_NPM_VERSION
