@@ -1,3 +1,5 @@
+#!/usr/bin/env ts-node-script
+
 import { ArgumentParser } from 'argparse';
 import * as SorobanClient from 'soroban-client';
 const xdr = SorobanClient.xdr;
@@ -78,9 +80,9 @@ async function main() {
         parsed = scval.i32();
         break;
       }
-      case xdr.ScValType.scvObject(): {
+      case xdr.ScValType.scvVec(): {
         // Total hack, we just assume the object is a vec. Good enough for now.
-        parsed = scval.obj()!.vec()!.map(v => v.sym().toString());
+        parsed = scval.vec()!.map(v => v.sym().toString());
         break;
       }
       default:

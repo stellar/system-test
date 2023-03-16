@@ -23,11 +23,6 @@ GO_GIT_REF=https://github.com/stellar/go.git\#soroban-xdr-next
 QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git\#master
 JS_SOROBAN_CLIENT_NPM_VERSION=https://github.com/stellar/js-soroban-client.git\#main
 
-NON_AMD_ARCH=false 
-ifneq ($(shell uname -p),x86_64)
-	NON_AMD_ARCH=true
-endif
-
 # variables to set if wanting to use existing dockerhub images instead of compiling
 # image during build. if using this option, the image ref should provide a version for same 
 # platform arch as the build host is on, i.e. linux/amd64 or linux/arm64.

@@ -102,7 +102,7 @@ function main() {
   print_screen_output "  TEST_FILTER=${TEST_FILTER}"
   print_screen_output "Tests can now begin ..." 
 
-  cd /opt/test/bin
+  cd /home/tester/bin
 
   export SorobanExamplesGitHash=${SOROBAN_EXAMPLES_GIT_HASH}
   export SorobanExamplesRepoURL=${SOROBAN_EXAMPLES_REPO_URL}

@@ -37,32 +37,47 @@ ENV RUST_TOOLCHAIN_VERSION=$RUST_TOOLCHAIN_VERSION
 ENV PATH="/usr/local/go/bin:$CARGO_HOME/bin:${PATH}"
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain "$RUST_TOOLCHAIN_VERSION"
 
+# Install phantomjs
+RUN test "$(dpkg --print-architecture)" == *"arm"* && apt -y install phantomjs=2.1.1+dfsg-2ubuntu1 || apt -y install phantomjs
+ENV QT_QPA_PLATFORM=offscreen
+
+# Use a non-root user
+ARG USERNAME=tester
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+    && apt-get update \
+    && apt-get install -y sudo \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+RUN ["mkdir", "-p", "/home/tester"]
+USER tester
+WORKDIR /home/tester
+
 # Install Node.js
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
-ENV NVM_DIR=/root/.nvm
+ENV NVM_DIR=/home/tester/.nvm
 RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
 RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
 RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
-ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
-
-# Install soroban-cli
-COPY --from=soroban-cli /usr/local/cargo/bin/soroban $CARGO_HOME/bin/
-
-# Install phantomjs
-RUN apt -y install phantomjs
-ENV QT_QPA_PLATFORM=offscreen
+ENV PATH="/home/tester/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+RUN npm i -g ts-node
 
 # Install js-soroban-client
 ARG JS_SOROBAN_CLIENT_NPM_VERSION
-ADD package.json package-lock.json /opt/test/
-RUN npm install "soroban-client@${JS_SOROBAN_CLIENT_NPM_VERSION}" && npm install
-ADD invoke.ts /opt/test/
+ADD package*.json /home/tester/
+RUN npm ci && npm install "soroban-client@${JS_SOROBAN_CLIENT_NPM_VERSION}"
+ADD invoke.ts /home/tester/bin/
+RUN ["sudo", "chmod", "+x", "/home/tester/bin/invoke.ts"]
 
 FROM base as build
-RUN ["mkdir", "-p", "/opt/test"] 
-ADD start /opt/test
-COPY --from=go /test/bin/ /opt/test/bin
 
-RUN ["chmod", "+x", "/opt/test/start"]
+# Tests expect to be run as root so they can launch stuff
+USER root
 
-ENTRYPOINT ["/opt/test/start"]
+ADD start /home/tester
+COPY --from=soroban-cli /usr/local/cargo/bin/soroban $CARGO_HOME/bin/
+COPY --from=go /test/bin/ /home/tester/bin
+
+ENTRYPOINT ["/home/tester/start"]
