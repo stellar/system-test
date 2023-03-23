@@ -21,7 +21,7 @@ To run tests, requires two steps:
        build     
   ```  
 
-  example of build using specific git branches, latest in this case, or use tag names for releases:  
+  example of build using specific git refs, mainline from repos in this example, or use tags, branches, etc:  
   ```
   $ make CORE_GIT_REF=https://github.com/stellar/stellar-core.git#f1dc39f0f146815e5e3a94ed162e2f0639cb433f \
          CORE_COMPILE_CONFIGURE_FLAGS="--disable-tests --enable-next-protocol-version-unsafe-for-production" \
@@ -59,6 +59,11 @@ To run tests, requires two steps:
 
   # this will override the default Node JS vm version used for running the JS code:
   NODE_VERSION=14.20.0
+
+  # soroban js client version can be set to a published npm version on https://www.npmjs.com/package/soroban-client 
+  JS_SOROBAN_CLIENT_NPM_VERSION=latest
+  # or it can be set to a github git ref of a js-soroban-client repo
+  JS_SOROBAN_CLIENT_NPM_VERSION=https://github.com/stellar/js-soroban-client.git\#main
 
   # Image overrides. 
   # If using these, the image ref should provide a manifiest version for same 
