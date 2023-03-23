@@ -79,7 +79,7 @@ func deployContractUsingConfigParams(compiledContractFileName string, contractWo
 		"deploy",
 		"--wasm", fmt.Sprintf("./%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, compiledContractFileName),
 		"--network", networkConfigName,
-		"--identity", identityName)
+		"--source", identityName)
 
 	status, stdOut, err := e2e.RunCommand(envCmd, e2eConfig)
 

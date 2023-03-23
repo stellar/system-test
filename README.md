@@ -16,17 +16,21 @@ To run tests, requires two steps:
        GO_GIT_REF=? \
        RUST_TOOLCHAIN_VERSION=? \
        SOROBAN_CLI_CRATE_VERSION=? \
+       JS_SOROBAN_CLIENT_NPM_VERSION=? \
+       NODE_VERSION=? \
        build     
   ```  
 
   example of build using specific git branches, latest in this case, or use tag names for releases:  
   ```
-  $ make CORE_GIT_REF=https://github.com/stellar/stellar-core#f1dc39f0f146815e5e3a94ed162e2f0639cb433f \
+  $ make CORE_GIT_REF=https://github.com/stellar/stellar-core.git#f1dc39f0f146815e5e3a94ed162e2f0639cb433f \
          CORE_COMPILE_CONFIGURE_FLAGS="--disable-tests --enable-next-protocol-version-unsafe-for-production" \
-         SOROBAN_RPC_GIT_REF=https://github.com/stellar/soroban-tools#main \
+         SOROBAN_RPC_GIT_REF=https://github.com/stellar/soroban-tools.git#main \
          RUST_TOOLCHAIN_VERSION=stable \
-         SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools#main \
-         QUICKSTART_GIT_REF=https://github.com/stellar/quickstart#master build
+         SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git#main \
+         QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git#master \
+         JS_SOROBAN_CLIENT_NPM_VERSION=https://github.com/stellar/js-soroban-client.git\#main \
+         build
   ```  
 
   example of build using the existing quickstart:soroban-dev image which has latest released soroban server versions and builds soroban cli from local directory of checked out soroban-tools repo:  
@@ -45,12 +49,16 @@ To run tests, requires two steps:
   GO_GIT_REF=https://github.com/stellar/go.git#soroban-xdr-next
   CORE_COMPILE_CONFIGURE_FLAGS="--disable-tests --enable-next-protocol-version-unsafe-for-production"
   CORE_GIT_REF=https://github.com/stellar/stellar-core.git#master
+  JS_SOROBAN_CLIENT_NPM_VERSION=https://github.com/stellar/js-soroban-client.git\#main
   ```  
 
   optional to set:  
   ```
   # this will override SOROBAN_CLI_GIT_REF, and install soroban cli from crates repo instead
   SOROBAN_CLI_CRATE_VERSION=0.4.0  
+
+  # this will override the default Node JS vm version used for running the JS code:
+  NODE_VERSION=14.20.0
 
   # Image overrides. 
   # If using these, the image ref should provide a manifiest version for same 
