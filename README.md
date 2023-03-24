@@ -29,7 +29,7 @@ To run tests, requires two steps:
          RUST_TOOLCHAIN_VERSION=stable \
          SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git#main \
          QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git#master \
-         JS_SOROBAN_CLIENT_NPM_VERSION=https://github.com/stellar/js-soroban-client.git\#main \
+         JS_SOROBAN_CLIENT_NPM_VERSION=https://github.com/stellar/js-soroban-client.git#main \
          build
   ```  
 
@@ -49,7 +49,7 @@ To run tests, requires two steps:
   GO_GIT_REF=https://github.com/stellar/go.git#soroban-xdr-next
   CORE_COMPILE_CONFIGURE_FLAGS="--disable-tests --enable-next-protocol-version-unsafe-for-production"
   CORE_GIT_REF=https://github.com/stellar/stellar-core.git#master
-  JS_SOROBAN_CLIENT_NPM_VERSION=https://github.com/stellar/js-soroban-client.git\#main
+  JS_SOROBAN_CLIENT_NPM_VERSION=https://github.com/stellar/js-soroban-client.git#main
   ```  
 
   optional to set:  
@@ -63,7 +63,7 @@ To run tests, requires two steps:
   # soroban js client version can be set to a published npm version on https://www.npmjs.com/package/soroban-client 
   JS_SOROBAN_CLIENT_NPM_VERSION=latest
   # or it can be set to a github git ref of a js-soroban-client repo
-  JS_SOROBAN_CLIENT_NPM_VERSION=https://github.com/stellar/js-soroban-client.git\#main
+  JS_SOROBAN_CLIENT_NPM_VERSION=https://github.com/stellar/js-soroban-client.git#main
 
   # Image overrides. 
   # If using these, the image ref should provide a manifiest version for same 
