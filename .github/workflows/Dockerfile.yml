@@ -18,12 +18,13 @@ env:
   HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
   # the only time system test image needs to be defined for a push is when it's a non 'v' tag creation
   PUSH_ENABLED: ${{ secrets.DOCKERHUB_TOKEN && github.ref_type == 'tag' && startsWith(github.ref_name, 'v') != true && 'true' || 'false' }}
-  IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository,  github.event.ref || 'latest') }}
+  IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository, github.ref_type == 'tag' && github.ref_name || github.event.ref || 'latest') }}
   CORE_GIT_REF: https://github.com/stellar/stellar-core.git#064a2787acb9e98c70567523785333581ee1ffa4
   CORE_COMPILE_CONFIGURE_FLAGS: "--disable-tests --enable-next-protocol-version-unsafe-for-production"
-  SOROBAN_RPC_GIT_REF: https://github.com/stellar/soroban-tools.git#53b82066a0f81ff5470c0acac6579d7213549e36
+  SOROBAN_RPC_GIT_REF: https://github.com/stellar/soroban-tools.git#4ffd8296cba4e9bff8816baf409c2a4faf4b51d4
   RUST_TOOLCHAIN_VERSION: stable
-  SOROBAN_CLI_GIT_REF: https://github.com/stellar/soroban-tools.git#53b82066a0f81ff5470c0acac6579d7213549e36
+  GO_GIT_REF: https://github.com/stellar/go.git#53b82066a0f81ff5470c0acac6579d7213549e36
+  SOROBAN_CLI_GIT_REF: https://github.com/stellar/soroban-tools.git#4ffd8296cba4e9bff8816baf409c2a4faf4b51d4
   QUICKSTART_GIT_REF: https://github.com/stellar/quickstart.git#457f51412e25a9e77ee488d9a13abdd613b13097
   JS_SOROBAN_CLIENT_NPM_VERSION: https://github.com/stellar/js-soroban-client.git#v0.5.0
 jobs:
@@ -52,6 +53,7 @@ jobs:
              SOROBAN_CLI_GIT_REF=${{ env.SOROBAN_CLI_GIT_REF }} \
              SYSTEM_TEST_IMAGE=${{ env.PUSH_ENABLED == 'true' && env.IMAGE || 'stellar/system-test:dev' }} \
              QUICKSTART_GIT_REF=${{ env.QUICKSTART_GIT_REF }} \
+             GO_GIT_REF=${{ env.GO_GIT_REF }} \
              JS_SOROBAN_CLIENT_NPM_VERSION=${{ env.JS_SOROBAN_CLIENT_NPM_VERSION }} build;
     - if: ${{ env.PUSH_ENABLED == 'true' }}
       name: Save Docker Image to file
