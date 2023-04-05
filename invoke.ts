@@ -11,8 +11,9 @@ async function main() {
   parser.add_argument('--rpc-url', { dest: 'rpcUrl', required: true, help: 'RPC URL' });
   parser.add_argument('--source', { dest: 'source', required: true, help: 'Secret key' });
   parser.add_argument('--network-passphrase', { dest: 'networkPassphrase', required: true, help: 'Network passphrase' });
-  parser.add_argument('--fn', { dest: 'functionName', required: true, help: 'Function name' });
-  parser.add_argument('--param1', { dest: 'param1', help: 'Param 1' });
+  const subparsers = parser.add_subparsers();
+  const functionSubparser = subparsers.add_parser('functionName', { help: 'Function name' });
+  functionSubparser.add_argument('--param1', { dest: 'param1', help: 'Param 1' });
 
   const {
     contractId,

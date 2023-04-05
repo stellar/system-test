@@ -17,7 +17,7 @@ func invokeContractFromNodeJSTool(deployedContractId, contractName, functionName
 		"--rpc-url", e2eConfig.TargetNetworkRPCURL,
 		"--source", e2eConfig.TargetNetworkSecretKey,
 		"--network-passphrase", e2eConfig.TargetNetworkPassPhrase,
-		"--fn", functionName,
+		"--", functionName,
 	}
 	if param1 != "" {
 		args = append(args, "--param1", param1)
