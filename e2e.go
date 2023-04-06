@@ -30,8 +30,8 @@ type E2EConfig struct {
 }
 
 const (
-	TX_SUCCESS = "SUCCESS"
-	TX_PENDING = "PENDING"
+	TX_SUCCESS   = "SUCCESS"
+	TX_NOT_FOUND = "NOT_FOUND"
 )
 
 type RPCError struct {
@@ -301,7 +301,9 @@ func TxSub(e2eConfig *E2EConfig, tx *txnbuild.Transaction) (*TransactionStatusRe
 	}
 
 	start := time.Now().Unix()
-	for x := range time.NewTicker(3 * time.Second).C {
+	ticker := time.NewTicker(3 * time.Second)
+	defer ticker.Stop()
+	for x := range ticker.C {
 		if x.Unix()-start > 30 {
 			break
 		}
@@ -311,10 +313,12 @@ func TxSub(e2eConfig *E2EConfig, tx *txnbuild.Transaction) (*TransactionStatusRe
 			return nil, fmt.Errorf("soroban rpc tx sub, unable to call tx status check, %v, %e", rpcResponse, err)
 		}
 
-		if transactionStatusResponse.Status == TX_SUCCESS {
+		switch transactionStatusResponse.Status {
+		case TX_SUCCESS:
 			return transactionStatusResponse, nil
-		}
-		if transactionStatusResponse.Status != TX_PENDING {
+		case TX_NOT_FOUND:
+			// no-op. Retry.
+		default:
 			return nil, fmt.Errorf("soroban rpc tx sub, got bad response on tx status check, %v, %v", rpcResponse, transactionStatusResponse)
 		}
 	}
