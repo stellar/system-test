@@ -27,6 +27,10 @@ type E2EConfig struct {
 	TargetNetworkPassPhrase string
 	TargetNetworkSecretKey  string
 	TargetNetworkPublicKey  string
+	// if true, means the core is running in same container as tests
+	LocalCore bool
+	// the relative feature file path
+	FeaturePath string
 }
 
 const (
@@ -77,12 +81,29 @@ type RPCLedgerEntryResponse struct {
 	Error  *RPCError         `json:"error,omitempty"`
 }
 
+type LatestLedgerResult struct {
+	// Hash of the latest ledger as a hex-encoded string
+	Hash string `json:"id"`
+	// Stellar Core protocol version associated with the ledger.
+	ProtocolVersion uint32 `json:"protocolVersion,string"`
+	// Sequence number of the latest ledger.
+	Sequence uint32 `json:"sequence"`
+}
+
+type RPCLatestLedgerResponse struct {
+	Result LatestLedgerResult `json:"result"`
+	Error  *RPCError          `json:"error,omitempty"`
+}
+
 const TestTmpDirectory = "test_tmp_workspace"
 
 func InitEnvironment() (*E2EConfig, error) {
 	var flagConfig = &E2EConfig{}
 	var err error
 
+	if flagConfig.FeaturePath, err = getEnv("FeaturePath"); err != nil {
+		return nil, err
+	}
 	if flagConfig.SorobanExamplesGitHash, err = getEnv("SorobanExamplesGitHash"); err != nil {
 		return nil, err
 	}
@@ -103,6 +124,9 @@ func InitEnvironment() (*E2EConfig, error) {
 	}
 	if verboseOutput, err := getEnv("VerboseOutput"); err == nil {
 		flagConfig.VerboseOutput, _ = strconv.ParseBool(verboseOutput)
+	}
+	if LocalCore, err := getEnv("LocalCore"); err == nil {
+		flagConfig.LocalCore, _ = strconv.ParseBool(LocalCore)
 	}
 
 	return flagConfig, nil
@@ -178,6 +202,32 @@ type Asserter struct {
 // Errorf is used by the called assertion to report an error
 func (a *Asserter) Errorf(format string, args ...interface{}) {
 	a.Err = fmt.Errorf(format, args...)
+}
+
+func QueryNetworkState(e2eConfig *E2EConfig) (LatestLedgerResult, error) {
+	getLatestLedger := []byte(`{
+           "jsonrpc": "2.0",
+           "id": 10235,
+           "method": "getLatestLedger"
+        }`)
+
+	resp, err := http.Post(e2eConfig.TargetNetworkRPCURL, "application/json", bytes.NewBuffer(getLatestLedger))
+	if err != nil {
+		return LatestLedgerResult{}, fmt.Errorf("soroban rpc get latest ledger had error %e", err)
+	}
+
+	var rpcResponse RPCLatestLedgerResponse
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&rpcResponse)
+	if err != nil {
+		return LatestLedgerResult{}, fmt.Errorf("soroban rpc get latest ledger, not able to parse response, %v, %e", resp, err)
+	}
+	if rpcResponse.Error != nil {
+		return LatestLedgerResult{}, fmt.Errorf("soroban rpc get latest ledger, error on response, %v, %e", resp, err)
+	}
+
+	return rpcResponse.Result, nil
+
 }
 
 func QueryAccount(e2eConfig *E2EConfig, publicKey string) (*AccountInfo, error) {

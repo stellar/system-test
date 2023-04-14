@@ -1,15 +1,32 @@
 Feature: DApp Contract Development
 
+
+
+Scenario Outline: DApp developer retrieves contract events
+  Given I am using an rpc instance that has captive core config, ENABLE_SOROBAN_DIAGNOSTIC_EVENTS=true
+  And I used cargo to compile example contract <ContractExampleSubPath>
+  And I used rpc to verify my account is on the network
+  And I used rpc to get network latest ledger
+  And I used cli to deploy contract <ContractCompiledFileName> using my secret key
+  And I invoke function <FunctionName> on <ContractName> with request parameters <FunctionParams> from tool <Tool> using my secret key
+  Then The result should be to receive <EventCount> contract events and <DiagEventCount> diagnostic events for <ContractName> from <Tool>
+
+  Examples: 
+        | Tool         | ContractExampleSubPath | ContractName                  | ContractCompiledFileName             | FunctionName | FunctionParams         | RootIdentityName | Result             | EventCount | DiagEventCount |
+        | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | Aloha                  | r1               | ["Hello","Aloha"]  | 0          | 1              |
+        | CLI          | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | --to=Aloha             | r1               | ["Hello","Aloha"]  | 0          | 1              |
+        
+
 Scenario Outline: DApp developer compiles, installs, deploys and invokes a contract
-Given I used cargo to compile example contract <ContractExampleSubPath>
+  Given I used cargo to compile example contract <ContractExampleSubPath>
   And I used rpc to verify my account is on the network
   And I used cli to install contract <ContractCompiledFileName> on network using my secret key
   And I used cli to deploy contract <ContractCompiledFileName> by installed hash using my secret key
-  When I invoke function <FunctionName> on <ContractName> with request parameter <Param1> from <Tool> using my secret key
-  Then the result should be <Result>
+  When I invoke function <FunctionName> on <ContractName> with request parameters <FunctionParams> from tool <Tool> using my secret key
+  Then The result should be <Result>
 
   Examples: 
-        | Tool         | ContractExampleSubPath | ContractName                  | ContractCompiledFileName             | FunctionName | Param1         | Result             |
+        | Tool         | ContractExampleSubPath | ContractName                  | ContractCompiledFileName             | FunctionName | FunctionParams | Result             |
         | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | Aloha          | ["Hello","Aloha"]  |
         | CLI          | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | --to=Aloha     | ["Hello","Aloha"]  |
         | NODEJS       | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  |
@@ -20,15 +37,15 @@ Scenario Outline: DApp developer compiles, deploys and invokes a contract
   Given I used cargo to compile example contract <ContractExampleSubPath>
   And I used rpc to verify my account is on the network
   And I used cli to deploy contract <ContractCompiledFileName> using my secret key
-  When I invoke function <FunctionName> on <ContractName> with request parameter <Param1> from <Tool> using my secret key
-  Then the result should be <Result>
+  When I invoke function <FunctionName> on <ContractName> with request parameters <FunctionParams> from tool <Tool> using my secret key
+  Then The result should be <Result>
 
   Examples: 
-        | Tool         | ContractExampleSubPath | ContractName                  | ContractCompiledFileName             | FunctionName | Param1     | Result             |
-        | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | Aloha      | ["Hello","Aloha"]  |
-        | CLI          | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | --to=Aloha | ["Hello","Aloha"]  |
-        | NODEJS       | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |            | 1                  |
-        | CLI          | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |            | 1                  |
+        | Tool         | ContractExampleSubPath | ContractName                  | ContractCompiledFileName             | FunctionName | FunctionParams | Result             |
+        | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | Aloha          | ["Hello","Aloha"]  |
+        | CLI          | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | --to=Aloha     | ["Hello","Aloha"]  |
+        | NODEJS       | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  |
+        | CLI          | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  |
 
 
 Scenario Outline: DApp developer uses config states, compiles, deploys and invokes contract with authorizations
@@ -38,9 +55,9 @@ Scenario Outline: DApp developer uses config states, compiles, deploys and invok
   And I used cli to add Network Config <NetworkConfigName> for rpc and standalone
   And I used cli to add Identity <RootIdentityName> for my secret key
   And I used cli to add Identity <TesterIdentityName> for tester secret key
-  And I used cli to deploy contract <ContractCompiledFileName> using my Identity <RootIdentityName> and Network Config <NetworkConfigName>
-  When I invoke function <FunctionName> on <ContractName> with request parameters <FunctionParams> from <Tool> using tester Identity <TesterIdentityName> as invoker and Network Config <NetworkConfigName>
-  Then the result should be <Result>
+  And I used cli to deploy contract <ContractCompiledFileName> using Identity <RootIdentityName> and Network Config <NetworkConfigName>
+  When I invoke function <FunctionName> on <ContractName> with request parameters <FunctionParams> from tool <Tool> using Identity <TesterIdentityName> as invoker and Network Config <NetworkConfigName>
+  Then The result should be <Result>
 
   Examples: 
         | Tool         | ContractExampleSubPath | ContractName                  | ContractCompiledFileName      | FunctionName     | FunctionParams                              | RootIdentityName  | TesterIdentityName  | NetworkConfigName   | Result |

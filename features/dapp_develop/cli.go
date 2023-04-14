@@ -1,6 +1,7 @@
 package dapp_develop
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -73,4 +74,47 @@ func invokeContractFromCliToolWithConfig(deployedContractId, contractName, funct
 	}
 
 	return stdOut, nil
+}
+
+func getEventsFromCliTool(ledgerFrom uint32, deployedContractId string, size uint32, e2eConfig *e2e.E2EConfig) ([]map[string]interface{}, error) {
+
+	args := []string{
+		"events",
+		"--start-ledger", fmt.Sprint(ledgerFrom),
+		"--count", fmt.Sprint(size),
+		"--id", deployedContractId,
+		"--rpc-url", e2eConfig.TargetNetworkRPCURL,
+		"--network-passphrase", e2eConfig.TargetNetworkPassPhrase,
+		"--output", "json",
+	}
+
+	envCmd := cmd.NewCmd("soroban", args...)
+
+	status, stdOutLines, err := e2e.RunCommand(envCmd, e2eConfig)
+	var jsonEvents []map[string]interface{}
+	var stdOutLinesTrimmed []string
+
+	if status != 0 || err != nil {
+		return jsonEvents, fmt.Errorf("soroban cli get events had error %v, %v", status, err)
+	}
+
+	if len(stdOutLines) > 0 {
+		// some output was produced to console by the cli events command,
+		// it could represent a correct or bad result, but need to remove the last line of it regardless
+		// because if it's correct results will have a last line of 'Latest Ledger: xxxx', which needs to be removed to
+		// parse the rest as valid json,
+		stdOutLinesTrimmed = stdOutLines[:len(stdOutLines)-1]
+	}
+
+	// put commas between any json event objects if more than one found
+	stdOutEventsValidJson := strings.ReplaceAll(strings.Join(stdOutLinesTrimmed, "\n"), `\n}\n{\n`, `\n}\n,\n{\n`)
+	// wrap the json objects in json array brackets
+	stdOutEventsValidJson = "[" + stdOutEventsValidJson + "]"
+
+	err = json.Unmarshal([]byte(stdOutEventsValidJson), &jsonEvents)
+	if err != nil {
+		return jsonEvents, fmt.Errorf("soroban cli get events console output %v was not parseable as event json, %e", strings.Join(stdOutLines, "\n"), err)
+	}
+
+	return jsonEvents, nil
 }

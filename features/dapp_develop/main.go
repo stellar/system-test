@@ -138,7 +138,7 @@ func createNetworkConfig(configName string, rpcUrl string, networkPassphrase str
 // uses 'expect' cli tool program, to forward the secret to the tty that cli wait for input
 func createIdentityConfig(identityName string, secretKey string, e2eConfig *e2e.E2EConfig) error {
 	envCmd := cmd.NewCmd("expect",
-		"soroban_config.exp",
+		e2eConfig.FeaturePath+"/soroban_config.exp",
 		identityName,
 		secretKey)
 
@@ -189,6 +189,30 @@ func invokeContractWithConfig(deployedContractId string, contractName string, fu
 
 	if err != nil {
 		return "", err
+	}
+
+	return response, nil
+}
+
+// returns all events as json array
+// ledgerFrom - required, starting point
+// deployedContractId - optional, the id of contract to filter events for or nil
+// tool - required, which tool to use to get events
+func getEvents(ledgerFrom uint32, deployedContractId string, tool string, size uint32, e2eConfig *e2e.E2EConfig) ([]map[string]interface{}, error) {
+	var response []map[string]interface{}
+	var err error
+
+	switch tool {
+	case "CLI":
+		response, err = getEventsFromCliTool(ledgerFrom, deployedContractId, size, e2eConfig)
+	case "NODEJS":
+		response, err = getEventsFromNodeJSTool(ledgerFrom, deployedContractId, size, e2eConfig)
+	default:
+		err = fmt.Errorf("%s tool not supported for events retrieval yet", tool)
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	return response, nil

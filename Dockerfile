@@ -1,7 +1,7 @@
 ARG QUICKSTART_IMAGE_REF=stellar/quickstart:soroban-dev
 ARG SOROBAN_CLI_IMAGE_REF=stellar/system-test-soroban-cli:dev
 
-FROM golang:1.19 as go
+FROM golang:1.20 as go
 
 RUN ["mkdir", "-p", "/test"] 
 RUN ["mkdir", "-p", "/test/bin"] 
@@ -54,6 +54,10 @@ RUN groupadd --gid $USER_GID $USERNAME \
 RUN ["mkdir", "-p", "/home/tester"]
 USER tester
 WORKDIR /home/tester
+RUN mkdir -p ~/.ssh
+RUN chmod 700 ~/.ssh
+RUN echo "HOST *" > ~/.ssh/config
+RUN echo "StrictHostKeyChecking no" >> ~/.ssh/config
 
 # Install Node.js
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
@@ -68,7 +72,7 @@ RUN npm i -g ts-node
 ARG JS_SOROBAN_CLIENT_NPM_VERSION
 ADD package*.json /home/tester/
 RUN npm ci && npm install "soroban-client@${JS_SOROBAN_CLIENT_NPM_VERSION}"
-ADD invoke.ts /home/tester/bin/
+ADD *.ts /home/tester/bin/
 RUN ["sudo", "chmod", "+x", "/home/tester/bin/invoke.ts"]
 
 FROM base as build

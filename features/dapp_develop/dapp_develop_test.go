@@ -16,7 +16,8 @@ import (
 
 	"github.com/stellar/go/keypair"
 	"github.com/stellar/go/txnbuild"
-	"github.com/stellar/system-test"
+	"github.com/stellar/go/xdr"
+	e2e "github.com/stellar/system-test"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -37,6 +38,9 @@ type testConfig struct {
 	TesterAccountPublicKey   string
 	TesterAccountPrivateKey  string
 	Identities               map[string]string
+	ContractEvents           []xdr.DiagnosticEvent
+	DiagnosticEvents         []xdr.DiagnosticEvent
+	InitialNetworkState      e2e.LatestLedgerResult
 }
 
 func TestDappDevelop(t *testing.T) {
@@ -48,7 +52,7 @@ func TestDappDevelop(t *testing.T) {
 
 	opts := &godog.Options{
 		Format:         "pretty",
-		Paths:          []string{"dapp_develop.feature"},
+		Paths:          []string{e2eConfig.FeaturePath + "/dapp_develop.feature"},
 		Output:         colors.Colored(os.Stdout),
 		StopOnFailure:  true,
 		TestingT:       t,
@@ -110,33 +114,29 @@ func installContractStep(ctx context.Context, compiledContractFileName string) e
 	return nil
 }
 
-func invokeNonAuthContractStep(ctx context.Context, functionName string, contractName string, param1 string, tool string) error {
+func invokeContractStep(ctx context.Context, functionName string, contractName string, parameters string, tool string) error {
 
-	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
-
-	var err error
-	if testConfig.ContractFunctionResponse, err = invokeContract(testConfig.DeployedContractId, contractName, functionName, param1, tool, testConfig.E2EConfig); err != nil {
-		return err
-	}
-
-	return nil
+	return invokeContractStepWithConfig(ctx, functionName, contractName, parameters, tool, "", "")
 }
 
-func invokeInvokerAuthContractStep(ctx context.Context, functionName string, contractName string, parameters string, tool string, identity string, networkConfig string) error {
+func invokeContractStepWithConfig(ctx context.Context, functionName string, contractName string, parameters string, tool string, identity string, networkConfig string) error {
+
 	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
-
-	invokerPubKey, has := testConfig.Identities[identity]
-	if !has {
-		return fmt.Errorf("invocation of invoker auth contract could not proceed, no public key for identity %v", identity)
-	}
-
-	parameters = strings.Replace(parameters, "<tester_identity_pub_key>", invokerPubKey, 1)
 	var err error
-	if testConfig.ContractFunctionResponse, err = invokeContractWithConfig(testConfig.DeployedContractId, contractName, functionName, parameters, tool, identity, networkConfig, testConfig.E2EConfig); err != nil {
-		return err
+
+	if identity != "" {
+		invokerPubKey, has := testConfig.Identities[identity]
+		if !has {
+			return fmt.Errorf("invocation of contract with config could not proceed, no public key for identity config name %v", identity)
+		}
+		parameters = strings.Replace(parameters, "<tester_identity_pub_key>", invokerPubKey, 1)
+		testConfig.ContractFunctionResponse, err = invokeContractWithConfig(testConfig.DeployedContractId, contractName, functionName, parameters, tool, identity, networkConfig, testConfig.E2EConfig)
+
+	} else {
+		testConfig.ContractFunctionResponse, err = invokeContract(testConfig.DeployedContractId, contractName, functionName, parameters, tool, testConfig.E2EConfig)
 	}
 
-	return nil
+	return err
 }
 
 func createNetworkConfigStep(ctx context.Context, configName string) error {
@@ -175,11 +175,63 @@ func newTestConfig(e2eConfig *e2e.E2EConfig) *testConfig {
 	}
 }
 
+func getNetworkStep(ctx context.Context) error {
+
+	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
+
+	network, err := e2e.QueryNetworkState(testConfig.E2EConfig)
+
+	if err != nil {
+		return fmt.Errorf("soroban network latest ledger retrieval had error %e", err)
+	}
+
+	testConfig.InitialNetworkState = network
+	return nil
+}
+
 func theResultShouldBeStep(ctx context.Context, expectedResult string) error {
 	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
 
 	var t e2e.Asserter
 	assert.Equal(&t, expectedResult, testConfig.ContractFunctionResponse, "Expected %v but got %v", expectedResult, testConfig.ContractFunctionResponse)
+	return t.Err
+}
+
+func noOpStep(ctx context.Context) error {
+	return nil
+}
+
+func theContractEventsShouldBeStep(ctx context.Context, expectedContractEventsCount int, expectedContractDiagEventsCount int, contractName string, tool string) error {
+	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
+
+	jsonResults, err := getEvents(testConfig.InitialNetworkState.Sequence, testConfig.DeployedContractId, tool, 10, testConfig.E2EConfig)
+
+	if err != nil {
+		return err
+	}
+
+	var contractEventsCount int
+	var diagEventsCount int
+
+	for _, v := range jsonResults {
+		if v["type"] == "diagnostic" {
+			diagEventsCount++
+		} else {
+			contractEventsCount++
+		}
+	}
+
+	var t e2e.Asserter
+	assert.Equal(&t, expectedContractEventsCount, contractEventsCount, "Expected %v contract events for %v using %v but got %v", expectedContractEventsCount, contractName, tool, contractEventsCount)
+	if t.Err != nil {
+		return t.Err
+	}
+
+	if testConfig.E2EConfig.LocalCore {
+		assert.Equal(&t, expectedContractDiagEventsCount, diagEventsCount, "Expected %v diagnostic events for %v using %v but got %v", expectedContractDiagEventsCount, contractName, tool, diagEventsCount)
+	} else {
+		fmt.Fprintf(os.Stdout, "Skipping assertion of diagnostic events, network under test is not local standalone, can't enable diagnostic events in that case.")
+	}
 	return t.Err
 }
 
@@ -255,7 +307,7 @@ func createTesterAccountStep(ctx context.Context) error {
 }
 
 func initializeScenario(scenarioCtx *godog.ScenarioContext) {
-	scenarioCtx.Before(func(ctx context.Context, scenario *godog.Scenario) (context.Context, error) {
+	scenarioCtx.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 
 		e2eConfig := ctx.Value(e2e.TestConfigContextKey).(*e2e.E2EConfig)
 
@@ -278,27 +330,22 @@ func initializeScenario(scenarioCtx *godog.ScenarioContext) {
 		testConfig.TestWorkingDir = e2e.TestTmpDirectory
 		ctx = context.WithValue(ctx, e2e.TestConfigContextKey, testConfig)
 
+		scenarioCtx.Step(`^I am using an rpc instance that has captive core config, ENABLE_SOROBAN_DIAGNOSTIC_EVENTS=true$`, noOpStep)
 		scenarioCtx.Step(`^I used cargo to compile example contract ([\S|\s]+)$`, compileContractStep)
 		scenarioCtx.Step(`^I used rpc to verify my account is on the network`, queryAccountStep)
-
-		switch scenario.Name {
-		case "DApp developer compiles, installs, deploys and invokes a contract":
-			scenarioCtx.Step(`^I used cli to install contract ([\S|\s]+) on network using my secret key$`, installContractStep)
-			scenarioCtx.Step(`^I used cli to deploy contract ([\S|\s]+) by installed hash using my secret key$`, deployContractStep)
-			scenarioCtx.Step(`^I invoke function ([\S|\s]+) on ([\S|\s]+) with request parameter ([\S|\s]*) from ([\S|\s]+) using my secret key$`, invokeNonAuthContractStep)
-		case "DApp developer compiles, deploys and invokes a contract":
-			scenarioCtx.Step(`^I used cli to deploy contract ([\S|\s]+) using my secret key$`, deployContractStep)
-			scenarioCtx.Step(`^I invoke function ([\S|\s]+) on ([\S|\s]+) with request parameter ([\S|\s]*) from ([\S|\s]+) using my secret key$`, invokeNonAuthContractStep)
-		case "DApp developer uses config states, compiles, deploys and invokes contract with authorizations":
-			scenarioCtx.Step(`^I used rpc to submit transaction to create tester account on the network$`, createTesterAccountStep)
-			scenarioCtx.Step(`^I used cli to add Network Config ([\S|\s]+) for rpc and standalone$`, createNetworkConfigStep)
-			scenarioCtx.Step(`^I used cli to add Identity ([\S|\s]+) for my secret key$`, createMyIdentityStep)
-			scenarioCtx.Step(`^I used cli to add Identity ([\S|\s]+) for tester secret key$`, createTestAccountIdentityStep)
-			scenarioCtx.Step(`^I used cli to deploy contract ([\S|\s]+) using my Identity ([\S|\s]+) and Network Config ([\S|\s]+)$`, deployContractUsingConfigParamsStep)
-			scenarioCtx.Step(`^I invoke function ([\S|\s]+) on ([\S|\s]+) with request parameters ([\S|\s]*) from ([\S|\s]+) using tester Identity ([\S|\s]+) as invoker and Network Config ([\S|\s]+)$`, invokeInvokerAuthContractStep)
-		}
-
-		scenarioCtx.Step(`^the result should be (\S+)$`, theResultShouldBeStep)
+		scenarioCtx.Step(`^I used rpc to get network latest ledger$`, getNetworkStep)
+		scenarioCtx.Step(`^I used rpc to submit transaction to create tester account on the network$`, createTesterAccountStep)
+		scenarioCtx.Step(`^I used cli to add Network Config ([\S|\s]+) for rpc and standalone$`, createNetworkConfigStep)
+		scenarioCtx.Step(`^I used cli to add Identity ([\S|\s]+) for my secret key$`, createMyIdentityStep)
+		scenarioCtx.Step(`^I used cli to deploy contract ([\S|\s]+) using Identity ([\S|\s]+) and Network Config ([\S|\s]+)$`, deployContractUsingConfigParamsStep)
+		scenarioCtx.Step(`^I used cli to install contract ([\S|\s]+) on network using my secret key$`, installContractStep)
+		scenarioCtx.Step(`^I used cli to deploy contract ([\S|\s]+) by installed hash using my secret key$`, deployContractStep)
+		scenarioCtx.Step(`^I used cli to deploy contract ([\S|\s]+) using my secret key$`, deployContractStep)
+		scenarioCtx.Step(`^I used cli to add Identity ([\S|\s]+) for tester secret key$`, createTestAccountIdentityStep)
+		scenarioCtx.Step(`^I invoke function ([\S|\s]+) on ([\S|\s]+) with request parameters ([\S|\s]*) from tool ([\S|\s]+) using Identity ([\S|\s]+) as invoker and Network Config ([\S|\s]+)$`, invokeContractStepWithConfig)
+		scenarioCtx.Step(`^I invoke function ([\S|\s]+) on ([\S|\s]+) with request parameters ([\S|\s]*) from tool ([\S|\s]+) using my secret key$`, invokeContractStep)
+		scenarioCtx.Step(`^The result should be (\S+)$`, theResultShouldBeStep)
+		scenarioCtx.Step(`^The result should be to receive ([\S|\s]+) contract events and ([\S|\s]+) diagnostic events for ([\S|\s]+) from ([\S|\s]+)$`, theContractEventsShouldBeStep)
 
 		return ctx, nil
 	})
