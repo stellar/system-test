@@ -1,6 +1,21 @@
 # System Test Releases
 
 
+#### 1.0.10
+
+* verify no value overhaul issues on test coverage. [system-test, #47](https://github.com/stellar/system-test/pull/47)
+
+
+#### 1.0.9
+
+* Fix bug in NODEJS test invocation. [system-test, #46](https://github.com/stellar/system-test/pull/46) 
+
+
+#### 1.0.8
+
+* Enable some NODEJS tests. [system-test, #44](https://github.com/stellar/system-test/pull/44) and [system-test, #42](https://github.com/stellar/system-test/pull/42)
+* Use new `--source` flag for cli. [system-test, #43](https://github.com/stellar/system-test/pull/43)
+
 
 #### 1.0.7
 
