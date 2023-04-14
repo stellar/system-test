@@ -12,7 +12,7 @@ import (
 
 // return the fn response as a serialized string
 // uses secret-key and network-passphrase directly on command
-func invokeContractFromCliTool(deployedContractId, contractName, functionName, param1 string, e2eConfig *e2e.E2EConfig) (string, error) {
+func invokeContractFromCliTool(deployedContractId, contractName, functionName, functionParams string, e2eConfig *e2e.E2EConfig) (string, error) {
 	args := []string{
 		"contract",
 		"invoke",
@@ -24,8 +24,8 @@ func invokeContractFromCliTool(deployedContractId, contractName, functionName, p
 		functionName,
 	}
 
-	if param1 != "" {
-		args = append(args, param1)
+	if functionParams != "" {
+		args = append(args, functionParams)
 	}
 
 	envCmd := cmd.NewCmd("soroban", args...)

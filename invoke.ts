@@ -7,18 +7,19 @@ const xdr = SorobanClient.xdr;
 async function main() {
   const parser = new ArgumentParser({ description: 'Invoke a contract function' })
 
+  const subparsers = parser.add_subparsers();
   parser.add_argument('--id', { dest: 'contractId', required: true, help: 'Contract ID' });
   parser.add_argument('--rpc-url', { dest: 'rpcUrl', required: true, help: 'RPC URL' });
   parser.add_argument('--source', { dest: 'source', required: true, help: 'Secret key' });
   parser.add_argument('--network-passphrase', { dest: 'networkPassphrase', required: true, help: 'Network passphrase' });
-  const subparsers = parser.add_subparsers();
-  const functionSubparser = subparsers.add_parser('functionName', { help: 'Function name' });
-  functionSubparser.add_argument('--param1', { dest: 'param1', help: 'Param 1' });
+  const functionParamParser = subparsers.add_parser('function', { help: 'Function' });
+  functionParamParser.add_argument('--name', { dest: 'functionName', help: 'Function Name' });
+  functionParamParser.add_argument('--params', { dest: 'functionParams', help: 'Function Params, comma separated' })
 
   const {
     contractId,
     rpcUrl,
-    param1,
+    functionParams,
     networkPassphrase,
     source,
     functionName,
@@ -30,10 +31,14 @@ async function main() {
   const account = secretKey.publicKey();
   const sourceAccount = await server.getAccount(account);
 
-  // Some hacky param-parsing. Generated Typescript bindings would be better
-  // here. But those don't exist yet as I'm writing this.
-  const params = param1 ? [xdr.ScVal.scvSymbol(param1)] : [];
-
+  // Some hacky param-parsing as csv. Generated Typescript bindings would be better.
+  const params: SorobanClient.xdr.ScVal[] = [];
+  if (functionParams) {
+    functionParams.split(",").forEach((param) => {
+        params.push(xdr.ScVal.scvSymbol(param));
+    });
+  }
+ 
   const txn = await server.prepareTransaction(
     new SorobanClient.TransactionBuilder(sourceAccount, {
       fee: "100",

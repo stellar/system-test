@@ -153,15 +153,15 @@ func createIdentityConfig(identityName string, secretKey string, e2eConfig *e2e.
 
 // returns the contract fn invocation response payload as a serialized string
 // uses secret-key and network-passphrase directly on command
-func invokeContract(deployedContractId string, contractName string, functionName string, param1 string, tool string, e2eConfig *e2e.E2EConfig) (string, error) {
+func invokeContract(deployedContractId string, contractName string, functionName string, functionParams string, tool string, e2eConfig *e2e.E2EConfig) (string, error) {
 	var response string
 	var err error
 
 	switch tool {
 	case "CLI":
-		response, err = invokeContractFromCliTool(deployedContractId, contractName, functionName, param1, e2eConfig)
+		response, err = invokeContractFromCliTool(deployedContractId, contractName, functionName, functionParams, e2eConfig)
 	case "NODEJS":
-		response, err = invokeContractFromNodeJSTool(deployedContractId, contractName, functionName, param1, e2eConfig)
+		response, err = invokeContractFromNodeJSTool(deployedContractId, contractName, functionName, functionParams, e2eConfig)
 	default:
 		err = fmt.Errorf("%s tool not supported for invoke yet", tool)
 	}

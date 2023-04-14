@@ -12,16 +12,16 @@ import (
 
 // return the fn response as a serialized string
 // uses secret-key and network-passphrase directly on command
-func invokeContractFromNodeJSTool(deployedContractId, contractName, functionName, param1 string, e2eConfig *e2e.E2EConfig) (string, error) {
+func invokeContractFromNodeJSTool(deployedContractId, contractName, functionName string, functionParams string, e2eConfig *e2e.E2EConfig) (string, error) {
 	args := []string{
 		"--id", deployedContractId,
 		"--rpc-url", e2eConfig.TargetNetworkRPCURL,
 		"--source", e2eConfig.TargetNetworkSecretKey,
 		"--network-passphrase", e2eConfig.TargetNetworkPassPhrase,
-		"--", functionName,
+		"function", "--name", functionName,
 	}
-	if param1 != "" {
-		args = append(args, "--param1", param1)
+	if functionParams != "" {
+		args = append(args, "--params", functionParams)
 	}
 	envCmd := cmd.NewCmd("./invoke.ts", args...)
 	status, stdOutLines, err := e2e.RunCommand(envCmd, e2eConfig)
