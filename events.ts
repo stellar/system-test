@@ -20,7 +20,7 @@ async function main() {
 
   const server = new SorobanClient.Server(rpcUrl, { allowHttp: true });
 
-  let filters = [];
+  let filters: SorobanClient.SorobanRpc.EventFilter[] = [];
 
   if (contractId != null) {
     filters.push({

@@ -74,9 +74,8 @@ async function main() {
       const scval = result.result().results()[0].tr().invokeHostFunctionResult().success();
 
       // Hacky result parsing. We should have some helpers from the
-      // js-stellar-base, or the generated Typescript bindings. But we don't yet as
-      // I'm writing this.
-      let parsed = null;
+      // js-stellar-base, or the generated Typescript bindings.
+      let parsed: number | object | null = null;
       switch (scval.switch()) {
       case xdr.ScValType.scvU32(): {
         parsed = scval.u32();
