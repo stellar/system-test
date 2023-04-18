@@ -1,0 +1,27 @@
+{
+    // example of how to debug and step through a system test feature using IDE
+    // need to have a running instance of quickstart:soroban-dev for rpc url
+    "version": "0.2.0",
+    "configurations": [
+        {
+			"name": "Debug Dapp Test",
+			"type": "go",
+			"request": "launch",
+			"host": "127.0.0.1",
+			"mode": "test",
+			"program": "${workspaceFolder}/features/dapp_develop/dapp_develop_test.go",
+			"cwd": "${workspaceFolder}",
+            "env": {
+                "SorobanExamplesGitHash": "v0.7.0",
+                "SorobanExamplesRepoURL": "https://github.com/stellar/soroban-examples.git",
+                "TargetNetworkPassPhrase": "Standalone Network ; February 2017",
+                "TargetNetworkSecretKey": "SC5O7VZUXDJ6JBDSZ74DSERXL7W3Y5LTOAMRF7RQRL3TAGAPS7LUVG3L",
+                "TargetNetworkPublicKey": "GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI",
+                "TargetNetworkRPCURL":"http://localhost:8000/soroban/rpc",
+                "LocalCore": "true",
+                "VerboseOutput": "true",
+                "FeaturePath": "./features/dapp_develop"
+            },
+		},
+    ]
+}

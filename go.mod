@@ -1,12 +1,11 @@
 module github.com/stellar/system-test
 
-go 1.18
+go 1.20
 
 require (
 	github.com/cucumber/godog v0.12.5
 	github.com/go-cmd/cmd v1.4.1
-	github.com/pkg/errors v0.8.1
-	github.com/stellar/go v0.0.0-20230216182126-bc7f94cc35b6
+	github.com/stellar/go v0.0.0-20230410132830-a9de2a21d17b
 	github.com/stretchr/testify v1.7.1
 )
 

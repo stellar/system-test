@@ -125,7 +125,7 @@ The default target network for system tests is a new/empty instance of standalon
 `--TargetNetworkTestAccountPublic "{your test account key pair info}"`  
 
 Debug mode, the docker container will exit with error code when any pre-setup or test fails to pass,
-you can enable DEBUG_MODE flag, and the container will stay running, prompting you for enter key before shutting down, make sure you invoke docker with `-it` so the prompt will reach your command line. While container is kept running, you can shell into it via `docker exec -it <container id or name>` and view log files of core, rpc, horizon all of which are located in container at `/var/log/supervisor`.  
+you can enable DEBUG_MODE flag, and the container will stay running, prompting you for enter key before shutting down, make sure you invoke docker with `-it` so the prompt will reach your command line. While container is kept running, you can shell into it via `docker exec -it <container id or name>` and view log files of services in the stack such as core, rpc located in container at `/var/log/supervisor`.  
 `--DebugMode=true`
 
 
@@ -133,19 +133,19 @@ The docker run follows standard exit code conventions, so if all tests pass in t
 
 
 ### Development mode and running tests directly from checked out system-test repo.
-This approach allows to run the tests from source code directly on host as go tests, no docker image.  
-Tests will use `soroban` cli tool from the host path. You need to set `TargetNetworkRPCURL` to a running instance of soroban rpc.
+This approach allows to run the tests from source code directly on host as go tests, no docker image is used. 
 
 #### Prerequisites:
 
  1. go 1.18 or above - https://go.dev/doc/install
  2. rust toolchain(cargo and rustc), install the version per testing requirements or stable, - use rustup - https://www.rust-lang.org/tools/install 
- 3. target network stack for the tests to execute against - need a soroban-rpc instance. You can use an existing/running instance if reachable or can use the quickstart image `stellar/quickstart:soroban-dev` from dockerhub to run the latest stable target network stack locally, or build quickstart with specific versions of core, horizon and soroban rpc first [following these instructions](https://github.com/stellar/quickstart#building-custom-images) and run `stellar/quickstart:dev` locally.
+ 3. `soroban`, compile or install via cargo crate a version of soroban cli onto your machine and accessible from PATH.
+ 4. target network stack for the tests to access soroban-rpc instance. You can use an existing/running instance if reachable or can use the quickstart image `stellar/quickstart:soroban-dev` from dockerhub to run the latest stable target network stack locally, or build quickstart with specific versions of core, horizon and soroban rpc first [following these instructions](https://github.com/stellar/quickstart#building-custom-images) and run `stellar/quickstart:dev` locally.
      ```
      docker run --rm -it -p 8000:8000 --name stellar stellar/quickstart:dev --standalone --enable-soroban-rpc --enable-core-artificially-accelerate-time-for-testing
      ```
- 4. locally checkout stellar/system-test GH repo and go into top folder - `git clone https://github.com/stellar/system-test.git;cd system-test`
- 5. compile or install via cargo crate a version of soroban cli onto your machine and accessible from PATH.
+ 5. locally checkout stellar/system-test GH repo and go into top folder - `git clone https://github.com/stellar/system-test.git;cd system-test`
+ 
 
 #### Running tests 
 ```
@@ -167,4 +167,9 @@ This example uses a feature/scenario filter also to limit which tests are run.
 * Tests will attempt to run `soroban` as the cli as provided from your operating system PATH.
 
 * the verbose output of BDD scenerio results for tests is dependent on go's testing verbose output rules, need to specify -v and a directory with single package, if multiple packages detected on directory location, then go won't print verbose output for each package, i.e. you wont see the BDD scenerio summaries printed, just the standard one liner for summary of package pass/fail status.
+
+#### Debugging tests 
+
+Have provided a debug config [launch.json](.vscode/launch.json) for example reference on how to run a test with the go/dlv debugger to step through, etc.
+
 

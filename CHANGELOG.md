@@ -1,5 +1,8 @@
 # System Test Releases
 
+#### Pending
+
+* new scenario for testing diagnostic events retrieval from cli and js. [system-test, #49](https://github.com/stellar/system-test/pull/49)
 
 #### 1.0.10
 
