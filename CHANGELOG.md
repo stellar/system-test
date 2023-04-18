@@ -1,8 +1,8 @@
 # System Test Releases
 
-#### Pending
+#### 1.0.11
 
-* new scenario for testing diagnostic events retrieval from cli and js. [system-test, #49](https://github.com/stellar/system-test/pull/49)
+* updated dapp scenario for verifying diagnostic events retrieval from cli and js. [system-test, #49](https://github.com/stellar/system-test/pull/49)
 
 #### 1.0.10
 
