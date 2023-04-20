@@ -1,8 +1,14 @@
 # System Test Releases
 
-#### Pending
+#### 1.0.12
 
-* new scenario for testing diagnostic events retrieval from cli and js. [system-test, #49](https://github.com/stellar/system-test/pull/49)
+* removed installation of phantomjs in the runtime image, it wasn't used and was triggering build errors due to no debian package available on 22.04. [system-test, #55](https://github.com/stellar/system-test/pull/55)
+
+#### 1.0.11
+
+
+* updated dapp scenario for verifying diagnostic events retrieval from cli and js. [system-test, #49](https://github.com/stellar/system-test/pull/49)
+
 
 #### 1.0.10
 
