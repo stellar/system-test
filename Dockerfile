@@ -37,10 +37,6 @@ ENV RUST_TOOLCHAIN_VERSION=$RUST_TOOLCHAIN_VERSION
 ENV PATH="/usr/local/go/bin:$CARGO_HOME/bin:${PATH}"
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain "$RUST_TOOLCHAIN_VERSION"
 
-# Install phantomjs
-RUN test "$(dpkg --print-architecture)" == *"arm"* && apt -y install phantomjs=2.1.1+dfsg-2ubuntu1 || apt -y install phantomjs
-ENV QT_QPA_PLATFORM=offscreen
-
 # Use a non-root user
 ARG USERNAME=tester
 ARG USER_UID=1000
@@ -71,7 +67,8 @@ RUN npm i -g ts-node
 # Install js-soroban-client
 ARG JS_SOROBAN_CLIENT_NPM_VERSION
 ADD package*.json /home/tester/
-RUN npm ci && npm install "soroban-client@${JS_SOROBAN_CLIENT_NPM_VERSION}"
+RUN npm install "soroban-client@${JS_SOROBAN_CLIENT_NPM_VERSION}"
+RUN npm ci
 ADD *.ts /home/tester/bin/
 RUN ["sudo", "chmod", "+x", "/home/tester/bin/invoke.ts"]
 
