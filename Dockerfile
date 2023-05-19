@@ -62,13 +62,14 @@ RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
 RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
 RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
 ENV PATH="/home/tester/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
-RUN npm i -g ts-node
+RUN npm install -g ts-node yarn
 
 # Install js-soroban-client
 ARG JS_SOROBAN_CLIENT_NPM_VERSION
-ADD package*.json /home/tester/
-RUN npm install "soroban-client@${JS_SOROBAN_CLIENT_NPM_VERSION}"
-RUN npm ci
+ADD package.json /home/tester/
+RUN sudo chown -R tester:tester /home/tester
+RUN yarn add "soroban-client@${JS_SOROBAN_CLIENT_NPM_VERSION}"
+RUN yarn install
 ADD *.ts /home/tester/bin/
 RUN ["sudo", "chmod", "+x", "/home/tester/bin/invoke.ts"]
 
