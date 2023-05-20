@@ -68,8 +68,8 @@ RUN npm install -g ts-node yarn
 ARG JS_SOROBAN_CLIENT_NPM_VERSION
 ADD package.json /home/tester/
 RUN sudo chown -R tester:tester /home/tester
-RUN yarn install
-RUN yarn add "soroban-client@${JS_SOROBAN_CLIENT_NPM_VERSION}"
+RUN yarn install --network-concurrency 1
+RUN yarn add "soroban-client@${JS_SOROBAN_CLIENT_NPM_VERSION}" --network-concurrency 1
 ADD *.ts /home/tester/bin/
 RUN ["sudo", "chmod", "+x", "/home/tester/bin/invoke.ts"]
 
