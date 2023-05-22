@@ -5,8 +5,8 @@ Feature: DApp Contract Development
 Scenario Outline: DApp developer compiles, installs, deploys and invokes a contract
   Given I used cargo to compile example contract <ContractExampleSubPath>
   And I used rpc to verify my account is on the network
-  And I used cli to install contract <ContractCompiledFileName> on network using my secret key
-  And I used cli to deploy contract <ContractCompiledFileName> by installed hash using my secret key
+  And I used cli to install contract <ContractExampleSubPath> / <ContractCompiledFileName> on network using my secret key
+  And I used cli to deploy contract <ContractExampleSubPath> / <ContractCompiledFileName> by installed hash using my secret key
   When I invoke function <FunctionName> on <ContractName> with request parameters <FunctionParams> from tool <Tool> using my secret key
   Then The result should be <Result>
 
@@ -23,7 +23,7 @@ Scenario Outline: DApp developer compiles, deploys and invokes a contract
   And I used cargo to compile example contract <ContractExampleSubPath>
   And I used rpc to verify my account is on the network
   And I used rpc to get network latest ledger
-  And I used cli to deploy contract <ContractCompiledFileName> using my secret key
+  And I used cli to deploy contract <ContractExampleSubPath> / <ContractCompiledFileName> using my secret key
   When I invoke function <FunctionName> on <ContractName> with request parameters <FunctionParams> from tool <Tool> using my secret key
   Then The result should be <Result>
   And The result should be to receive <EventCount> contract events and <DiagEventCount> diagnostic events for <ContractName> from <Tool>
@@ -43,7 +43,7 @@ Scenario Outline: DApp developer uses config states, compiles, deploys and invok
   And I used cli to add Network Config <NetworkConfigName> for rpc and standalone
   And I used cli to add Identity <RootIdentityName> for my secret key
   And I used cli to add Identity <TesterIdentityName> for tester secret key
-  And I used cli to deploy contract <ContractCompiledFileName> using Identity <RootIdentityName> and Network Config <NetworkConfigName>
+  And I used cli to deploy contract <ContractExampleSubPath> / <ContractCompiledFileName> using Identity <RootIdentityName> and Network Config <NetworkConfigName>
   When I invoke function <FunctionName> on <ContractName> with request parameters <FunctionParams> from tool <Tool> using Identity <TesterIdentityName> as invoker and Network Config <NetworkConfigName>
   Then The result should be <Result>
 

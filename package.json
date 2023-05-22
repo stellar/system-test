@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "argparse": "^2.0.1",
-    "soroban-client": "git+https://github.com/stellar/js-soroban-client.git#main",
     "tslib": "^2.5.0",
     "typescript": "^4.9.5"
   },

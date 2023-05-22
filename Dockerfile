@@ -37,10 +37,6 @@ ENV RUST_TOOLCHAIN_VERSION=$RUST_TOOLCHAIN_VERSION
 ENV PATH="/usr/local/go/bin:$CARGO_HOME/bin:${PATH}"
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain "$RUST_TOOLCHAIN_VERSION"
 
-# Install phantomjs
-RUN test "$(dpkg --print-architecture)" == *"arm"* && apt -y install phantomjs=2.1.1+dfsg-2ubuntu1 || apt -y install phantomjs
-ENV QT_QPA_PLATFORM=offscreen
-
 # Use a non-root user
 ARG USERNAME=tester
 ARG USER_UID=1000
@@ -66,12 +62,14 @@ RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
 RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
 RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
 ENV PATH="/home/tester/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
-RUN npm i -g ts-node
+RUN npm install -g ts-node yarn
 
 # Install js-soroban-client
 ARG JS_SOROBAN_CLIENT_NPM_VERSION
-ADD package*.json /home/tester/
-RUN npm ci && npm install "soroban-client@${JS_SOROBAN_CLIENT_NPM_VERSION}"
+ADD package.json /home/tester/
+RUN sudo chown -R tester:tester /home/tester
+RUN yarn install --network-concurrency 1
+RUN yarn add "soroban-client@${JS_SOROBAN_CLIENT_NPM_VERSION}" --network-concurrency 1
 ADD *.ts /home/tester/bin/
 RUN ["sudo", "chmod", "+x", "/home/tester/bin/invoke.ts"]
 

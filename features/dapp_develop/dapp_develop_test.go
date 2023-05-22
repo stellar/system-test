@@ -77,37 +77,37 @@ func compileContractStep(ctx context.Context, contractExamplesSubPath string) er
 	return compileContract(contractExamplesSubPath, contractWorkingDirectory, testConfig.E2EConfig)
 }
 
-func deployContractStep(ctx context.Context, compiledContractFileName string) error {
+func deployContractStep(ctx context.Context, contractExamplesSubPath string, compiledContractFileName string) error {
 	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
 	contractWorkingDirectory := fmt.Sprintf("%s/soroban_examples", testConfig.TestWorkingDir)
 
 	var err error
-	if testConfig.DeployedContractId, err = deployContract(compiledContractFileName, contractWorkingDirectory, testConfig.InstalledContractId, testConfig.E2EConfig); err != nil {
+	if testConfig.DeployedContractId, err = deployContract(compiledContractFileName, contractWorkingDirectory, contractExamplesSubPath, testConfig.InstalledContractId, testConfig.E2EConfig); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func deployContractUsingConfigParamsStep(ctx context.Context, compiledContractFileName string, identityName string, networkConfigName string) error {
+func deployContractUsingConfigParamsStep(ctx context.Context, contractExamplesSubPath string, compiledContractFileName string, identityName string, networkConfigName string) error {
 	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
 	contractWorkingDirectory := fmt.Sprintf("%s/soroban_examples", testConfig.TestWorkingDir)
 
 	var err error
-	if testConfig.DeployedContractId, err = deployContractUsingConfigParams(compiledContractFileName, contractWorkingDirectory, identityName, networkConfigName, testConfig.E2EConfig); err != nil {
+	if testConfig.DeployedContractId, err = deployContractUsingConfigParams(compiledContractFileName, contractWorkingDirectory, contractExamplesSubPath, identityName, networkConfigName, testConfig.E2EConfig); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func installContractStep(ctx context.Context, compiledContractFileName string) error {
+func installContractStep(ctx context.Context, contractExamplesSubPath string, compiledContractFileName string) error {
 
 	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
 	contractWorkingDirectory := fmt.Sprintf("%s/soroban_examples", testConfig.TestWorkingDir)
 
 	var err error
-	if testConfig.InstalledContractId, err = installContract(compiledContractFileName, contractWorkingDirectory, testConfig.E2EConfig); err != nil {
+	if testConfig.InstalledContractId, err = installContract(compiledContractFileName, contractWorkingDirectory, contractExamplesSubPath, testConfig.E2EConfig); err != nil {
 		return err
 	}
 
@@ -337,10 +337,10 @@ func initializeScenario(scenarioCtx *godog.ScenarioContext) {
 		scenarioCtx.Step(`^I used rpc to submit transaction to create tester account on the network$`, createTesterAccountStep)
 		scenarioCtx.Step(`^I used cli to add Network Config ([\S|\s]+) for rpc and standalone$`, createNetworkConfigStep)
 		scenarioCtx.Step(`^I used cli to add Identity ([\S|\s]+) for my secret key$`, createMyIdentityStep)
-		scenarioCtx.Step(`^I used cli to deploy contract ([\S|\s]+) using Identity ([\S|\s]+) and Network Config ([\S|\s]+)$`, deployContractUsingConfigParamsStep)
-		scenarioCtx.Step(`^I used cli to install contract ([\S|\s]+) on network using my secret key$`, installContractStep)
-		scenarioCtx.Step(`^I used cli to deploy contract ([\S|\s]+) by installed hash using my secret key$`, deployContractStep)
-		scenarioCtx.Step(`^I used cli to deploy contract ([\S|\s]+) using my secret key$`, deployContractStep)
+		scenarioCtx.Step(`^I used cli to deploy contract ([\S|\s]+) / ([\S|\s]+) using Identity ([\S|\s]+) and Network Config ([\S|\s]+)$`, deployContractUsingConfigParamsStep)
+		scenarioCtx.Step(`^I used cli to install contract ([\S|\s]+) / ([\S|\s]+) on network using my secret key$`, installContractStep)
+		scenarioCtx.Step(`^I used cli to deploy contract ([\S|\s]+) / ([\S|\s]+) by installed hash using my secret key$`, deployContractStep)
+		scenarioCtx.Step(`^I used cli to deploy contract ([\S|\s]+) / ([\S|\s]+) using my secret key$`, deployContractStep)
 		scenarioCtx.Step(`^I used cli to add Identity ([\S|\s]+) for tester secret key$`, createTestAccountIdentityStep)
 		scenarioCtx.Step(`^I invoke function ([\S|\s]+) on ([\S|\s]+) with request parameters ([\S|\s]*) from tool ([\S|\s]+) using Identity ([\S|\s]+) as invoker and Network Config ([\S|\s]+)$`, invokeContractStepWithConfig)
 		scenarioCtx.Step(`^I invoke function ([\S|\s]+) on ([\S|\s]+) with request parameters ([\S|\s]*) from tool ([\S|\s]+) using my secret key$`, invokeContractStep)

@@ -39,7 +39,7 @@ func compileContract(contractExamplesSubPath string, contractWorkingDirectory st
 }
 
 // returns the deployed contract id
-func deployContract(compiledContractFileName string, contractWorkingDirectory string, installedContractId string, e2eConfig *e2e.E2EConfig) (string, error) {
+func deployContract(compiledContractFileName string, contractWorkingDirectory string, contractExamplesSubPath string, installedContractId string, e2eConfig *e2e.E2EConfig) (string, error) {
 	var envCmd *cmd.Cmd
 
 	if installedContractId != "" {
@@ -54,7 +54,7 @@ func deployContract(compiledContractFileName string, contractWorkingDirectory st
 		envCmd = cmd.NewCmd("soroban",
 			"contract",
 			"deploy",
-			"--wasm", fmt.Sprintf("./%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, compiledContractFileName),
+			"--wasm", fmt.Sprintf("./%s/%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, contractExamplesSubPath, compiledContractFileName),
 			"--rpc-url", e2eConfig.TargetNetworkRPCURL,
 			"--source", e2eConfig.TargetNetworkSecretKey,
 			"--network-passphrase", e2eConfig.TargetNetworkPassPhrase)
@@ -73,11 +73,11 @@ func deployContract(compiledContractFileName string, contractWorkingDirectory st
 	return stdOut[0], nil
 }
 
-func deployContractUsingConfigParams(compiledContractFileName string, contractWorkingDirectory string, identityName string, networkConfigName string, e2eConfig *e2e.E2EConfig) (string, error) {
+func deployContractUsingConfigParams(compiledContractFileName string, contractWorkingDirectory string, contractExamplesSubPath string, identityName string, networkConfigName string, e2eConfig *e2e.E2EConfig) (string, error) {
 	envCmd := cmd.NewCmd("soroban",
 		"contract",
 		"deploy",
-		"--wasm", fmt.Sprintf("./%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, compiledContractFileName),
+		"--wasm", fmt.Sprintf("./%s/%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, contractExamplesSubPath, compiledContractFileName),
 		"--network", networkConfigName,
 		"--source", identityName)
 
@@ -95,11 +95,11 @@ func deployContractUsingConfigParams(compiledContractFileName string, contractWo
 }
 
 // returns the installed contract id
-func installContract(compiledContractFileName string, contractWorkingDirectory string, e2eConfig *e2e.E2EConfig) (string, error) {
+func installContract(compiledContractFileName string, contractWorkingDirectory string, contractExamplesSubPath string, e2eConfig *e2e.E2EConfig) (string, error) {
 	envCmd := cmd.NewCmd("soroban",
 		"contract",
 		"install",
-		"--wasm", fmt.Sprintf("./%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, compiledContractFileName),
+		"--wasm", fmt.Sprintf("./%s/%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, contractExamplesSubPath, compiledContractFileName),
 		"--rpc-url", e2eConfig.TargetNetworkRPCURL,
 		"--source", e2eConfig.TargetNetworkSecretKey,
 		"--network-passphrase", e2eConfig.TargetNetworkPassPhrase)

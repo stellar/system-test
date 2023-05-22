@@ -70,7 +70,9 @@ build-friendbot:
 			pushd "$(GO_GIT_REF)"; \
 			SOURCE_URL=.; \
 		fi; \
-		docker build -t "$(FRIENDBOT_STAGE_IMAGE)" -f services/friendbot/docker/Dockerfile "$$SOURCE_URL"; \
+		docker build -t "$(FRIENDBOT_STAGE_IMAGE)" \
+		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
+		-f services/friendbot/docker/Dockerfile "$$SOURCE_URL"; \
 	fi	
 
 build-soroban-rpc:
@@ -80,13 +82,16 @@ build-soroban-rpc:
 			pushd "$(SOROBAN_RPC_GIT_REF)"; \
 			SOURCE_URL=.; \
 		fi; \
-		docker build -t "$(SOROBAN_RPC_STAGE_IMAGE)" --target build -f cmd/soroban-rpc/docker/Dockerfile "$$SOURCE_URL"; \
+		docker build -t "$(SOROBAN_RPC_STAGE_IMAGE)" --target build \
+		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
+		-f cmd/soroban-rpc/docker/Dockerfile "$$SOURCE_URL"; \
 	fi
 
 build-soroban-cli:
 	if [ -z "$(SOROBAN_CLI_IMAGE)" ]; then \
 		DOCKERHUB_RUST_VERSION=rust:$$( [ "$(RUST_TOOLCHAIN_VERSION)" = "stable" ] && echo "latest" || echo "$(RUST_TOOLCHAIN_VERSION)"); \
 		docker buildx build -t "$(SOROBAN_CLI_STAGE_IMAGE)" --target builder \
+		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
 		--build-arg DOCKERHUB_RUST_VERSION="$$DOCKERHUB_RUST_VERSION" \
 		--build-arg SOROBAN_CLI_CRATE_VERSION="$(SOROBAN_CLI_CRATE_VERSION)" \
 		-f- $(SOROBAN_CLI_GIT_REF) < $(MAKEFILE_DIR)Dockerfile.soroban-cli; \
@@ -99,7 +104,9 @@ build-horizon:
 			pushd "$(GO_GIT_REF)"; \
 			SOURCE_URL=.; \
 		fi; \
-		docker build -t "$(HORIZON_STAGE_IMAGE)" --target builder -f services/horizon/docker/Dockerfile.dev "$$SOURCE_URL"; \
+		docker build -t "$(HORIZON_STAGE_IMAGE)" \
+		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
+		--target builder -f services/horizon/docker/Dockerfile.dev "$$SOURCE_URL"; \
 	fi
 
 build-core: 
@@ -127,6 +134,7 @@ build-quickstart: build-core build-friendbot build-horizon build-soroban-rpc
 			SOURCE_URL=.; \
 		fi; \
 		docker build -t "$(QUICKSTART_STAGE_IMAGE)" \
+		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
 		--build-arg STELLAR_CORE_IMAGE_REF=$$CORE_IMAGE_REF \
 		--build-arg HORIZON_IMAGE_REF=$$HORIZON_IMAGE_REF \
 		--build-arg FRIENDBOT_IMAGE_REF=$$FRIENDBOT_IMAGE_REF \
@@ -138,6 +146,7 @@ build: build-quickstart build-soroban-cli
 	QUICKSTART_IMAGE_REF=$$( [ -z "$(QUICKSTART_IMAGE)" ] && echo "$(QUICKSTART_STAGE_IMAGE)" || echo "$(QUICKSTART_IMAGE)"); \
 	SOROBAN_CLI_IMAGE_REF=$$( [ -z "$(SOROBAN_CLI_IMAGE)" ] && echo "$(SOROBAN_CLI_STAGE_IMAGE)" || echo "$(SOROBAN_CLI_IMAGE)"); \
 	docker build -t "$(SYSTEM_TEST_IMAGE)" -f Dockerfile \
+	    --build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
 		--build-arg QUICKSTART_IMAGE_REF=$$QUICKSTART_IMAGE_REF \
 		--build-arg SOROBAN_CLI_CRATE_VERSION=$(SOROBAN_CLI_CRATE_VERSION) \
 		--build-arg SOROBAN_CLI_IMAGE_REF=$$SOROBAN_CLI_IMAGE_REF \
