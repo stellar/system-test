@@ -38,18 +38,16 @@ async function main() {
         params.push(xdr.ScVal.scvSymbol(param));
     });
   }
- 
-  const txn = await server.prepareTransaction(
-    new SorobanClient.TransactionBuilder(sourceAccount, {
+
+  const originalTxn = new SorobanClient.TransactionBuilder(sourceAccount, {
       fee: "100",
       networkPassphrase,
     })
     .addOperation(contract.call(functionName, ...params))
     .setTimeout(30)
-    .build(),
-    networkPassphrase
-  );
-
+    .build();
+ 
+  const txn = await server.prepareTransaction(originalTxn,networkPassphrase);
   txn.sign(secretKey);
   const send = await server.sendTransaction(txn);
   if (send.errorResultXdr) {
