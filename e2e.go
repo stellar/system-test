@@ -39,7 +39,7 @@ const (
 )
 
 type RPCError struct {
-	Code    string `json:"code"`
+	Code    int64  `json:"code"`
 	Message string `json:"message"`
 	Data    string `json:"data"`
 }
@@ -76,9 +76,13 @@ type LedgerEntryResult struct {
 	XDR string `json:"xdr"`
 }
 
-type RPCLedgerEntryResponse struct {
-	Result LedgerEntryResult `json:"result"`
-	Error  *RPCError         `json:"error,omitempty"`
+type LedgerEntriesResult struct {
+	Entries []LedgerEntryResult `json:"entries"`
+}
+
+type RPCLedgerEntriesResponse struct {
+	Result LedgerEntriesResult `json:"result"`
+	Error  *RPCError           `json:"error,omitempty"`
 }
 
 type LatestLedgerResult struct {
@@ -253,9 +257,9 @@ func QueryAccount(e2eConfig *E2EConfig, publicKey string) (*AccountInfo, error) 
 	getAccountRequest := []byte(`{
            "jsonrpc": "2.0",
            "id": 10235,
-           "method": "getLedgerEntry",
+           "method": "getLedgerEntries",
            "params": { 
-               "key": "` + keyXdr + `"
+               "keys": [` + fmt.Sprintf("%q", keyXdr) + `]
             }
         }`)
 
@@ -264,7 +268,7 @@ func QueryAccount(e2eConfig *E2EConfig, publicKey string) (*AccountInfo, error) 
 		return nil, fmt.Errorf("soroban rpc get account had error %e", err)
 	}
 
-	var rpcResponse RPCLedgerEntryResponse
+	var rpcResponse RPCLedgerEntriesResponse
 	decoder := json.NewDecoder(resp.Body)
 	err = decoder.Decode(&rpcResponse)
 	if err != nil {
@@ -275,9 +279,12 @@ func QueryAccount(e2eConfig *E2EConfig, publicKey string) (*AccountInfo, error) 
 	}
 
 	var entry xdr.LedgerEntryData
-	err = xdr.SafeUnmarshalBase64(rpcResponse.Result.XDR, &entry)
+	if len(rpcResponse.Result.Entries) == 0 {
+		return nil, fmt.Errorf("unable to find account for key %v, %e", keyXdr, err)
+	}
+	err = xdr.SafeUnmarshalBase64(rpcResponse.Result.Entries[0].XDR, &entry)
 	if err != nil {
-		return nil, fmt.Errorf("soroban rpc get account, not able to parse XDR from ledger entry response, %v, %e", rpcResponse.Result.XDR, err)
+		return nil, fmt.Errorf("soroban rpc get account, not able to parse XDR from ledger entry response, %v, %e", rpcResponse.Result.Entries[0].XDR, err)
 	}
 
 	return &AccountInfo{ID: entry.Account.AccountId.Address(), Sequence: int64(entry.Account.SeqNum)}, nil
