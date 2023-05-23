@@ -80,18 +80,17 @@ function main() {
     print_screen_output "  SOROBAN RPC VERSION=$(stellar-soroban-rpc version 2>/dev/null || echo "n/a")"
       
     if [ "$TARGET_NETWORK" = "standalone" ]; then
-        ARTIFICIAL_ACCELERATE=--enable-core-artificially-accelerate-time-for-testing
         ENABLE_SOROBAN_DIAGNOSTIC_EVENTS=--enable-soroban-diagnostic-events
     fi        
 
     if [ "$VERBOSE_OUTPUT" = "true" ]; then
         # redirects all quickstart output to console during test execution
-        /start --$TARGET_NETWORK --enable-soroban-rpc $ARTIFICIAL_ACCELERATE $ENABLE_SOROBAN_DIAGNOSTIC_EVENTS --logs 2>&1 &
+        /start --$TARGET_NETWORK --enable-soroban-rpc $ENABLE_SOROBAN_DIAGNOSTIC_EVENTS --logs 2>&1 &
     else
         # don't show any quickstart output on console during test execution
         # all quickstart output is redirected(buffering disabled) to log file, which will be dumped to
         # console if tests fail.
-        stdbuf -o0 -e0 /start --$TARGET_NETWORK --enable-soroban-rpc $ARTIFICIAL_ACCELERATE $ENABLE_SOROBAN_DIAGNOSTIC_EVENTS --logs >> $QUICKSTART_LOG_FILE 2>&1 &
+        stdbuf -o0 -e0 /start --$TARGET_NETWORK --enable-soroban-rpc $ENABLE_SOROBAN_DIAGNOSTIC_EVENTS --logs >> $QUICKSTART_LOG_FILE 2>&1 &
     fi
   fi
 
