@@ -38,18 +38,16 @@ async function main() {
         params.push(xdr.ScVal.scvSymbol(param));
     });
   }
- 
-  const txn = await server.prepareTransaction(
-    new SorobanClient.TransactionBuilder(sourceAccount, {
+
+  const originalTxn = new SorobanClient.TransactionBuilder(sourceAccount, {
       fee: "100",
       networkPassphrase,
     })
     .addOperation(contract.call(functionName, ...params))
     .setTimeout(30)
-    .build(),
-    networkPassphrase
-  );
-
+    .build();
+ 
+  const txn = await server.prepareTransaction(originalTxn,networkPassphrase);
   txn.sign(secretKey);
   const send = await server.sendTransaction(txn);
   if (send.errorResultXdr) {
@@ -71,8 +69,12 @@ async function main() {
           throw new Error(`No result XDR: ${JSON.stringify(response)}`);
       }
       const result = xdr.TransactionResult.fromXDR(response.resultXdr, "base64");
-      const scval = result.result().results()[0].tr().invokeHostFunctionResult().success();
+      const scvals = result.result().results()[0].tr().invokeHostFunctionResult().success();
 
+      if (scvals.length !== 1) {
+        throw new Error(`Invalid tx success response for invoke host, expected one host function scval`);
+      }
+      const scval = scvals[0];
       // Hacky result parsing. We should have some helpers from the
       // js-stellar-base, or the generated Typescript bindings.
       let parsed: number | object | null = null;
