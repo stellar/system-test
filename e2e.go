@@ -39,7 +39,7 @@ const (
 )
 
 type RPCError struct {
-	Code    string `json:"code"`
+	Code    int64  `json:"code"`
 	Message string `json:"message"`
 	Data    string `json:"data"`
 }
@@ -259,7 +259,7 @@ func QueryAccount(e2eConfig *E2EConfig, publicKey string) (*AccountInfo, error) 
            "id": 10235,
            "method": "getLedgerEntries",
            "params": { 
-               "keys": "[` + keyXdr + `]"
+               "keys": [` + fmt.Sprintf("%q", keyXdr) + `]
             }
         }`)
 
