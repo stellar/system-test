@@ -1,5 +1,10 @@
 # System Test Releases
 
+#### 1.0.14
+
+* remove usage of accelerate flag on quickstart startup flags. [system-test, #60](https://github.com/stellar/system-test/pull/60)
+
+
 #### 1.0.13
 
 * tests use new output paths compiled wasm in soroban-examples. [system-test, #58](https://github.com/stellar/system-test/pull/58)
