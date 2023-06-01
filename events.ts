@@ -24,7 +24,7 @@ async function main() {
 
   if (contractId != null) {
     filters.push({
-      contractIds: [ contractId ]
+      contractIds: [ new SorobanClient.Contract(contractId).contractId('hex') ]
     });
   }
 
