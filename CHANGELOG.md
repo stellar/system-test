@@ -1,5 +1,13 @@
 # System Test Releases
 
+#### 1.0.15
+
+* hex-ify the contract id for getEvents. [system-test, #61](https://github.com/stellar/system-test/pull/61)
+
+#### 1.0.14
+
+* removed usage of accelerate flag on quickstart options, it's been deprecated [system-test, #60](https://github.com/stellar/system-test/pull/60)
+
 #### 1.0.13
 
 * tests use new output paths compiled wasm in soroban-examples. [system-test, #58](https://github.com/stellar/system-test/pull/58)
