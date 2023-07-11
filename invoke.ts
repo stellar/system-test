@@ -32,7 +32,7 @@ async function main() {
   const sourceAccount = await server.getAccount(account);
 
   // Some hacky param-parsing as csv. Generated Typescript bindings would be better.
-  const params: SorobanClient.xdr.ScVal[] = [];
+  const params: xdr.ScVal[] = [];
   if (functionParams) {
     functionParams.split(",").forEach((param) => {
         params.push(xdr.ScVal.scvSymbol(param));
@@ -46,7 +46,7 @@ async function main() {
     .addOperation(contract.call(functionName, ...params))
     .setTimeout(30)
     .build();
- 
+
   const txn = await server.prepareTransaction(originalTxn,networkPassphrase);
   txn.sign(secretKey);
   const send = await server.sendTransaction(txn);
@@ -63,38 +63,14 @@ async function main() {
       break;
     }
     case "SUCCESS": {
-      // parse and print the response (assuming it is a vec)
-      // TODO: Move this scval serializing stuff to stellar-base
-      if (!response.resultXdr) {
-          throw new Error(`No result XDR: ${JSON.stringify(response)}`);
+      if (!response.resultMetaXdr) {
+        throw new Error(`No result meta XDR: ${JSON.stringify(response)}`);
       }
-      const result = xdr.TransactionResult.fromXDR(response.resultXdr, "base64");
-      const scvals = result.result().results()[0].tr().invokeHostFunctionResult().success();
 
-      if (scvals.length !== 1) {
-        throw new Error(`Invalid tx success response for invoke host, expected one host function scval`);
-      }
-      const scval = scvals[0];
-      // Hacky result parsing. We should have some helpers from the
-      // js-stellar-base, or the generated Typescript bindings.
-      let parsed: number | object | null = null;
-      switch (scval.switch()) {
-      case xdr.ScValType.scvU32(): {
-        parsed = scval.u32();
-        break;
-      }
-      case xdr.ScValType.scvI32(): {
-        parsed = scval.i32();
-        break;
-      }
-      case xdr.ScValType.scvVec(): {
-        // Total hack, we just assume the object is a vec. Good enough for now.
-        parsed = scval.vec()!.map(v => v.sym().toString());
-        break;
-      }
-      default:
-        throw new Error(`Unexpected scval type: ${scval.switch().name}`);
-      }
+      const result = xdr.TransactionMeta.fromXDR(response.resultMetaXdr, "base64");
+      // TODO: Move this scval serializing stuff to stellar-base
+      const scval = result.v3().sorobanMeta()?.returnValue()!;
+      const parsed = SorobanClient.scValToNative(scval);
       console.log(JSON.stringify(parsed));
       return;
     }
