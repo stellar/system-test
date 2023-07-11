@@ -67,9 +67,9 @@ async function main() {
         throw new Error(`No result meta XDR: ${JSON.stringify(response)}`);
       }
 
-      const result = xdr.TransactionResultMeta.fromXDR(response.resultMetaXdr, "base64");
+      const result = xdr.TransactionMeta.fromXDR(response.resultMetaXdr, "base64");
       // TODO: Move this scval serializing stuff to stellar-base
-      const scval = result.txApplyProcessing().v3().sorobanMeta()?.returnValue()!;
+      const scval = result.v3().sorobanMeta()?.returnValue()!;
       const parsed = SorobanClient.scValToNative(scval);
       console.log(JSON.stringify(parsed));
       return;
