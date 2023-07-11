@@ -71,26 +71,7 @@ async function main() {
       const result = xdr.TransactionResultMeta.fromXDR(response.resultMetaXdr!, "base64");
       const scval = result.txApplyProcessing().v3().sorobanMeta()?.returnValue()!;
 
-      // Hacky result parsing. We should have some helpers from the
-      // js-stellar-base, or the generated Typescript bindings.
-      let parsed: number | object | null = null;
-      switch (scval.switch()) {
-      case xdr.ScValType.scvU32(): {
-        parsed = scval.u32();
-        break;
-      }
-      case xdr.ScValType.scvI32(): {
-        parsed = scval.i32();
-        break;
-      }
-      case xdr.ScValType.scvVec(): {
-        // Total hack, we just assume the object is a vec. Good enough for now.
-        parsed = scval.vec()!.map(v => v.sym().toString());
-        break;
-      }
-      default:
-        throw new Error(`Unexpected scval type: ${scval.switch().name}`);
-      }
+      const parsed = SorobanClient.scValToNative(scval);
       console.log(JSON.stringify(parsed));
       return;
     }
