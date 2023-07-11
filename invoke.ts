@@ -32,7 +32,7 @@ async function main() {
   const sourceAccount = await server.getAccount(account);
 
   // Some hacky param-parsing as csv. Generated Typescript bindings would be better.
-  const params: SorobanClient.xdr.ScVal[] = [];
+  const params: xdr.ScVal[] = [];
   if (functionParams) {
     functionParams.split(",").forEach((param) => {
         params.push(xdr.ScVal.scvSymbol(param));
@@ -46,7 +46,7 @@ async function main() {
     .addOperation(contract.call(functionName, ...params))
     .setTimeout(30)
     .build();
- 
+
   const txn = await server.prepareTransaction(originalTxn,networkPassphrase);
   txn.sign(secretKey);
   const send = await server.sendTransaction(txn);
@@ -68,13 +68,9 @@ async function main() {
       if (!response.resultXdr) {
           throw new Error(`No result XDR: ${JSON.stringify(response)}`);
       }
-      const result = xdr.TransactionResult.fromXDR(response.resultXdr, "base64");
-      const scvals = result.result().results()[0].tr().invokeHostFunctionResult().success();
+      const result = xdr.TransactionResultMeta.fromXDR(response.resultMetaXdr!, "base64");
+      const scval = result.txApplyProcessing().v3().sorobanMeta()?.returnValue()!;
 
-      if (scvals.length !== 1) {
-        throw new Error(`Invalid tx success response for invoke host, expected one host function scval`);
-      }
-      const scval = scvals[0];
       // Hacky result parsing. We should have some helpers from the
       // js-stellar-base, or the generated Typescript bindings.
       let parsed: number | object | null = null;
