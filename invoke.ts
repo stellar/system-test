@@ -63,14 +63,13 @@ async function main() {
       break;
     }
     case "SUCCESS": {
-      // parse and print the response (assuming it is a vec)
-      // TODO: Move this scval serializing stuff to stellar-base
-      if (!response.resultXdr) {
-          throw new Error(`No result XDR: ${JSON.stringify(response)}`);
+      if (!response.resultMetaXdr) {
+        throw new Error(`No result meta XDR: ${JSON.stringify(response)}`);
       }
-      const result = xdr.TransactionResultMeta.fromXDR(response.resultMetaXdr!, "base64");
-      const scval = result.txApplyProcessing().v3().sorobanMeta()?.returnValue()!;
 
+      const result = xdr.TransactionResultMeta.fromXDR(response.resultMetaXdr, "base64");
+      // TODO: Move this scval serializing stuff to stellar-base
+      const scval = result.txApplyProcessing().v3().sorobanMeta()?.returnValue()!;
       const parsed = SorobanClient.scValToNative(scval);
       console.log(JSON.stringify(parsed));
       return;
