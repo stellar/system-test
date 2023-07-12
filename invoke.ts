@@ -2,7 +2,6 @@
 
 import { ArgumentParser } from 'argparse';
 import * as SorobanClient from 'soroban-client';
-const xdr = SorobanClient.xdr;
 
 async function main() {
   const parser = new ArgumentParser({ description: 'Invoke a contract function' })
@@ -32,10 +31,10 @@ async function main() {
   const sourceAccount = await server.getAccount(account);
 
   // Some hacky param-parsing as csv. Generated Typescript bindings would be better.
-  const params: xdr.ScVal[] = [];
+  const params: SorobanClient.xdr.ScVal[] = [];
   if (functionParams) {
     functionParams.split(",").forEach((param) => {
-        params.push(xdr.ScVal.scvSymbol(param));
+      params.push(SorobanClient.xdr.ScVal.scvSymbol(param));
     });
   }
 
@@ -67,7 +66,7 @@ async function main() {
         throw new Error(`No result meta XDR: ${JSON.stringify(response)}`);
       }
 
-      const result = xdr.TransactionMeta.fromXDR(response.resultMetaXdr, "base64");
+      const result = SorobanClient.xdr.TransactionMeta.fromXDR(response.resultMetaXdr, "base64");
       // TODO: Move this scval serializing stuff to stellar-base
       const scval = result.v3().sorobanMeta()?.returnValue()!;
       const parsed = SorobanClient.scValToNative(scval);
