@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/cucumber/godog v0.12.5
 	github.com/go-cmd/cmd v1.4.1
-	github.com/stellar/go v0.0.0-20230410132830-a9de2a21d17b
+	github.com/stellar/go v0.0.0-20230711170410-05e630f47f6c
 	github.com/stretchr/testify v1.7.1
 )
 
