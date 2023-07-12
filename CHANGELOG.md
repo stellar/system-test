@@ -1,5 +1,12 @@
 # System Test Releases
 
+#### 1.0.18
+
+* verify js contract invoke return value as native arrays. [system-test, #67](https://github.com/stellar/system-test/pull/67)
+
+
+...
+
 #### 1.0.15
 
 * hex-ify the contract id for getEvents. [system-test, #61](https://github.com/stellar/system-test/pull/61)
