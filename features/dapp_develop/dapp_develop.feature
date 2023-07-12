@@ -9,10 +9,11 @@ Scenario Outline: DApp developer compiles, installs, deploys and invokes a contr
   And I used cli to deploy contract <ContractExampleSubPath> / <ContractCompiledFileName> by installed hash using my secret key
   When I invoke function <FunctionName> on <ContractName> with request parameters <FunctionParams> from tool <Tool> using my secret key
   Then The result should be <Result>
-
+# Note, the NODEJS verification value for hello world response of ScVal(ScVec(Sym("Hello"),Sym("Aloha"))) 
+# is stringified Uint8Array for each Sym value per js scValToNative conversion.
   Examples: 
         | Tool         | ContractExampleSubPath | ContractName                  | ContractCompiledFileName             | FunctionName | FunctionParams | Result             |
-        | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | Aloha          | ["Hello","Aloha"]  |
+        | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | Aloha          | [{"0":72,"1":101,"2":108,"3":108,"4":111},{"0":65,"1":108,"2":111,"3":104,"4":97}] |
         | CLI          | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | --to=Aloha     | ["Hello","Aloha"]  |
         | NODEJS       | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  |
         | CLI          | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  |
@@ -27,10 +28,11 @@ Scenario Outline: DApp developer compiles, deploys and invokes a contract
   When I invoke function <FunctionName> on <ContractName> with request parameters <FunctionParams> from tool <Tool> using my secret key
   Then The result should be <Result>
   And The result should be to receive <EventCount> contract events and <DiagEventCount> diagnostic events for <ContractName> from <Tool>
-
+# Note, the NODEJS verification value for hello world response of ScVal(ScVec(Sym("Hello"),Sym("Aloha"))) 
+# is stringified Uint8Array for each Sym value per js scValToNative conversion.
   Examples: 
         | Tool         | ContractExampleSubPath | ContractName                  | ContractCompiledFileName             | FunctionName | FunctionParams | Result             | EventCount | DiagEventCount |
-        | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | Aloha          | ["Hello","Aloha"]  | 0          | 1              |
+        | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | Aloha          | [{"0":72,"1":101,"2":108,"3":108,"4":111},{"0":65,"1":108,"2":111,"3":104,"4":97}] | 0          | 1              |
         | CLI          | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | --to=Aloha     | ["Hello","Aloha"]  | 0          | 1              |
         | NODEJS       | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  | 0          | 1              |
         | CLI          | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  | 0          | 1              |
