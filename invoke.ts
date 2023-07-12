@@ -66,11 +66,17 @@ async function main() {
         throw new Error(`No result meta XDR: ${JSON.stringify(response)}`);
       }
 
-      const result = SorobanClient.xdr.TransactionMeta.fromXDR(response.resultMetaXdr, "base64");
       // TODO: Move this scval serializing stuff to stellar-base
+      const result = SorobanClient.xdr.TransactionMeta.fromXDR(response.resultMetaXdr, "base64");
       const scval = result.v3().sorobanMeta()?.returnValue()!;
-      const parsed = SorobanClient.scValToNative(scval);
+      let parsed = SorobanClient.scValToNative(scval);
+
+      // Hack: Convert Vec<Buffer> to Vec<String> for stringification
+      if (parsed.length !== 0 && ArrayBuffer.isView(parsed[0])) {
+        parsed = parsed.map(elem => elem.toString());
+      }
       console.log(JSON.stringify(parsed));
+
       return;
     }
     case "FAILED": {
