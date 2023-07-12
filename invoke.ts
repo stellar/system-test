@@ -73,10 +73,11 @@ async function main() {
 
       // Hack: Convert Vec<Buffer> to Vec<String> for stringification
       if (parsed.length !== 0 && ArrayBuffer.isView(parsed[0])) {
-        parsed = parsed.map(elem => elem.toString());
+        const decoder = new TextDecoder();
+        parsed = parsed.map(elem => decoder.decode(elem));
       }
-      console.log(JSON.stringify(parsed));
 
+      console.log(JSON.stringify(parsed));
       return;
     }
     case "FAILED": {
