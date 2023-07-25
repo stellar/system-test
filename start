@@ -15,6 +15,7 @@ TARGET_NETWORK_PUBLIC_KEY="GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNM
 TARGET_NETWORK_RPC_URL=
 QUICKSTART_LOG_FILE=/var/log/system-test-quickstart.log
 LOCAL_CORE=false
+ENABLE_SOROBAN_DIAGNOSTIC_EVENTS=--enable-soroban-diagnostic-events
 
 # example filter for all combos of one scenario outline: ^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$
 # each row in example data for a scenario outline is postfixed with '#01', '#02', example:
@@ -79,9 +80,9 @@ function main() {
     print_screen_output "  HORIZON VERSION=$(stellar-horizon version 2>/dev/null || echo "n/a")"
     print_screen_output "  SOROBAN RPC VERSION=$(stellar-soroban-rpc version 2>/dev/null || echo "n/a")"
       
-    if [ "$TARGET_NETWORK" = "standalone" ]; then
-        ENABLE_SOROBAN_DIAGNOSTIC_EVENTS=--enable-soroban-diagnostic-events
-    fi        
+    if [ "$TARGET_NETWORK" = "futurenet" ]; then
+        TARGET_NETWORK_PASSPHRASE="Test SDF Future Network ; October 2022"
+    fi       
 
     if [ "$VERBOSE_OUTPUT" = "true" ]; then
         # redirects all quickstart output to console during test execution
