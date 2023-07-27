@@ -227,11 +227,8 @@ func theContractEventsShouldBeStep(ctx context.Context, expectedContractEventsCo
 		return t.Err
 	}
 
-	if testConfig.E2EConfig.LocalCore {
-		assert.Equal(&t, expectedContractDiagEventsCount, diagEventsCount, "Expected %v diagnostic events for %v using %v but got %v", expectedContractDiagEventsCount, contractName, tool, diagEventsCount)
-	} else {
-		fmt.Fprintf(os.Stdout, "Skipping assertion of diagnostic events, network under test is not local standalone, can't enable diagnostic events in that case.")
-	}
+	assert.Equal(&t, expectedContractDiagEventsCount, diagEventsCount, "Expected %v diagnostic events for %v using %v but got %v", expectedContractDiagEventsCount, contractName, tool, diagEventsCount)
+
 	return t.Err
 }
 
