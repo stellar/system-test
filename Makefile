@@ -49,7 +49,7 @@ CORE_IMAGE=
 # work those images whether the build host is arm64 or amd64.
 QUICKSTART_IMAGE=
 
-NODE_VERSION?=14.20.0
+NODE_VERSION?=16.20.2
 
 # if crate version is set, then it overrides SOROBAN_CLI_GIT_REF, cli will be installed from this create instead
 SOROBAN_CLI_CRATE_VERSION=
