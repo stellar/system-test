@@ -62,13 +62,11 @@ async function main() {
       break;
     }
     case "SUCCESS": {
-      if (!response.resultMetaXdr) {
-        throw new Error(`No result meta XDR: ${JSON.stringify(response)}`);
+      if (!response.returnValue) {
+        throw new Error(`No invoke host fn return value provided: ${JSON.stringify(response)}`);
       }
 
-      const result = SorobanClient.xdr.TransactionMeta.fromXDR(response.resultMetaXdr, "base64");
-      // TODO: Move this scval serializing stuff to stellar-base
-      const scval = result.v3().sorobanMeta()?.returnValue()!;
+      const scval:SorobanClient.xdr.ScVal = response.returnValue;
       const parsed = SorobanClient.scValToNative(scval);
       console.log(JSON.stringify(parsed));
       return;
