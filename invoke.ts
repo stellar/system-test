@@ -2,6 +2,7 @@
 
 import { ArgumentParser } from 'argparse';
 import * as SorobanClient from 'soroban-client';
+import { SorobanRpc } from 'soroban-client';
 
 async function main() {
   const parser = new ArgumentParser({ description: 'Invoke a contract function' })
@@ -31,11 +32,11 @@ async function main() {
   const sourceAccount = await server.getAccount(account);
 
   // Some hacky param-parsing as csv. Generated Typescript bindings would be better.
-  const params: SorobanClient.xdr.ScVal[] = [];
+  let params: SorobanClient.xdr.ScVal[] = [];
   if (functionParams) {
-    functionParams.split(",").forEach((param) => {
-      params.push(SorobanClient.xdr.ScVal.scvSymbol(param));
-    });
+    params = functionParams.split(",").map((param) =>
+      SorobanClient.xdr.ScVal.scvSymbol(param)
+    );
   }
 
   const originalTxn = new SorobanClient.TransactionBuilder(sourceAccount, {
@@ -46,38 +47,36 @@ async function main() {
     .setTimeout(30)
     .build();
 
-  const txn = await server.prepareTransaction(originalTxn,networkPassphrase);
+  const txn = await server.prepareTransaction(originalTxn, networkPassphrase);
   txn.sign(secretKey);
+
   const send = await server.sendTransaction(txn);
   if (send.errorResultXdr) {
     throw new Error(`Transaction failed: ${JSON.stringify(send)}`);
   }
+
   let response = await server.getTransaction(send.hash);
   for (let i = 0; i < 50; i++) {
     switch (response.status) {
-    case "NOT_FOUND": {
-      // retry
-      await new Promise(resolve => setTimeout(resolve, 100));
-      response = await server.getTransaction(send.hash);
-      break;
-    }
-    case "SUCCESS": {
-      if (!response.resultMetaXdr) {
-        throw new Error(`No result meta XDR: ${JSON.stringify(response)}`);
+      case SorobanRpc.GetTransactionStatus.NOT_FOUND: {
+        // retry
+        await new Promise(resolve => setTimeout(resolve, 100));
+        response = await server.getTransaction(send.hash);
+        break;
       }
 
-      const result = SorobanClient.xdr.TransactionMeta.fromXDR(response.resultMetaXdr, "base64");
-      // TODO: Move this scval serializing stuff to stellar-base
-      const scval = result.v3().sorobanMeta()?.returnValue()!;
-      const parsed = SorobanClient.scValToNative(scval);
-      console.log(JSON.stringify(parsed));
-      return;
-    }
-    case "FAILED": {
-      throw new Error(`Transaction failed: ${JSON.stringify(response)}`);
-    }
-    default:
-      throw new Error(`Unknown transaction status: ${response.status}`);
+      case SorobanRpc.GetTransactionStatus.SUCCESS: {
+        if (!response.resultMetaXdr) {
+          throw new Error(`No result meta XDR: ${JSON.stringify(response)}`);
+        }
+
+        const parsed = SorobanClient.scValToNative(response.returnValue!);
+        console.log(JSON.stringify(parsed, null, 2));
+        return;
+      }
+
+      case SorobanRpc.GetTransactionStatus.FAILED:
+        throw new Error(`Transaction failed: ${JSON.stringify(response)}`);
     }
   }
   throw new Error("Transaction timed out");
