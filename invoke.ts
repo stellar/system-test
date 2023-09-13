@@ -66,15 +66,16 @@ async function main() {
       }
 
       case SorobanRpc.GetTransactionStatus.SUCCESS: {
-        if (!response.resultMetaXdr) {
-          throw new Error(`No result meta XDR: ${JSON.stringify(response)}`);
+        if (!response.returnValue) {
+          throw new Error(`No invokeHostFunction return value provided: ${
+            JSON.stringify(response)
+          }`);
         }
 
-        const parsed = SorobanClient.scValToNative(response.returnValue!);
+        const parsed = SorobanClient.scValToNative(response.returnValue);
         console.log(JSON.stringify(parsed, null, 2));
         return;
       }
-
       case SorobanRpc.GetTransactionStatus.FAILED:
         throw new Error(`Transaction failed: ${JSON.stringify(response)}`);
     }

@@ -71,6 +71,10 @@ ADD js-soroban-client /home/tester/js-soroban-client
 RUN sudo chown -R tester:tester /home/tester
 RUN yarn install --network-concurrency 1
 RUN if echo "$JS_SOROBAN_CLIENT_NPM_VERSION" | grep -q '.*file:.*'; then \
+  cd /home/tester/js-soroban-client; \
+  yarn cache clean; \
+  yarn install --network-concurrency 1; \
+  cd /home/tester; \
   yarn add ${JS_SOROBAN_CLIENT_NPM_VERSION} --network-concurrency 1; \
   else \
   yarn add "soroban-client@${JS_SOROBAN_CLIENT_NPM_VERSION}" --network-concurrency 1; \
