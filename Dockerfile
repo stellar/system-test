@@ -27,7 +27,7 @@ ARG RUST_TOOLCHAIN_VERSION
 ARG NODE_VERSION
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y build-essential expect && apt-get clean
+RUN apt-get update && apt-get install -y build-essential expect git && apt-get clean
 
 # Install Rust
 RUN ["mkdir", "-p", "/rust"] 
