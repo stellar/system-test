@@ -51,6 +51,7 @@ jobs:
              RUST_TOOLCHAIN_VERSION=${{ env.RUST_TOOLCHAIN_VERSION }} \
              SOROBAN_CLI_GIT_REF=${{ env.SOROBAN_CLI_GIT_REF }} \
              SYSTEM_TEST_IMAGE=${{ env.PUSH_ENABLED == 'true' && env.IMAGE || 'stellar/system-test:dev' }} \
+             JS_SOROBAN_CLIENT_NPM_VERSION=${{ env.JS_SOROBAN_CLIENT_NPM_VERSION }} \
              QUICKSTART_GIT_REF=${{ env.QUICKSTART_GIT_REF }} build;
     - if: ${{ env.PUSH_ENABLED == 'true' }}
       name: Save Docker Image to file
