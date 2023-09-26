@@ -19,11 +19,11 @@ env:
   # the only time system test image needs to be defined for a push is when it's a non 'v' tag creation
   PUSH_ENABLED: ${{ secrets.DOCKERHUB_TOKEN && github.ref_type == 'tag' && startsWith(github.ref_name, 'v') != true && 'true' || 'false' }}
   IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository, github.ref_type == 'tag' && github.ref_name || github.event.ref || 'latest') }}
-  CORE_GIT_REF: https://github.com/stellar/stellar-core.git#ecb24df104c2453a00fa5097d2e879d7731b9596
+  CORE_GIT_REF: https://github.com/stellar/stellar-core.git#v20.0.0rc2
   CORE_COMPILE_CONFIGURE_FLAGS: "--disable-tests"
-  SOROBAN_RPC_GIT_REF: https://github.com/stellar/soroban-tools.git#v20.0.0-rc1
+  SOROBAN_RPC_GIT_REF: https://github.com/stellar/soroban-tools.git#7cc2f46b4b83a94375e33f738d30f0bb824ea9a5
   RUST_TOOLCHAIN_VERSION: stable
-  SOROBAN_CLI_GIT_REF: https://github.com/stellar/soroban-tools.git#v20.0.0-rc1
+  SOROBAN_CLI_GIT_REF: https://github.com/stellar/soroban-tools.git#7cc2f46b4b83a94375e33f738d30f0bb824ea9a5
   QUICKSTART_GIT_REF: https://github.com/stellar/quickstart.git#master
   JS_SOROBAN_CLIENT_NPM_VERSION: 1.0.0-beta.2
 jobs:
