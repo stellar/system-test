@@ -18,13 +18,14 @@ env:
   HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
   # the only time system test image needs to be defined for a push is when it's a non 'v' tag creation
   PUSH_ENABLED: ${{ secrets.DOCKERHUB_TOKEN && github.ref_type == 'tag' && startsWith(github.ref_name, 'v') != true && 'true' || 'false' }}
-  IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository,  github.event.ref || 'latest') }}
+  IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository, github.ref_type == 'tag' && github.ref_name || github.event.ref || 'latest') }}
   CORE_GIT_REF: https://github.com/stellar/stellar-core.git#master
-  CORE_COMPILE_CONFIGURE_FLAGS: "--disable-tests --enable-next-protocol-version-unsafe-for-production"
+  CORE_COMPILE_CONFIGURE_FLAGS: "--disable-tests"
   SOROBAN_RPC_GIT_REF: https://github.com/stellar/soroban-tools.git#main
   RUST_TOOLCHAIN_VERSION: stable
   SOROBAN_CLI_GIT_REF: https://github.com/stellar/soroban-tools.git#main
   QUICKSTART_GIT_REF: https://github.com/stellar/quickstart.git#master
+  JS_SOROBAN_CLIENT_NPM_VERSION: https://github.com/stellar/js-soroban-client.git#main
 jobs:
   complete:
     if: always()
@@ -50,6 +51,7 @@ jobs:
              RUST_TOOLCHAIN_VERSION=${{ env.RUST_TOOLCHAIN_VERSION }} \
              SOROBAN_CLI_GIT_REF=${{ env.SOROBAN_CLI_GIT_REF }} \
              SYSTEM_TEST_IMAGE=${{ env.PUSH_ENABLED == 'true' && env.IMAGE || 'stellar/system-test:dev' }} \
+             JS_SOROBAN_CLIENT_NPM_VERSION=${{ env.JS_SOROBAN_CLIENT_NPM_VERSION }} \
              QUICKSTART_GIT_REF=${{ env.QUICKSTART_GIT_REF }} build;
     - if: ${{ env.PUSH_ENABLED == 'true' }}
       name: Save Docker Image to file
