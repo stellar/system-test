@@ -1,10 +1,10 @@
 ARG QUICKSTART_IMAGE_REF=stellar/quickstart:soroban-dev
 ARG SOROBAN_CLI_IMAGE_REF=stellar/system-test-soroban-cli:dev
 
-FROM golang:1.20 as go
+FROM golang:1.21 as go
 
-RUN ["mkdir", "-p", "/test"] 
-RUN ["mkdir", "-p", "/test/bin"] 
+RUN ["mkdir", "-p", "/test"]
+RUN ["mkdir", "-p", "/test/bin"]
 
 WORKDIR /test
 ADD go.mod go.sum ./
@@ -13,7 +13,7 @@ ADD e2e.go ./
 ADD features ./features
 
 # build each feature folder with go test module.
-# compiles each feature to a binary to be executed, 
+# compiles each feature to a binary to be executed,
 # and copies the .feature file with it for runtime.
 RUN go test -c -o ./bin/dapp_develop_test.bin ./features/dapp_develop/...
 ADD features/dapp_develop/dapp_develop.feature ./bin
@@ -30,7 +30,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y build-essential expect git && apt-get clean
 
 # Install Rust
-RUN ["mkdir", "-p", "/rust"] 
+RUN ["mkdir", "-p", "/rust"]
 ENV CARGO_HOME=/rust/.cargo
 ENV RUSTUP_HOME=/rust/.rust
 ENV RUST_TOOLCHAIN_VERSION=$RUST_TOOLCHAIN_VERSION
@@ -64,20 +64,20 @@ RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
 ENV PATH="/home/tester/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
 RUN npm install -g ts-node yarn
 
-# Install js-soroban-client
-ARG JS_SOROBAN_CLIENT_NPM_VERSION
+# Install js-stellar-sdk
+ARG JS_STELLAR_SDK_NPM_VERSION
 ADD package.json /home/tester/
-ADD js-soroban-client /home/tester/js-soroban-client
+ADD js-stellar-sdk /home/tester/js-stellar-sdk
 RUN sudo chown -R tester:tester /home/tester
 RUN yarn install --network-concurrency 1
-RUN if echo "$JS_SOROBAN_CLIENT_NPM_VERSION" | grep -q '.*file:.*'; then \
-  cd /home/tester/js-soroban-client; \
-  yarn cache clean; \
-  yarn install --network-concurrency 1; \
-  cd /home/tester; \
-  yarn add ${JS_SOROBAN_CLIENT_NPM_VERSION} --network-concurrency 1; \
+RUN if echo "$JS_STELLAR_SDK_NPM_VERSION" | grep -q '.*file:.*'; then \
+    cd /home/tester/js-stellar-sdk; \
+    yarn cache clean; \
+    yarn install --network-concurrency 1; \
+    cd /home/tester; \
+    yarn add ${JS_STELLAR_SDK_NPM_VERSION} --network-concurrency 1; \
   else \
-  yarn add "soroban-client@${JS_SOROBAN_CLIENT_NPM_VERSION}" --network-concurrency 1; \
+    yarn add "stellar-sdk@${JS_STELLAR_SDK_NPM_VERSION}" --network-concurrency 1; \
   fi
 
 ADD *.ts /home/tester/bin/
