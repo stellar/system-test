@@ -136,6 +136,7 @@ build-quickstart: build-core build-friendbot build-horizon build-soroban-rpc
 		docker build -t "$(QUICKSTART_STAGE_IMAGE)" \
 		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
 		--build-arg STELLAR_CORE_IMAGE_REF=$$CORE_IMAGE_REF \
+		--build-arg CORE_SUPPORTS_ENABLE_SOROBAN_DIAGNOSTIC_EVENTS=true \
 		--build-arg HORIZON_IMAGE_REF=$$HORIZON_IMAGE_REF \
 		--build-arg FRIENDBOT_IMAGE_REF=$$FRIENDBOT_IMAGE_REF \
 		--build-arg SOROBAN_RPC_IMAGE_REF=$$SOROBAN_RPC_IMAGE_REF \
