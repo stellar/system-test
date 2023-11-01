@@ -127,12 +127,14 @@ The docker run follows standard exit code conventions, so if all tests pass in t
 #### Running Test Examples
 - Run tests against an instance of core and rpc on a local network all running in the test container:
 
+
   ```
   docker run --rm -t --name e2e_test stellar/system-test:<tag> \
   --VerboseOutput true
   ```
 
 - Run tests against a remote instance of rpc configured for testnet, this will not run core or rpc instances locally in the test container. It requires you provide a key pair of an account that is funded with Lumens on the target network for the tests to use as source account on transactions it will submit to target network:
+
 
   ```
   docker run --rm -t --name e2e_test stellar/system-test:<tag> \
