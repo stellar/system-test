@@ -22,7 +22,7 @@ SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git\#main
 GO_GIT_REF=https://github.com/stellar/go.git\#master
 QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git\#master
 # specify the published npm repo version of soroban-client js library, or you can specify gh git ref url as the version also
-JS_STELLAR_SDK_NPM_VERSION=https://github.com/stellar/js-stellar-sdk.git\#main
+JS_STELLAR_SDK_NPM_VERSION=https://github.com/stellar/js-stellar-sdk.git\#master
 
 # variables to set if wanting to use existing dockerhub images instead of compiling
 # image during build. if using this option, the image ref should provide a version for same

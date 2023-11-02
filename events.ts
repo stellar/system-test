@@ -1,7 +1,7 @@
 #!/usr/bin/env ts-node-script
 
 import { ArgumentParser } from 'argparse';
-import { xdr, Contract, SorobanRpc } from 'stellar-sdk';
+import { Contract, SorobanRpc } from 'stellar-sdk';
 
 async function main() {
   const parser = new ArgumentParser({ description: 'Get contract events' })
