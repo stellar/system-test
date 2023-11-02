@@ -22,10 +22,10 @@ SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git\#main
 GO_GIT_REF=https://github.com/stellar/go.git\#master
 QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git\#master
 # specify the published npm repo version of soroban-client js library, or you can specify gh git ref url as the version also
-JS_SOROBAN_CLIENT_NPM_VERSION=https://github.com/stellar/js-soroban-client.git\#main
+JS_STELLAR_SDK_NPM_VERSION=https://github.com/stellar/js-stellar-sdk.git\#master
 
 # variables to set if wanting to use existing dockerhub images instead of compiling
-# image during build. if using this option, the image ref should provide a version for same 
+# image during build. if using this option, the image ref should provide a version for same
 # platform arch as the build host is on, i.e. linux/amd64 or linux/arm64.
 #
 # image must have soroban cli bin at /usr/local/cargo/bin/soroban
@@ -43,7 +43,7 @@ FRIENDBOT_IMAGE=
 # image must have core bin at /usr/local/bin/stellar-core
 CORE_IMAGE=
 #
-# a prebuilt 'soroban-dev' image from the quickstart repo, if this is supplied, 
+# a prebuilt 'soroban-dev' image from the quickstart repo, if this is supplied,
 # the other core, rpc, horizon, friendbot config settings are mostly ignored, since the quickstart image
 # has them compiled in already. the 'stellar/quickstart' images also support multi-arch, so the build will
 # work those images whether the build host is arm64 or amd64.
@@ -54,11 +54,11 @@ NODE_VERSION?=16.20.2
 # if crate version is set, then it overrides SOROBAN_CLI_GIT_REF, cli will be installed from this create instead
 SOROBAN_CLI_CRATE_VERSION=
 
-# sets the rustc version in the system test image 
+# sets the rustc version in the system test image
 RUST_TOOLCHAIN_VERSION=stable
 
 # temporarily needed, builds core with soroban enabled features
-CORE_COMPILE_CONFIGURE_FLAGS=--disable-tests --enable-next-protocol-version-unsafe-for-production
+CORE_COMPILE_CONFIGURE_FLAGS=--disable-tests
 
 # the final image name that is created in local docker images store for system test
 SYSTEM_TEST_IMAGE=stellar/system-test:dev
@@ -73,7 +73,7 @@ build-friendbot:
 		docker build -t "$(FRIENDBOT_STAGE_IMAGE)" \
 		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
 		-f services/friendbot/docker/Dockerfile "$$SOURCE_URL"; \
-	fi	
+	fi
 
 build-soroban-rpc:
 	if [ -z "$(QUICKSTART_IMAGE)" ] && [ -z "$(SOROBAN_RPC_IMAGE)" ]; then \
@@ -109,7 +109,7 @@ build-horizon:
 		--target builder -f services/horizon/docker/Dockerfile.dev "$$SOURCE_URL"; \
 	fi
 
-build-core: 
+build-core:
 	if [ -z "$(QUICKSTART_IMAGE)" ] && [ -z "$(CORE_IMAGE)" ]; then \
 		SOURCE_URL="$(CORE_GIT_REF)"; \
 		if [[ ! "$(CORE_GIT_REF)" =~ \.git ]]; then \
@@ -136,6 +136,8 @@ build-quickstart: build-core build-friendbot build-horizon build-soroban-rpc
 		docker build -t "$(QUICKSTART_STAGE_IMAGE)" \
 		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
 		--build-arg STELLAR_CORE_IMAGE_REF=$$CORE_IMAGE_REF \
+		--build-arg CORE_SUPPORTS_ENABLE_SOROBAN_DIAGNOSTIC_EVENTS=true \
+		--build-arg CORE_SUPPORTS_TESTING_SOROBAN_HIGH_LIMIT_OVERRIDE=true \
 		--build-arg HORIZON_IMAGE_REF=$$HORIZON_IMAGE_REF \
 		--build-arg FRIENDBOT_IMAGE_REF=$$FRIENDBOT_IMAGE_REF \
 		--build-arg SOROBAN_RPC_IMAGE_REF=$$SOROBAN_RPC_IMAGE_REF \
@@ -152,5 +154,5 @@ build: build-quickstart build-soroban-cli
 		--build-arg SOROBAN_CLI_IMAGE_REF=$$SOROBAN_CLI_IMAGE_REF \
 		--build-arg RUST_TOOLCHAIN_VERSION=$(RUST_TOOLCHAIN_VERSION) \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
-		--build-arg JS_SOROBAN_CLIENT_NPM_VERSION=$(JS_SOROBAN_CLIENT_NPM_VERSION) \
+		--build-arg JS_STELLAR_SDK_NPM_VERSION=$(JS_STELLAR_SDK_NPM_VERSION) \
 		--label org.opencontainers.image.revision="$(SYSTEM_TEST_SHA)" .;

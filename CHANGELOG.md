@@ -1,5 +1,9 @@
 # System Test Releases
 
+#### Unreleased
+
+* js invocation upgraded to use [`stellar-sdk`](https://github.com/stellar/js-stellar-sdk) rather than the now-deprecated `soroban-client`. [system-test, #81](https://github.com/stellar/system-test/pull/81)
+
 #### 1.0.19
 
 * js verification of contract invoke results, compare as strings. [system-test, #68](https://github.com/stellar/system-test/pull/68)
@@ -39,7 +43,7 @@
 
 #### 1.0.9
 
-* Fix bug in NODEJS test invocation. [system-test, #46](https://github.com/stellar/system-test/pull/46) 
+* Fix bug in NODEJS test invocation. [system-test, #46](https://github.com/stellar/system-test/pull/46)
 
 
 #### 1.0.8
@@ -64,31 +68,31 @@
 
 #### 1.0.5
 
-* Fixed `--TargetNetwork futurenet`, was incorrectly trying to configure artificial acceleration on core config also, which is only allowed on `standalone`. [system-test, #25](https://github.com/stellar/system-test/pull/25).  
+* Fixed `--TargetNetwork futurenet`, was incorrectly trying to configure artificial acceleration on core config also, which is only allowed on `standalone`. [system-test, #25](https://github.com/stellar/system-test/pull/25).
 
-This version of tests is based on [Soroban Preview 7](https://soroban.stellar.org/docs/releases) system interfaces. 
+This version of tests is based on [Soroban Preview 7](https://soroban.stellar.org/docs/releases) system interfaces.
 
 #### 1.0.4
 
-* Fixed git ref resolution to detached head state when compiling soroban cli during image build [system-test, #23](https://github.com/stellar/system-test/pull/23), to build [Stellar Quickstart](https://github.com/stellar/quickstart).  
+* Fixed git ref resolution to detached head state when compiling soroban cli during image build [system-test, #23](https://github.com/stellar/system-test/pull/23), to build [Stellar Quickstart](https://github.com/stellar/quickstart).
 
-This version of tests is based on [Soroban Preview 7](https://soroban.stellar.org/docs/releases) system interfaces. 
+This version of tests is based on [Soroban Preview 7](https://soroban.stellar.org/docs/releases) system interfaces.
 
 #### 1.0.3
 
-* Modified test framework, [system-test, #21](https://github.com/stellar/system-test/pull/21), to build [Stellar Quickstart](https://github.com/stellar/quickstart) as the base image.  
-Refer to [README.md](https://github.com/stellar/system-test#readme) for new two step process of running tests:  
-(1) run make with server versions, creates docker image  
-(2) run the docker image to run tests.  
+* Modified test framework, [system-test, #21](https://github.com/stellar/system-test/pull/21), to build [Stellar Quickstart](https://github.com/stellar/quickstart) as the base image.
+Refer to [README.md](https://github.com/stellar/system-test#readme) for new two step process of running tests:
+(1) run make with server versions, creates docker image
+(2) run the docker image to run tests.
 
 
-This version of tests is based on [Soroban Preview 7](https://soroban.stellar.org/docs/releases) system interfaces. 
+This version of tests is based on [Soroban Preview 7](https://soroban.stellar.org/docs/releases) system interfaces.
 
 #### 1.0.2
 
 * Modified tests to follow the new dynamic args format on cli [soroban-tools, #307](https://github.com/stellar/soroban-tools/pull/307)
 
-This version of tests is based on [Soroban Preview 6](https://soroban.stellar.org/docs/releases#preview-6-january-9th-2023) system interfaces, combined with the additional change applied on top of dynamic args in cli `contract invoke` 
+This version of tests is based on [Soroban Preview 6](https://soroban.stellar.org/docs/releases#preview-6-january-9th-2023) system interfaces, combined with the additional change applied on top of dynamic args in cli `contract invoke`
 
 
 #### 1.0.1
@@ -105,4 +109,3 @@ First release of packaged system tests. Initial focus is on Soroban e2e cases us
 * DApp developer compiles, deploys and invokes a contract
 
 This version of tests execute the [Soroban Preview 5](https://soroban.stellar.org/docs/releases#preview-5-december-8th-2022) system interfaces only.
-

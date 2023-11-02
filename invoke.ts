@@ -1,7 +1,16 @@
 #!/usr/bin/env ts-node-script
 
 import { ArgumentParser } from 'argparse';
-import * as SorobanClient from 'soroban-client';
+import {
+  Contract,
+  Keypair,
+  TransactionBuilder,
+  SorobanRpc,
+  scValToNative,
+  xdr
+} from 'stellar-sdk';
+
+const { Server } = SorobanRpc;
 
 async function main() {
   const parser = new ArgumentParser({ description: 'Invoke a contract function' })
@@ -24,21 +33,17 @@ async function main() {
     functionName,
   } = parser.parse_args() as Record<string, string>;
 
-  const contract = new SorobanClient.Contract(contractId);
-  const server = new SorobanClient.Server(rpcUrl, { allowHttp: true });
-  const secretKey = SorobanClient.Keypair.fromSecret(source);
+  const contract = new Contract(contractId);
+  const server = new Server(rpcUrl, { allowHttp: true });
+  const secretKey = Keypair.fromSecret(source);
   const account = secretKey.publicKey();
   const sourceAccount = await server.getAccount(account);
 
   // Some hacky param-parsing as csv. Generated Typescript bindings would be better.
-  const params: SorobanClient.xdr.ScVal[] = [];
-  if (functionParams) {
-    functionParams.split(",").forEach((param) => {
-      params.push(SorobanClient.xdr.ScVal.scvSymbol(param));
-    });
-  }
+  const params: xdr.ScVal[] = functionParams
+    ? functionParams.split(",").map((p) => xdr.ScVal.scvSymbol(p)) : [];
 
-  const originalTxn = new SorobanClient.TransactionBuilder(sourceAccount, {
+  const originalTxn = new TransactionBuilder(sourceAccount, {
       fee: "100",
       networkPassphrase,
     })
@@ -46,10 +51,10 @@ async function main() {
     .setTimeout(30)
     .build();
 
-  const txn = await server.prepareTransaction(originalTxn,networkPassphrase);
+  const txn = await server.prepareTransaction(originalTxn);
   txn.sign(secretKey);
   const send = await server.sendTransaction(txn);
-  if (send.errorResultXdr) {
+  if (send.errorResult) {
     throw new Error(`Transaction failed: ${JSON.stringify(send)}`);
   }
   let response = await server.getTransaction(send.hash);
@@ -66,8 +71,7 @@ async function main() {
         throw new Error(`No invoke host fn return value provided: ${JSON.stringify(response)}`);
       }
 
-      const scval:SorobanClient.xdr.ScVal = response.returnValue;
-      const parsed = SorobanClient.scValToNative(scval);
+      const parsed = scValToNative(response.returnValue);
       console.log(JSON.stringify(parsed));
       return;
     }

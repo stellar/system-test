@@ -42,7 +42,6 @@ func compileContract(contractExamplesSubPath string, contractWorkingDirectory st
 func deployContract(compiledContractFileName string, contractWorkingDirectory string, contractExamplesSubPath string, installedContractId string, e2eConfig *e2e.E2EConfig) (string, error) {
 	var envCmd *cmd.Cmd
 
-	// Always use --ignore-checks since system-test will use contracts compiled with RC versions of the Soroban Rust SDK.
 	if installedContractId != "" {
 		envCmd = cmd.NewCmd("soroban",
 			"contract",
@@ -50,8 +49,7 @@ func deployContract(compiledContractFileName string, contractWorkingDirectory st
 			"--wasm-hash", installedContractId,
 			"--rpc-url", e2eConfig.TargetNetworkRPCURL,
 			"--source", e2eConfig.TargetNetworkSecretKey,
-			"--network-passphrase", e2eConfig.TargetNetworkPassPhrase,
-			"--ignore-checks")
+			"--network-passphrase", e2eConfig.TargetNetworkPassPhrase)
 	} else {
 		envCmd = cmd.NewCmd("soroban",
 			"contract",
@@ -59,8 +57,7 @@ func deployContract(compiledContractFileName string, contractWorkingDirectory st
 			"--wasm", fmt.Sprintf("./%s/%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, contractExamplesSubPath, compiledContractFileName),
 			"--rpc-url", e2eConfig.TargetNetworkRPCURL,
 			"--source", e2eConfig.TargetNetworkSecretKey,
-			"--network-passphrase", e2eConfig.TargetNetworkPassPhrase,
-			"--ignore-checks")
+			"--network-passphrase", e2eConfig.TargetNetworkPassPhrase)
 	}
 
 	status, stdOut, err := e2e.RunCommand(envCmd, e2eConfig)
@@ -77,14 +74,12 @@ func deployContract(compiledContractFileName string, contractWorkingDirectory st
 }
 
 func deployContractUsingConfigParams(compiledContractFileName string, contractWorkingDirectory string, contractExamplesSubPath string, identityName string, networkConfigName string, e2eConfig *e2e.E2EConfig) (string, error) {
-	// Always use --ignore-checks since system-test will use contracts compiled with RC versions of the Soroban Rust SDK.
 	envCmd := cmd.NewCmd("soroban",
 		"contract",
 		"deploy",
 		"--wasm", fmt.Sprintf("./%s/%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, contractExamplesSubPath, compiledContractFileName),
 		"--network", networkConfigName,
-		"--source", identityName,
-		"--ignore-checks")
+		"--source", identityName)
 
 	status, stdOut, err := e2e.RunCommand(envCmd, e2eConfig)
 
@@ -101,15 +96,13 @@ func deployContractUsingConfigParams(compiledContractFileName string, contractWo
 
 // returns the installed contract id
 func installContract(compiledContractFileName string, contractWorkingDirectory string, contractExamplesSubPath string, e2eConfig *e2e.E2EConfig) (string, error) {
-	// Always use --ignore-checks since system-test will use contracts compiled with RC versions of the Soroban Rust SDK.
 	envCmd := cmd.NewCmd("soroban",
 		"contract",
 		"install",
 		"--wasm", fmt.Sprintf("./%s/%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, contractExamplesSubPath, compiledContractFileName),
 		"--rpc-url", e2eConfig.TargetNetworkRPCURL,
 		"--source", e2eConfig.TargetNetworkSecretKey,
-		"--network-passphrase", e2eConfig.TargetNetworkPassPhrase,
-		"--ignore-checks")
+		"--network-passphrase", e2eConfig.TargetNetworkPassPhrase)
 
 	status, stdOut, err := e2e.RunCommand(envCmd, e2eConfig)
 

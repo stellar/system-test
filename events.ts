@@ -1,8 +1,7 @@
 #!/usr/bin/env ts-node-script
 
 import { ArgumentParser } from 'argparse';
-import * as SorobanClient from 'soroban-client';
-const xdr = SorobanClient.xdr;
+import { Contract, SorobanRpc } from 'stellar-sdk';
 
 async function main() {
   const parser = new ArgumentParser({ description: 'Get contract events' })
@@ -18,27 +17,27 @@ async function main() {
     ledgerFrom,
   } = parser.parse_args() as Record<string, string>;
 
-  const server = new SorobanClient.Server(rpcUrl, { allowHttp: true });
+  const server = new SorobanRpc.Server(rpcUrl, { allowHttp: true });
 
-  let filters: SorobanClient.SorobanRpc.EventFilter[] = [];
+  let filters: SorobanRpc.Api.EventFilter[] = [];
 
   if (contractId != null) {
     filters.push({
-      contractIds: [ new SorobanClient.Contract(contractId).contractId() ]
+      contractIds: [ new Contract(contractId).contractId() ]
     });
   }
 
-  let response = await server
-          .getEvents({ 
-            startLedger: Number(ledgerFrom), 
-            filters: filters,
-            limit: Number(size)});
-    
+  let response = await server.getEvents({
+    startLedger: Number(ledgerFrom),
+    filters: filters,
+    limit: Number(size)
+  });
+
   if (!response.events) {
       throw new Error(`No events in response: ${JSON.stringify(response)}`);
   }
-     
-  console.log(JSON.stringify(response.events));  
+
+  console.log(JSON.stringify(response.events));
 }
 
 main().catch(err => {
