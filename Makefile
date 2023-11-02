@@ -154,5 +154,5 @@ build: build-quickstart build-soroban-cli
 		--build-arg SOROBAN_CLI_IMAGE_REF=$$SOROBAN_CLI_IMAGE_REF \
 		--build-arg RUST_TOOLCHAIN_VERSION=$(RUST_TOOLCHAIN_VERSION) \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
-		--build-arg JS_STELLAR_SDK_VERSION=$(JS_STELLAR_SDK_VERSION) \
+		--build-arg JS_STELLAR_SDK_NPM_VERSION=$(JS_STELLAR_SDK_NPM_VERSION) \
 		--label org.opencontainers.image.revision="$(SYSTEM_TEST_SHA)" .;

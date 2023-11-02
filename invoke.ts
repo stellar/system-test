@@ -40,7 +40,7 @@ async function main() {
   const sourceAccount = await server.getAccount(account);
 
   // Some hacky param-parsing as csv. Generated Typescript bindings would be better.
-  const params: xdr.ScVal[] = (functionParams ?? []).split(",").map((param) => {
+  const params: xdr.ScVal[] = (functionParams ?? '').split(",").map((param) => {
     return xdr.ScVal.scvSymbol(param);
   });
 
@@ -52,10 +52,10 @@ async function main() {
     .setTimeout(30)
     .build();
 
-  const txn = await server.prepareTransaction(originalTxn,networkPassphrase);
+  const txn = await server.prepareTransaction(originalTxn);
   txn.sign(secretKey);
   const send = await server.sendTransaction(txn);
-  if (send.errorResultXdr) {
+  if (send.errorResult) {
     throw new Error(`Transaction failed: ${JSON.stringify(send)}`);
   }
   let response = await server.getTransaction(send.hash);
