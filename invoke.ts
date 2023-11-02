@@ -40,9 +40,8 @@ async function main() {
   const sourceAccount = await server.getAccount(account);
 
   // Some hacky param-parsing as csv. Generated Typescript bindings would be better.
-  const params: xdr.ScVal[] = (functionParams ?? '').split(",").map((param) => {
-    return xdr.ScVal.scvSymbol(param);
-  });
+  const params: xdr.ScVal[] = functionParams
+    ? functionParams.split(",").map((p) => xdr.ScVal.scvSymbol(p)) : [];
 
   const originalTxn = new TransactionBuilder(sourceAccount, {
       fee: "100",
