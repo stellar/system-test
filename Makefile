@@ -58,7 +58,7 @@ SOROBAN_CLI_CRATE_VERSION=
 RUST_TOOLCHAIN_VERSION=stable
 
 # temporarily needed, builds core with soroban enabled features
-CORE_COMPILE_CONFIGURE_FLAGS=--disable-tests --enable-next-protocol-version-unsafe-for-production
+CORE_COMPILE_CONFIGURE_FLAGS=--disable-tests
 
 # the final image name that is created in local docker images store for system test
 SYSTEM_TEST_IMAGE=stellar/system-test:dev
