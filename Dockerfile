@@ -69,7 +69,7 @@ ARG JS_STELLAR_SDK_NPM_VERSION
 ADD package.json /home/tester/
 ADD js-stellar-sdk /home/tester/js-stellar-sdk
 RUN sudo chown -R tester:tester /home/tester
-RUN yarn install --network-concurrency 1
+RUN yarn cache clean && yarn install --network-concurrency 1
 RUN if echo "$JS_STELLAR_SDK_NPM_VERSION" | grep -q '.*file:.*'; then \
     cd /home/tester/js-stellar-sdk; \
     yarn cache clean; \

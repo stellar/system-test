@@ -8,6 +8,7 @@ SYSTEM_TEST_SHA=$(shell git rev-parse HEAD)
 QUICKSTART_STAGE_IMAGE=stellar/system-test-base:dev
 CORE_STAGE_IMAGE=stellar/system-test-core:dev
 HORIZON_STAGE_IMAGE=stellar/system-test-horizon:dev
+RS_XDR_STAGE_IMAGE=stellar/system-test-rs-xdr:dev
 FRIENDBOT_STAGE_IMAGE=stellar/system-test-friendbot:dev
 SOROBAN_RPC_STAGE_IMAGE=stellar/system-test-soroban-rpc:dev
 SOROBAN_CLI_STAGE_IMAGE=stellar/system-test-soroban-cli:dev
@@ -20,8 +21,11 @@ CORE_GIT_REF=https://github.com/stellar/stellar-core.git\#master
 SOROBAN_RPC_GIT_REF=https://github.com/stellar/soroban-tools.git\#main
 SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git\#main
 GO_GIT_REF=https://github.com/stellar/go.git\#master
+RS_XDR_GIT_REPO=https://github.com/stellar/rs-stellar-xdr
+RS_XDR_GIT_REF=main
 QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git\#master
-# specify the published npm repo version of soroban-client js library, or you can specify gh git ref url as the version also
+# specify the published npm repo version of soroban-client js library, 
+# or you can specify gh git ref url as the version
 JS_STELLAR_SDK_NPM_VERSION=https://github.com/stellar/js-stellar-sdk.git\#master
 
 # variables to set if wanting to use existing dockerhub images instead of compiling
@@ -40,6 +44,9 @@ HORIZON_IMAGE=
 # image must have friendbot bin at /app/friendbot
 FRIENDBOT_IMAGE=
 #
+# image must have the bin at /usr/local/cargo/bin/stellar-xdr
+RS_XDR_IMAGE=
+#
 # image must have core bin at /usr/local/bin/stellar-core
 CORE_IMAGE=
 #
@@ -49,7 +56,7 @@ CORE_IMAGE=
 # work those images whether the build host is arm64 or amd64.
 QUICKSTART_IMAGE=
 
-NODE_VERSION?=16.20.2
+NODE_VERSION?=18.19.0
 
 # if crate version is set, then it overrides SOROBAN_CLI_GIT_REF, cli will be installed from this create instead
 SOROBAN_CLI_CRATE_VERSION=
@@ -74,6 +81,20 @@ build-friendbot:
 		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
 		-f services/friendbot/docker/Dockerfile "$$SOURCE_URL"; \
 	fi
+
+build-rs-xdr: 
+	if [ -z "$(QUICKSTART_IMAGE)" ] && [ -z "$(RS_XDR_IMAGE)" ]; then \
+		SOURCE_URL="$(QUICKSTART_GIT_REF)"; \
+		if [[ ! "$(QUICKSTART_GIT_REF)" =~ \.git ]]; then \
+			pushd "$(QUICKSTART_GIT_REF)"; \
+			SOURCE_URL=.; \
+		fi; \
+		docker build -t "$(RS_XDR_STAGE_IMAGE)" --target builder \
+		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
+		--build-arg REPO=$$RS_XDR_GIT_REPO \
+		--build-arg REF=$$RS_XDR_GIT_REF \
+		-f Dockerfile.xdr "$$SOURCE_URL"; \
+	fi	
 
 build-soroban-rpc:
 	if [ -z "$(QUICKSTART_IMAGE)" ] && [ -z "$(SOROBAN_RPC_IMAGE)" ]; then \
@@ -122,12 +143,13 @@ build-core:
 		-f docker/Dockerfile.testing "$$SOURCE_URL"; \
 	fi
 
-build-quickstart: build-core build-friendbot build-horizon build-soroban-rpc
+build-quickstart: build-core build-friendbot build-horizon build-rs-xdr build-soroban-rpc
 	if [ -z "$(QUICKSTART_IMAGE)" ]; then \
 		CORE_IMAGE_REF=$$( [ -z "$(CORE_IMAGE)" ] && echo "$(CORE_STAGE_IMAGE)" || echo "$(CORE_IMAGE)"); \
 		HORIZON_IMAGE_REF=$$( [ -z "$(HORIZON_IMAGE)" ] && echo "$(HORIZON_STAGE_IMAGE)" || echo "$(HORIZON_IMAGE)"); \
 		FRIENDBOT_IMAGE_REF=$$( [ -z "$(FRIENDBOT_IMAGE)" ] && echo "$(FRIENDBOT_STAGE_IMAGE)" || echo "$(FRIENDBOT_IMAGE)"); \
 		SOROBAN_RPC_IMAGE_REF=$$( [ -z "$(SOROBAN_RPC_IMAGE)" ] && echo "$(SOROBAN_RPC_STAGE_IMAGE)" || echo "$(SOROBAN_RPC_IMAGE)"); \
+		RS_XDR_IMAGE_REF=$$( [ -z "$(RS_XDR_IMAGE)" ] && echo "$(RS_XDR_STAGE_IMAGE)" || echo "$(RS_XDR_IMAGE)"); \
 		SOURCE_URL="$(QUICKSTART_GIT_REF)"; \
 		if [[ ! "$(QUICKSTART_GIT_REF)" =~ \.git ]]; then \
 			pushd "$(QUICKSTART_GIT_REF)"; \
@@ -136,6 +158,7 @@ build-quickstart: build-core build-friendbot build-horizon build-soroban-rpc
 		docker build -t "$(QUICKSTART_STAGE_IMAGE)" \
 		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
 		--build-arg STELLAR_CORE_IMAGE_REF=$$CORE_IMAGE_REF \
+		--build-arg STELLAR_XDR_IMAGE_REF=$$RS_XDR_IMAGE_REF \
 		--build-arg CORE_SUPPORTS_ENABLE_SOROBAN_DIAGNOSTIC_EVENTS=true \
 		--build-arg CORE_SUPPORTS_TESTING_SOROBAN_HIGH_LIMIT_OVERRIDE=true \
 		--build-arg HORIZON_IMAGE_REF=$$HORIZON_IMAGE_REF \
