@@ -101,6 +101,11 @@ function main() {
 
   soroban_rpc_status 
 
+  # quickstart runs horizon, but sys tests don't need it.
+  if [ "$LOCAL_CORE" = "true" ]; then
+      supervisorctl stop horizon
+  fi  
+
   print_screen_output "  RUST_TOOLCHAIN_VERSION=$(rustc --version 2>/dev/null || echo"n/a" )"
   print_screen_output "  SOROBAN_CLI_CRATE_VERSION=$(soroban version 2>/dev/null || echo "n/a" )"
   print_screen_output "  SOROBAN_EXAMPLES_GIT_HASH=$SOROBAN_EXAMPLES_GIT_HASH"

@@ -8,7 +8,7 @@ import {
   SorobanRpc,
   scValToNative,
   xdr
-} from 'stellar-sdk';
+} from '@stellar/stellar-sdk';
 
 const { Server } = SorobanRpc;
 
