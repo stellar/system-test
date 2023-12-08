@@ -19,16 +19,16 @@ env:
   # the only time system test image needs to be defined for a push is when it's a non 'v' tag creation
   PUSH_ENABLED: ${{ secrets.DOCKERHUB_TOKEN && github.ref_type == 'tag' && startsWith(github.ref_name, 'v') != true && 'true' || 'false' }}
   IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository, github.ref_type == 'tag' && github.ref_name || github.event.ref || 'latest') }}
-  CORE_GIT_REF: https://github.com/stellar/stellar-core.git#master
-  SOROBAN_RPC_GIT_REF: https://github.com/stellar/soroban-tools.git#main
+  CORE_GIT_REF: https://github.com/stellar/stellar-core.git#v20.0.0
+  # v20.0.0
+  SOROBAN_RPC_GIT_REF: https://github.com/stellar/soroban-tools.git#91a441ff9593377c11d7e8b26c4942e941d548bb
   RUST_TOOLCHAIN_VERSION: stable
-  SOROBAN_CLI_GIT_REF: https://github.com/stellar/soroban-tools.git#main
-  QUICKSTART_GIT_REF: https://github.com/stellar/quickstart.git#master
-  # leaving sdk npm version blank defaults to whatever npm has for latest version
-  # rather than build from git source, which is fine for ci test build
-  JS_STELLAR_SDK_NPM_VERSION: 
+  # v20.0.1
+  SOROBAN_CLI_GIT_REF: https://github.com/stellar/soroban-tools.git#c0b84da707aacc81802be1caf96d008ddf0b337a
+  QUICKSTART_GIT_REF: https://github.com/stellar/quickstart.git#412bb828ddb4a93745227ab5ad97c623d43f3a5f
+  JS_STELLAR_SDK_NPM_VERSION: 11.0.1
   RS_XDR_GIT_REPO: https://github.com/stellar/rs-stellar-xdr
-  RS_XDR_GIT_REF: main
+  RS_XDR_GIT_REF: v20.0.1
 jobs:
   complete:
     if: always()
