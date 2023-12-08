@@ -77,7 +77,7 @@ RUN if echo "$JS_STELLAR_SDK_NPM_VERSION" | grep -q '.*file:.*'; then \
     cd /home/tester; \
     yarn add ${JS_STELLAR_SDK_NPM_VERSION} --network-concurrency 1; \
   else \
-    yarn add "stellar-sdk@${JS_STELLAR_SDK_NPM_VERSION}" --network-concurrency 1; \
+    yarn add "@stellar/stellar-sdk@${JS_STELLAR_SDK_NPM_VERSION}" --network-concurrency 1; \
   fi
 
 ADD *.ts /home/tester/bin/
