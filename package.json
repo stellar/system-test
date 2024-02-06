@@ -6,8 +6,8 @@
   "author": "dev@stellar.org",
   "private": true,
   "scripts": {
-    "invoke": "ts-node invoke.ts",
-    "install": "ts-node install.ts"
+    "contract-invoke": "ts-node invoke.ts",
+    "contract-install": "ts-node install.ts"
   },
   "dependencies": {
     "@stellar/stellar-sdk": "^11.2.1",
