@@ -5,7 +5,7 @@ Feature: DApp Contract Development
 Scenario Outline: DApp developer compiles, installs, deploys and invokes a contract
   Given I used cargo to compile example contract <ContractExampleSubPath>
   And I used rpc to verify my account is on the network
-  And I used cli to install contract <ContractExampleSubPath> / <ContractCompiledFileName> on network using my secret key
+  And I used cli to install contract <ContractExampleSubPath> / <ContractCompiledFileName> on network from tool <Tool> using my secret key
   And I used cli to deploy contract <ContractExampleSubPath> / <ContractCompiledFileName> by installed hash using my secret key
   When I invoke function <FunctionName> on <ContractName> with request parameters <FunctionParams> from tool <Tool> using my secret key
   Then The result should be <Result>

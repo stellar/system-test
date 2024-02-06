@@ -101,13 +101,13 @@ func deployContractUsingConfigParamsStep(ctx context.Context, contractExamplesSu
 	return nil
 }
 
-func installContractStep(ctx context.Context, contractExamplesSubPath string, compiledContractFileName string) error {
+func installContractStep(ctx context.Context, contractExamplesSubPath string, compiledContractFileName string, tool string) error {
 
 	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
 	contractWorkingDirectory := fmt.Sprintf("%s/soroban_examples", testConfig.TestWorkingDir)
 
 	var err error
-	if testConfig.InstalledContractId, err = installContract(compiledContractFileName, contractWorkingDirectory, contractExamplesSubPath, testConfig.E2EConfig); err != nil {
+	if testConfig.InstalledContractId, err = installContract(compiledContractFileName, contractWorkingDirectory, contractExamplesSubPath, tool, testConfig.E2EConfig); err != nil {
 		return err
 	}
 
@@ -335,7 +335,7 @@ func initializeScenario(scenarioCtx *godog.ScenarioContext) {
 		scenarioCtx.Step(`^I used cli to add Network Config ([\S|\s]+) for rpc and standalone$`, createNetworkConfigStep)
 		scenarioCtx.Step(`^I used cli to add Identity ([\S|\s]+) for my secret key$`, createMyIdentityStep)
 		scenarioCtx.Step(`^I used cli to deploy contract ([\S|\s]+) / ([\S|\s]+) using Identity ([\S|\s]+) and Network Config ([\S|\s]+)$`, deployContractUsingConfigParamsStep)
-		scenarioCtx.Step(`^I used cli to install contract ([\S|\s]+) / ([\S|\s]+) on network using my secret key$`, installContractStep)
+		scenarioCtx.Step(`^I used cli to install contract ([\S|\s]+) / ([\S|\s]+) on network from tool ([\S|\s]+) using my secret key$`, installContractStep)
 		scenarioCtx.Step(`^I used cli to deploy contract ([\S|\s]+) / ([\S|\s]+) by installed hash using my secret key$`, deployContractStep)
 		scenarioCtx.Step(`^I used cli to deploy contract ([\S|\s]+) / ([\S|\s]+) using my secret key$`, deployContractStep)
 		scenarioCtx.Step(`^I used cli to add Identity ([\S|\s]+) for tester secret key$`, createTestAccountIdentityStep)

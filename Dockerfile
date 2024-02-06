@@ -82,6 +82,7 @@ RUN if echo "$JS_STELLAR_SDK_NPM_VERSION" | grep -q '.*file:.*'; then \
 
 ADD *.ts /home/tester/bin/
 RUN ["sudo", "chmod", "+x", "/home/tester/bin/invoke.ts"]
+RUN ["sudo", "chmod", "+x", "/home/tester/bin/install.ts"]
 
 FROM base as build
 

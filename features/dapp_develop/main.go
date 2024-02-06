@@ -2,6 +2,7 @@ package dapp_develop
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/go-cmd/cmd"
 
@@ -95,7 +96,50 @@ func deployContractUsingConfigParams(compiledContractFileName string, contractWo
 }
 
 // returns the installed contract id
-func installContract(compiledContractFileName string, contractWorkingDirectory string, contractExamplesSubPath string, e2eConfig *e2e.E2EConfig) (string, error) {
+func installContract(compiledContractFileName string, contractWorkingDirectory string, contractExamplesSubPath string, tool string, e2eConfig *e2e.E2EConfig) (string, error) {
+	var response string
+	var err error
+
+	switch tool {
+	case "CLI":
+		response, err = installContractFromCliTool(compiledContractFileName, contractWorkingDirectory, contractExamplesSubPath, e2eConfig)
+	case "NODEJS":
+		response, err = installContractFromNodeJSTool(compiledContractFileName, contractWorkingDirectory, contractExamplesSubPath, e2eConfig)
+	default:
+		err = fmt.Errorf("%s tool not supported for invoke yet", tool)
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	return response, nil
+}
+
+func installContractFromNodeJSTool(compiledContractFileName string, contractWorkingDirectory string, contractExamplesSubPath string, e2eConfig *e2e.E2EConfig) (string, error) {
+	args := []string{
+
+		"--wasm", fmt.Sprintf("./%s/%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, contractExamplesSubPath, compiledContractFileName),
+		"--rpc-url", e2eConfig.TargetNetworkRPCURL,
+		"--source", e2eConfig.TargetNetworkSecretKey,
+		"--network-passphrase", e2eConfig.TargetNetworkPassPhrase,
+	}
+	envCmd := cmd.NewCmd("./install.ts", args...)
+	status, stdOutLines, err := e2e.RunCommand(envCmd, e2eConfig)
+	stdOut := strings.TrimSpace(strings.Join(stdOutLines, "\n"))
+
+	if status != 0 || err != nil {
+		return "", fmt.Errorf("nodejs install of example contract %s had error %v, %v, stdout: %v", compiledContractFileName, status, err, stdOut)
+	}
+
+	if stdOut == "" {
+		return "", fmt.Errorf("nodejs install of example contract %s did not print any response", compiledContractFileName)
+	}
+
+	return stdOut, nil
+}
+
+func installContractFromCliTool(compiledContractFileName string, contractWorkingDirectory string, contractExamplesSubPath string, e2eConfig *e2e.E2EConfig) (string, error) {
 	envCmd := cmd.NewCmd("soroban",
 		"contract",
 		"install",
