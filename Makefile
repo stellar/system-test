@@ -18,8 +18,8 @@ SOROBAN_CLI_STAGE_IMAGE=stellar/system-test-soroban-cli:dev
 
 # variables to set for source code, can be any valid docker context url local path github remote repo `https://github.com/repo#<ref>`
 CORE_GIT_REF=https://github.com/stellar/stellar-core.git\#master
-SOROBAN_RPC_GIT_REF=https://github.com/stellar/soroban-tools.git\#main
-SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git\#main
+SOROBAN_RPC_GIT_REF=https://github.com/stellar/soroban-rpc.git\#main
+SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-cli.git\#main
 GO_GIT_REF=https://github.com/stellar/go.git\#master
 RS_XDR_GIT_REPO=https://github.com/stellar/rs-stellar-xdr
 RS_XDR_GIT_REF=main
@@ -56,7 +56,7 @@ CORE_IMAGE=
 # work those images whether the build host is arm64 or amd64.
 QUICKSTART_IMAGE=
 
-NODE_VERSION?=18.19.0
+NODE_VERSION?=18.19.1
 
 # if crate version is set, then it overrides SOROBAN_CLI_GIT_REF, cli will be installed from this create instead
 SOROBAN_CLI_CRATE_VERSION=
