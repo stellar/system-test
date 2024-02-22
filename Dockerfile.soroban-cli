@@ -3,7 +3,7 @@ ARG SOROBAN_CLI_CRATE_VERSION
 
 FROM $DOCKERHUB_RUST_VERSION AS builder
 
-WORKDIR /soroban-cli
+WORKDIR /
 COPY . .
 
 run if [ ! -z "$SOROBAN_CLI_CRATE_VERSION" ]; then \
