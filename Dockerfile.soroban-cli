@@ -6,6 +6,7 @@ FROM $DOCKERHUB_RUST_VERSION AS builder
 WORKDIR /
 COPY . .
 
+run ls -R ..
 run if [ ! -z "$SOROBAN_CLI_CRATE_VERSION" ]; then \
 		cargo install \
 		--config net.git-fetch-with-cli=true \
@@ -13,4 +14,4 @@ run if [ ! -z "$SOROBAN_CLI_CRATE_VERSION" ]; then \
 		--version "$SOROBAN_CLI_CRATE_VERSION"; \
 	else \
 		make install_rust; \
-	fi	
+	fi
