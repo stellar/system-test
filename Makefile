@@ -16,9 +16,14 @@ SOROBAN_CLI_STAGE_IMAGE=stellar/system-test-soroban-cli:dev
 # The rest of these variables can be set as environment variables to the makefile
 # to modify how system test is built.
 
+# The default protocol version that the image should start with. Should
+# typically be set to the maximum supported protocol version of all components.
+# If not set will default to the core max supported protocol version in quickstart.
+PROTOCOL_VERSION_DEFAULT=
+
 # variables to set for source code, can be any valid docker context url local path github remote repo `https://github.com/repo#<ref>`
 CORE_GIT_REF=https://github.com/stellar/stellar-core.git\#master
-SOROBAN_RPC_GIT_REF=https://github.com/stellar/soroban-tools.git\#main
+SOROBAN_RPC_GIT_REF=https://github.com/stellar/soroban-rpc.git\#main
 SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git\#main
 GO_GIT_REF=https://github.com/stellar/go.git\#master
 RS_XDR_GIT_REPO=https://github.com/stellar/rs-stellar-xdr
@@ -156,6 +161,7 @@ build-quickstart: build-core build-friendbot build-horizon build-rs-xdr build-so
 			SOURCE_URL=.; \
 		fi; \
 		docker build -t "$(QUICKSTART_STAGE_IMAGE)" \
+		--build-arg PROTOCOL_VERSION_DEFAULT=$$PROTOCOL_VERSION_DEFAULT \
 		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
 		--build-arg STELLAR_CORE_IMAGE_REF=$$CORE_IMAGE_REF \
 		--build-arg STELLAR_XDR_IMAGE_REF=$$RS_XDR_IMAGE_REF \

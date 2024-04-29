@@ -18,6 +18,7 @@
        SOROBAN_CLI_CRATE_VERSION=? \
        JS_STELLAR_SDK_NPM_VERSION=? \
        NODE_VERSION=? \
+       PROTOCOL_VERSION_DEFAULT=? \
        build
   ```
 
@@ -54,7 +55,7 @@
   JS_STELLAR_SDK_NPM_VERSION=https://github.com/stellar/js-stellar-sdk.git#master
   ```
 
-  optional to set:
+  optional params to set:
   ```
   # this will override SOROBAN_CLI_GIT_REF, and install soroban cli from crates repo instead
   SOROBAN_CLI_CRATE_VERSION=0.4.0
@@ -95,9 +96,14 @@
   # this will skip building friendbot from GO_GIT_REF and instead
   # will use the bin already compiled at /app/friendbot in the existing docker image provided:
   FRIENDBOT_IMAGE=<docker registry>/<docker image name>:<docker tag>
+
+  # set the default network protocol version which the internal core runtime built from `CORE_GIT_REF` should start with. 
+  # Should typically be set to the maximum supported protocol version of all components.
+  # If not set or set to empty, will default to the core max supported protocol version defined in quickstart.
+  PROTOCOL_VERSION_DEFAULT=
   ```
 
-Optional parameters to pass when running system-test image, `stellar/system-test:<tag>`:
+Optional parameters to pass when running the system-test image, `stellar/system-test:<tag>`:
 
 To specify git version of the smart contract source code used in soroban test fixtures.
 `--SorobanExamplesGitHash {branch, tag, git commit hash}`
