@@ -18,7 +18,8 @@ SOROBAN_CLI_STAGE_IMAGE=stellar/system-test-soroban-cli:dev
 
 # The default protocol version that the image should start with. Should
 # typically be set to the maximum supported protocol version of all components.
-PROTOCOL_VERSION_DEFAULT=21
+# If not set will default to the core max supported protocol version in quickstart.
+PROTOCOL_VERSION_DEFAULT=
 
 # variables to set for source code, can be any valid docker context url local path github remote repo `https://github.com/repo#<ref>`
 CORE_GIT_REF=https://github.com/stellar/stellar-core.git\#master
