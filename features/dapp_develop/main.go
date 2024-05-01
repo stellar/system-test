@@ -119,7 +119,6 @@ func installContract(compiledContractFileName string, contractWorkingDirectory s
 
 func createNetworkConfig(configName string, rpcUrl string, networkPassphrase string, e2eConfig *e2e.E2EConfig) error {
 	envCmd := cmd.NewCmd("soroban",
-		"config",
 		"network",
 		"add",
 		"--rpc-url", rpcUrl,
