@@ -78,8 +78,12 @@
   QUICKSTART_IMAGE=<docker registry>/<docker image name>:<docker tag>
 
   # this will skip building core from CORE_GIT_REF and instead
-  # will use the bin already compiled at /usr/local/bin/stellar-core in the existing docker image provided:
+  # will use the `stellar-core` by default at /usr/local/bin/stellar-core in the existing docker image provided:
   CORE_IMAGE=<docker registry>/<docker image name>:<docker tag>
+
+  # define a custom path that `stellar-core` bin is located on CORE_IMAGE, 
+  # to override the default of /usr/local/bin/stellar-core
+  CORE_IMAGE_BIN_PATH=
 
   # this will skip building soroban-rpc from SOROBAN_RPC_GIT_REF and instead
   # will use the bin already compiled at /bin/soroban-rpc in the existing docker image provided:
