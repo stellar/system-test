@@ -1,0 +1,9 @@
+ARG CORE_IMAGE=
+ARG CORE_IMAGE_BIN_PATH=
+
+FROM $CORE_IMAGE
+
+COPY $CORE_IMAGE_BIN_PATH /usr/local/bin/stellar-core
+
+
+
