@@ -52,8 +52,10 @@ FRIENDBOT_IMAGE=
 # image must have the bin at /usr/local/cargo/bin/stellar-xdr
 RS_XDR_IMAGE=
 #
-# image must have core bin at /usr/local/bin/stellar-core
+# image with stellar-core binary, assumes core bin at /usr/local/bin/stellar-core
 CORE_IMAGE=
+# define a custom path that core bin is located on CORE_IMAGE, other than /usr/local/bin/stellar-core
+CORE_IMAGE_BIN_PATH=
 #
 # a prebuilt 'soroban-dev' image from the quickstart repo, if this is supplied,
 # the other core, rpc, horizon, friendbot config settings are mostly ignored, since the quickstart image
@@ -146,11 +148,17 @@ build-core:
 		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
 		--build-arg CONFIGURE_FLAGS="$(CORE_COMPILE_CONFIGURE_FLAGS)" \
 		-f docker/Dockerfile.testing "$$SOURCE_URL"; \
+	fi; \
+	if [ ! -z "$(CORE_IMAGE)" ] && [ ! -z "$(CORE_IMAGE_BIN_PATH)" ]; then \
+		docker build -t "$(CORE_STAGE_IMAGE)" \
+		--build-arg CORE_IMAGE="$(CORE_IMAGE)" \
+		--build-arg CORE_IMAGE_BIN_PATH="$(CORE_IMAGE_BIN_PATH)" \
+		-f Dockerfile.core .; \
 	fi
 
 build-quickstart: build-core build-friendbot build-horizon build-rs-xdr build-soroban-rpc
 	if [ -z "$(QUICKSTART_IMAGE)" ]; then \
-		CORE_IMAGE_REF=$$( [ -z "$(CORE_IMAGE)" ] && echo "$(CORE_STAGE_IMAGE)" || echo "$(CORE_IMAGE)"); \
+		CORE_IMAGE_REF=$$( [[ -z "$(CORE_IMAGE)"  ||  ! -z "$(CORE_IMAGE_BIN_PATH)" ]] && echo "$(CORE_STAGE_IMAGE)" || echo "$(CORE_IMAGE)"); \
 		HORIZON_IMAGE_REF=$$( [ -z "$(HORIZON_IMAGE)" ] && echo "$(HORIZON_STAGE_IMAGE)" || echo "$(HORIZON_IMAGE)"); \
 		FRIENDBOT_IMAGE_REF=$$( [ -z "$(FRIENDBOT_IMAGE)" ] && echo "$(FRIENDBOT_STAGE_IMAGE)" || echo "$(FRIENDBOT_IMAGE)"); \
 		SOROBAN_RPC_IMAGE_REF=$$( [ -z "$(SOROBAN_RPC_IMAGE)" ] && echo "$(SOROBAN_RPC_STAGE_IMAGE)" || echo "$(SOROBAN_RPC_IMAGE)"); \
