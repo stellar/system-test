@@ -12,7 +12,7 @@ Scenario Outline: DApp developer compiles, installs, deploys and invokes a contr
 
   Examples: 
         | Tool         | ContractExampleSubPath | ContractName                  | ContractCompiledFileName             | FunctionName | FunctionParams | Result             |
-        | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | Aloha          | ["Hello","Aloha"]  |
+        | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | to:'Aloha'     | ["Hello","Aloha"]  |
         | CLI          | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | --to=Aloha     | ["Hello","Aloha"]  |
         | NODEJS       | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  |
         | CLI          | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  |
@@ -30,7 +30,7 @@ Scenario Outline: DApp developer compiles, deploys and invokes a contract
 
   Examples: 
         | Tool         | ContractExampleSubPath | ContractName                  | ContractCompiledFileName             | FunctionName | FunctionParams | Result             | EventCount | DiagEventCount |
-        | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | Aloha          | ["Hello","Aloha"]  | 0          | 1              |
+        | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | to:'Aloha'     | ["Hello","Aloha"]  | 0          | 1              |
         | CLI          | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | --to=Aloha     | ["Hello","Aloha"]  | 0          | 1              |
         | NODEJS       | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  | 0          | 1              |
         | CLI          | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  | 0          | 1              |
