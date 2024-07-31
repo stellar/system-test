@@ -1,13 +1,14 @@
 #!/usr/bin/env ts-node-script
 
 import { ArgumentParser } from 'argparse';
+
 import {
   Contract,
   Keypair,
   TransactionBuilder,
   SorobanRpc,
   scValToNative,
-  xdr
+  xdr,
 } from '@stellar/stellar-sdk';
 
 const { Server } = SorobanRpc;
@@ -33,53 +34,75 @@ async function main() {
     functionName,
   } = parser.parse_args() as Record<string, string>;
 
-  const contract = new Contract(contractId);
-  const server = new Server(rpcUrl, { allowHttp: true });
-  const secretKey = Keypair.fromSecret(source);
-  const account = secretKey.publicKey();
-  const sourceAccount = await server.getAccount(account);
+  const keypair = Keypair.fromSecret(source);
+  const account = keypair.publicKey();
 
-  // Some hacky param-parsing as csv. Generated Typescript bindings would be better.
-  const params: xdr.ScVal[] = functionParams
-    ? functionParams.split(",").map((p) => xdr.ScVal.scvSymbol(p)) : [];
-
-  const originalTxn = new TransactionBuilder(sourceAccount, {
-      fee: "100",
+  // @ts-ignore contract client only available in stellar-sdk ≥12
+  const { contract } = await import('@stellar/stellar-sdk');
+  if (contract) {
+    const client = await contract.Client.from({
+      allowHttp: true,
+      rpcUrl,
       networkPassphrase,
-    })
-    .addOperation(contract.call(functionName, ...params))
-    .setTimeout(30)
-    .build();
+      contractId,
+      publicKey: account,
+      ...contract.basicNodeSigner(keypair, networkPassphrase),
+    });
+    const args: Record<string, any> = {};
+    functionParams.split(",").forEach((p) => {
+      const [name, value] = p.split(":");
+      args[name] = value;
+    });
+    // @ts-ignore client[functionName] is defined dynamically
+    const { result } = await client[functionName](args);
+    console.log(JSON.stringify(result));
+    return;
+  } else {
+    const server = new Server(rpcUrl, { allowHttp: true });
+    const sourceAccount = await server.getAccount(account);
+    const contract = new Contract(contractId);
+    // Some hacky param-parsing as csv. Generated Typescript bindings would be better.
+    const params: xdr.ScVal[] = functionParams
+      ? functionParams.split(",").map((p) => xdr.ScVal.scvSymbol(p.split(':')[1])) : [];
 
-  const txn = await server.prepareTransaction(originalTxn);
-  txn.sign(secretKey);
-  const send = await server.sendTransaction(txn);
-  if (send.errorResult) {
-    throw new Error(`Transaction failed: ${JSON.stringify(send)}`);
-  }
-  let response = await server.getTransaction(send.hash);
-  for (let i = 0; i < 50; i++) {
-    switch (response.status) {
-    case "NOT_FOUND": {
-      // retry
-      await new Promise(resolve => setTimeout(resolve, 100));
-      response = await server.getTransaction(send.hash);
-      break;
+    const originalTxn = new TransactionBuilder(sourceAccount, {
+        fee: "100",
+        networkPassphrase,
+      })
+      .addOperation(contract.call(functionName, ...params))
+      .setTimeout(30)
+      .build();
+
+    const txn = await server.prepareTransaction(originalTxn);
+    txn.sign(keypair);
+    const send = await server.sendTransaction(txn);
+    if (send.errorResult) {
+      throw new Error(`Transaction failed: ${JSON.stringify(send)}`);
     }
-    case "SUCCESS": {
-      if (!response.returnValue) {
-        throw new Error(`No invoke host fn return value provided: ${JSON.stringify(response)}`);
+    let response = await server.getTransaction(send.hash);
+    for (let i = 0; i < 50; i++) {
+      switch (response.status) {
+      case "NOT_FOUND": {
+        // retry
+        await new Promise(resolve => setTimeout(resolve, 100));
+        response = await server.getTransaction(send.hash);
+        break;
       }
+      case "SUCCESS": {
+        if (!response.returnValue) {
+          throw new Error(`No invoke host fn return value provided: ${JSON.stringify(response)}`);
+        }
 
-      const parsed = scValToNative(response.returnValue);
-      console.log(JSON.stringify(parsed));
-      return;
-    }
-    case "FAILED": {
-      throw new Error(`Transaction failed: ${JSON.stringify(response)}`);
-    }
-    default:
-      throw new Error(`Unknown transaction status: ${response.status}`);
+        const parsed = scValToNative(response.returnValue);
+        console.log(JSON.stringify(parsed));
+        return;
+      }
+      case "FAILED": {
+        throw new Error(`Transaction failed: ${JSON.stringify(response)}`);
+      }
+      default:
+        throw new Error(`Unknown transaction status: ${response.status}`);
+      }
     }
   }
   throw new Error("Transaction timed out");
