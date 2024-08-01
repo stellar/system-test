@@ -49,10 +49,12 @@ async function main() {
       ...contract.basicNodeSigner(keypair, networkPassphrase),
     });
     const args: Record<string, any> = {};
-    functionParams.split(",").forEach((p) => {
-      const [name, value] = p.split(":");
-      args[name] = value;
-    });
+    if (functionParams) {
+      functionParams.split(",").forEach((p) => {
+        const [name, value] = p.split(":");
+        args[name] = value;
+      });
+    }
     // @ts-ignore client[functionName] is defined dynamically
     const { result } = await client[functionName](args);
     console.log(JSON.stringify(result));
