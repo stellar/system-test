@@ -56,7 +56,8 @@ async function main() {
       });
     }
     // @ts-ignore client[functionName] is defined dynamically
-    const { result } = await client[functionName](args);
+    const tx = await client[functionName](args);
+    const { result } = await tx.signAndSend({ force: true });
     console.log(JSON.stringify(result));
     return;
   } else {
