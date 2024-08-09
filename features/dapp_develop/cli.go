@@ -20,6 +20,7 @@ func invokeContractFromCliTool(deployedContractId, contractName, functionName, f
 		"--rpc-url", e2eConfig.TargetNetworkRPCURL,
 		"--source", e2eConfig.TargetNetworkSecretKey,
 		"--network-passphrase", e2eConfig.TargetNetworkPassPhrase,
+		"--send", "yes",
 		"--",
 		functionName,
 	}
