@@ -99,14 +99,6 @@ func getEventsFromCliTool(ledgerFrom uint32, deployedContractId string, size uin
 		return jsonEvents, fmt.Errorf("soroban cli get events had error %v, %v", status, err)
 	}
 
-	if len(stdOutLines) > 0 {
-		// some output was produced to console by the cli events command,
-		// it could represent a correct or bad result, but need to remove the last line of it regardless
-		// because if it's correct results will have a last line of 'Latest Ledger: xxxx', which needs to be removed to
-		// parse the rest as valid json,
-		stdOutLinesTrimmed = stdOutLines[:len(stdOutLines)-1]
-	}
-
 	// put commas between any json event objects if more than one found
 	stdOutEventsValidJson := strings.ReplaceAll(strings.Join(stdOutLinesTrimmed, "\n"), `\n}\n{\n`, `\n}\n,\n{\n`)
 	// wrap the json objects in json array brackets
