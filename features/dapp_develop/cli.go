@@ -93,14 +93,13 @@ func getEventsFromCliTool(ledgerFrom uint32, deployedContractId string, size uin
 
 	status, stdOutLines, err := e2e.RunCommand(envCmd, e2eConfig)
 	var jsonEvents []map[string]interface{}
-	var stdOutLinesTrimmed []string
 
 	if status != 0 || err != nil {
 		return jsonEvents, fmt.Errorf("soroban cli get events had error %v, %v", status, err)
 	}
 
 	// put commas between any json event objects if more than one found
-	stdOutEventsValidJson := strings.ReplaceAll(strings.Join(stdOutLinesTrimmed, "\n"), `\n}\n{\n`, `\n}\n,\n{\n`)
+	stdOutEventsValidJson := strings.ReplaceAll(strings.Join(stdOutLines, "\n"), `\n}\n{\n`, `\n}\n,\n{\n`)
 	// wrap the json objects in json array brackets
 	stdOutEventsValidJson = "[" + stdOutEventsValidJson + "]"
 
