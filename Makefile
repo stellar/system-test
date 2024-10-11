@@ -24,7 +24,7 @@ PROTOCOL_VERSION_DEFAULT=
 # variables to set for source code, can be any valid docker context url local path github remote repo `https://github.com/repo#<ref>`
 CORE_GIT_REF=https://github.com/stellar/stellar-core.git\#master
 SOROBAN_RPC_GIT_REF=https://github.com/stellar/soroban-rpc.git\#main
-SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git\#main
+SOROBAN_CLI_GIT_REF=https://github.com/stellar/stellar-cli.git\#478a74f517b14d42c9f02437537c9fabf2e70840
 GO_GIT_REF=https://github.com/stellar/go.git\#master
 RS_XDR_GIT_REPO=https://github.com/stellar/rs-stellar-xdr
 RS_XDR_GIT_REF=main
