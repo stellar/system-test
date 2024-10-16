@@ -11,7 +11,7 @@ HORIZON_STAGE_IMAGE=stellar/system-test-horizon:dev
 RS_XDR_STAGE_IMAGE=stellar/system-test-rs-xdr:dev
 FRIENDBOT_STAGE_IMAGE=stellar/system-test-friendbot:dev
 SOROBAN_RPC_STAGE_IMAGE=stellar/system-test-soroban-rpc:dev
-SOROBAN_CLI_STAGE_IMAGE=stellar/system-test-soroban-cli:dev
+STELLAR_CLI_STAGE_IMAGE=stellar/system-test-stellar-cli:dev
 
 # The rest of these variables can be set as environment variables to the makefile
 # to modify how system test is built.
@@ -24,12 +24,12 @@ PROTOCOL_VERSION_DEFAULT=
 # variables to set for source code, can be any valid docker context url local path github remote repo `https://github.com/repo#<ref>`
 CORE_GIT_REF=https://github.com/stellar/stellar-core.git\#master
 SOROBAN_RPC_GIT_REF=https://github.com/stellar/soroban-rpc.git\#main
-SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git\#main
+STELLAR_CLI_GIT_REF=https://github.com/stellar/stellar-cli.git\#main
 GO_GIT_REF=https://github.com/stellar/go.git\#master
 RS_XDR_GIT_REPO=https://github.com/stellar/rs-stellar-xdr
 RS_XDR_GIT_REF=main
 QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git\#master
-# specify the published npm repo version of soroban-client js library, 
+# specify the published npm repo version of stellar-client js library, 
 # or you can specify gh git ref url as the version
 JS_STELLAR_SDK_NPM_VERSION=https://github.com/stellar/js-stellar-sdk.git\#master
 
@@ -37,8 +37,8 @@ JS_STELLAR_SDK_NPM_VERSION=https://github.com/stellar/js-stellar-sdk.git\#master
 # image during build. if using this option, the image ref should provide a version for same
 # platform arch as the build host is on, i.e. linux/amd64 or linux/arm64.
 #
-# image must have soroban cli bin at /usr/local/cargo/bin/soroban
-SOROBAN_CLI_IMAGE=
+# image must have stellar cli bin at /usr/local/cargo/bin/soroban
+STELLAR_CLI_IMAGE=
 #
 # image must have soroban rpc bin at /bin/soroban-rpc
 SOROBAN_RPC_IMAGE=
@@ -65,8 +65,8 @@ QUICKSTART_IMAGE=
 
 NODE_VERSION?=18.19.0
 
-# if crate version is set, then it overrides SOROBAN_CLI_GIT_REF, cli will be installed from this create instead
-SOROBAN_CLI_CRATE_VERSION=
+# if crate version is set, then it overrides STELLAR_CLI_GIT_REF, cli will be installed from this create instead
+STELLAR_CLI_CRATE_VERSION=
 
 # sets the rustc version in the system test image
 RUST_TOOLCHAIN_VERSION=stable
@@ -115,14 +115,14 @@ build-soroban-rpc:
 		-f cmd/soroban-rpc/docker/Dockerfile "$$SOURCE_URL"; \
 	fi
 
-build-soroban-cli:
-	if [ -z "$(SOROBAN_CLI_IMAGE)" ]; then \
+build-stellar-cli:
+	if [ -z "$(STELLAR_CLI_IMAGE)" ]; then \
 		DOCKERHUB_RUST_VERSION=rust:$$( [ "$(RUST_TOOLCHAIN_VERSION)" = "stable" ] && echo "latest" || echo "$(RUST_TOOLCHAIN_VERSION)"); \
-		docker buildx build -t "$(SOROBAN_CLI_STAGE_IMAGE)" --target builder \
+		docker buildx build -t "$(STELLAR_CLI_STAGE_IMAGE)" --target builder \
 		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
 		--build-arg DOCKERHUB_RUST_VERSION="$$DOCKERHUB_RUST_VERSION" \
-		--build-arg SOROBAN_CLI_CRATE_VERSION="$(SOROBAN_CLI_CRATE_VERSION)" \
-		-f- $(SOROBAN_CLI_GIT_REF) < $(MAKEFILE_DIR)Dockerfile.soroban-cli; \
+		--build-arg STELLAR_CLI_CRATE_VERSION="$(STELLAR_CLI_CRATE_VERSION)" \
+		-f- $(STELLAR_CLI_GIT_REF) < $(MAKEFILE_DIR)Dockerfile.stellar-cli; \
 	fi
 
 build-horizon:
@@ -181,14 +181,14 @@ build-quickstart: build-core build-friendbot build-horizon build-rs-xdr build-so
 		-f Dockerfile "$$SOURCE_URL"; \
 	fi
 
-build: build-quickstart build-soroban-cli
+build: build-quickstart build-stellar-cli
 	QUICKSTART_IMAGE_REF=$$( [ -z "$(QUICKSTART_IMAGE)" ] && echo "$(QUICKSTART_STAGE_IMAGE)" || echo "$(QUICKSTART_IMAGE)"); \
-	SOROBAN_CLI_IMAGE_REF=$$( [ -z "$(SOROBAN_CLI_IMAGE)" ] && echo "$(SOROBAN_CLI_STAGE_IMAGE)" || echo "$(SOROBAN_CLI_IMAGE)"); \
+	STELLAR_CLI_IMAGE_REF=$$( [ -z "$(STELLAR_CLI_IMAGE)" ] && echo "$(STELLAR_CLI_STAGE_IMAGE)" || echo "$(STELLAR_CLI_IMAGE)"); \
 	docker build -t "$(SYSTEM_TEST_IMAGE)" -f Dockerfile \
 	    --build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
 		--build-arg QUICKSTART_IMAGE_REF=$$QUICKSTART_IMAGE_REF \
-		--build-arg SOROBAN_CLI_CRATE_VERSION=$(SOROBAN_CLI_CRATE_VERSION) \
-		--build-arg SOROBAN_CLI_IMAGE_REF=$$SOROBAN_CLI_IMAGE_REF \
+		--build-arg STELLAR_CLI_CRATE_VERSION=$(STELLAR_CLI_CRATE_VERSION) \
+		--build-arg STELLAR_CLI_IMAGE_REF=$$STELLAR_CLI_IMAGE_REF \
 		--build-arg RUST_TOOLCHAIN_VERSION=$(RUST_TOOLCHAIN_VERSION) \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
 		--build-arg JS_STELLAR_SDK_NPM_VERSION=$(JS_STELLAR_SDK_NPM_VERSION) \

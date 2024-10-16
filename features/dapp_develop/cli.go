@@ -35,11 +35,11 @@ func invokeContractFromCliTool(deployedContractId, contractName, functionName, f
 	stdOut := strings.TrimSpace(strings.Join(stdOutLines, "\n"))
 
 	if status != 0 || err != nil {
-		return "", fmt.Errorf("soroban cli invoke of example contract %s had error %v, %v, stdout: %v", contractName, status, err, stdOut)
+		return "", fmt.Errorf("stellar cli invoke of example contract %s had error %v, %v, stdout: %v", contractName, status, err, stdOut)
 	}
 
 	if stdOut == "" {
-		return "", fmt.Errorf("soroban cli invoke of example contract %s did not emit successful response", contractName)
+		return "", fmt.Errorf("stellar cli invoke of example contract %s did not emit successful response", contractName)
 	}
 
 	return stdOut, nil
@@ -67,11 +67,11 @@ func invokeContractFromCliToolWithConfig(deployedContractId, contractName, funct
 	stdOut := strings.TrimSpace(strings.Join(stdOutLines, "\n"))
 
 	if status != 0 || err != nil {
-		return "", fmt.Errorf("soroban cli invoke of example contract with config states, %s had error %v, %v, stdout: %v", contractName, status, err, stdOut)
+		return "", fmt.Errorf("stellar cli invoke of example contract with config states, %s had error %v, %v, stdout: %v", contractName, status, err, stdOut)
 	}
 
 	if stdOut == "" {
-		return "", fmt.Errorf("soroban cli invoke of example contract with config states, %s did not emit successful response", contractName)
+		return "", fmt.Errorf("stellar cli invoke of example contract with config states, %s did not emit successful response", contractName)
 	}
 
 	return stdOut, nil
@@ -95,7 +95,7 @@ func getEventsFromCliTool(ledgerFrom uint32, deployedContractId string, size uin
 	var jsonEvents []map[string]interface{}
 
 	if status != 0 || err != nil {
-		return jsonEvents, fmt.Errorf("soroban cli get events had error %v, %v", status, err)
+		return jsonEvents, fmt.Errorf("stellar cli get events had error %v, %v", status, err)
 	}
 
 	// put commas between any json event objects if more than one found
@@ -105,7 +105,7 @@ func getEventsFromCliTool(ledgerFrom uint32, deployedContractId string, size uin
 
 	err = json.Unmarshal([]byte(stdOutEventsValidJson), &jsonEvents)
 	if err != nil {
-		return jsonEvents, fmt.Errorf("soroban cli get events console output %v was not parseable as event json, %e", strings.Join(stdOutLines, "\n"), err)
+		return jsonEvents, fmt.Errorf("stellar cli get events console output %v was not parseable as event json, %e", strings.Join(stdOutLines, "\n"), err)
 	}
 
 	return jsonEvents, nil

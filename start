@@ -107,7 +107,7 @@ function main() {
   fi  
 
   print_screen_output "  RUST_TOOLCHAIN_VERSION=$(rustc --version 2>/dev/null || echo"n/a" )"
-  print_screen_output "  SOROBAN_CLI_CRATE_VERSION=$(soroban version 2>/dev/null || echo "n/a" )"
+  print_screen_output "  STELLAR_CLI_CRATE_VERSION=$(soroban version 2>/dev/null || echo "n/a" )"
   print_screen_output "  SOROBAN_EXAMPLES_GIT_HASH=$SOROBAN_EXAMPLES_GIT_HASH"
   print_screen_output "  SOROBAN_EXAMPLES_REPO_URL=$SOROBAN_EXAMPLES_REPO_URL"
   print_screen_output "  TARGET_NETWORK=$TARGET_NETWORK"

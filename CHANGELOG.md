@@ -2,7 +2,7 @@
 
 #### Unreleased
 
-* js invocation upgraded to use [`stellar-sdk`](https://github.com/stellar/js-stellar-sdk) rather than the now-deprecated `soroban-client`. [system-test, #81](https://github.com/stellar/system-test/pull/81)
+* js invocation upgraded to use [`stellar-sdk`](https://github.com/stellar/js-stellar-sdk) rather than the now-deprecated `stellar-client`. [system-test, #81](https://github.com/stellar/system-test/pull/81)
 
 #### 1.0.19
 
@@ -74,7 +74,7 @@ This version of tests is based on [Soroban Preview 7](https://soroban.stellar.or
 
 #### 1.0.4
 
-* Fixed git ref resolution to detached head state when compiling soroban cli during image build [system-test, #23](https://github.com/stellar/system-test/pull/23), to build [Stellar Quickstart](https://github.com/stellar/quickstart).
+* Fixed git ref resolution to detached head state when compiling stellar cli during image build [system-test, #23](https://github.com/stellar/system-test/pull/23), to build [Stellar Quickstart](https://github.com/stellar/quickstart).
 
 This version of tests is based on [Soroban Preview 7](https://soroban.stellar.org/docs/releases) system interfaces.
 
