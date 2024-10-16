@@ -2,7 +2,7 @@
 
 #### Unreleased
 
-* js invocation upgraded to use [`stellar-sdk`](https://github.com/stellar/js-stellar-sdk) rather than the now-deprecated `stellar-client`. [system-test, #81](https://github.com/stellar/system-test/pull/81)
+* js invocation upgraded to use [`stellar-sdk`](https://github.com/stellar/js-stellar-sdk) rather than the now-deprecated `soroban-client`. [system-test, #81](https://github.com/stellar/system-test/pull/81)
 
 #### 1.0.19
 

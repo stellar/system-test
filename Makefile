@@ -29,7 +29,7 @@ GO_GIT_REF=https://github.com/stellar/go.git\#master
 RS_XDR_GIT_REPO=https://github.com/stellar/rs-stellar-xdr
 RS_XDR_GIT_REF=main
 QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git\#master
-# specify the published npm repo version of stellar-client js library, 
+# specify the published npm repo version of soroban-client js library, 
 # or you can specify gh git ref url as the version
 JS_STELLAR_SDK_NPM_VERSION=https://github.com/stellar/js-stellar-sdk.git\#master
 
