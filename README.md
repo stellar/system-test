@@ -3,7 +3,7 @@
 ### Running system tests:
   Identify the system-test image you want to use for running tests:
   - Use a prebuilt system test image published as tags under `dockerhub.io/stellar/system-test`
-  - Build the system test docker image locally with specific versions of core, horizon, soroban rpc, rust toolchain, soroban cli, this will create a docker image named
+  - Build the system test docker image locally with specific versions of core, horizon, soroban rpc, rust toolchain, stellar cli, this will create a docker image named
   `stellar/system-test:dev`.
   All `GIT_REF` variables can refer to either a fully qualified local path to checked out git repo, or a fully qualified github remote repo url `https://github.com/repo#<ref>`
   ```
@@ -12,10 +12,10 @@
        CORE_GIT_REF=? \
        CORE_COMPILE_CONFIGURE_FLAGS=? \
        SOROBAN_RPC_GIT_REF=? \
-       SOROBAN_CLI_GIT_REF=? \
+       STELLAR_CLI_GIT_REF=? \
        GO_GIT_REF=? \
        RUST_TOOLCHAIN_VERSION=? \
-       SOROBAN_CLI_CRATE_VERSION=? \
+       STELLAR_CLI_CRATE_VERSION=? \
        JS_STELLAR_SDK_NPM_VERSION=? \
        NODE_VERSION=? \
        PROTOCOL_VERSION_DEFAULT=? \
@@ -26,9 +26,9 @@
   ```
   make CORE_GIT_REF=https://github.com/stellar/stellar-core.git#f1dc39f0f146815e5e3a94ed162e2f0639cb433f \
          CORE_COMPILE_CONFIGURE_FLAGS="--disable-tests --enable-next-protocol-version-unsafe-for-production" \
-         SOROBAN_RPC_GIT_REF=https://github.com/stellar/soroban-tools.git#main \
+         SOROBAN_RPC_GIT_REF=https://github.com/stellar/stellar-cli.git#main \
          RUST_TOOLCHAIN_VERSION=stable \
-         SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git#main \
+         STELLAR_CLI_GIT_REF=https://github.com/stellar/stellar-cli.git#main \
          QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git#master \
          JS_STELLAR_SDK_NPM_VERSION=https://github.com/stellar/js-stellar-sdk.git#master \
          build
@@ -38,13 +38,13 @@
   ```
   make QUICKSTART_IMAGE=stellar/quickstart:soroban-dev \
          RUST_TOOLCHAIN_VERSION=1.66.0 \
-         SOROBAN_CLI_GIT_REF=/Users/user/soroban-tools build
+         STELLAR_CLI_GIT_REF=/Users/user/stellar-cli build
   ```
 
   some settings have defaults pre-set, and optionally be overriden:
   ```
-  SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git#main
-  SOROBAN_RPC_GIT_REF=https://github.com/stellar/soroban-tools.git#main
+  STELLAR_CLI_GIT_REF=https://github.com/stellar/stellar-cli.git#main
+  SOROBAN_RPC_GIT_REF=https://github.com/stellar/soroban-rpc.git#main
   RUST_TOOLCHAIN_VERSION=stable
   QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git#master
   # the GO_GIT_REF provides the reference on the stellar/go repo from which
@@ -57,8 +57,8 @@
 
   optional params to set:
   ```
-  # this will override SOROBAN_CLI_GIT_REF, and install soroban cli from crates repo instead
-  SOROBAN_CLI_CRATE_VERSION=0.4.0
+  # this will override STELLAR_CLI_GIT_REF, and install stellar cli from crates repo instead
+  STELLAR_CLI_CRATE_VERSION=0.4.0
 
   # this will override the default Node JS vm version used for running the JS code:
   NODE_VERSION=16.20.2
@@ -89,9 +89,9 @@
   # will use the bin already compiled at /bin/soroban-rpc in the existing docker image provided:
   SOROBAN_RPC_IMAGE=<docker registry>/<docker image name>:<docker tag>
 
-  # this will skip building soroban-cli from SOROBAN_CLI_GIT_REF and instead
+  # this will skip building stellar-cli from STELLAR_CLI_GIT_REF and instead
   # will use the bin already compiled at /usr/local/cargo/bin/soroban in the existing docker image provided:
-  SOROBAN_CLI_IMAGE=<docker registry>/<docker image name>:<docker tag>
+  STELLAR_CLI_IMAGE=<docker registry>/<docker image name>:<docker tag>
 
   # this will skip building horizon from GO_GIT_REF and instead
   # will use the bin already compiled at /go/bin/horizon in the existing docker image provided:
@@ -164,7 +164,7 @@ This approach allows to run the tests from source code directly on host as go te
 
  1. go 1.18 or above - https://go.dev/doc/install
  2. rust toolchain(cargo and rustc), install the version per testing requirements or stable, - use rustup - https://www.rust-lang.org/tools/install
- 3. `soroban` cli, compile or install via cargo crate a version of soroban cli onto your machine and accessible from PATH.
+ 3. `soroban` cli, compile or install via cargo crate a version of stellar cli onto your machine and accessible from PATH.
  4. target network stack for the tests to access soroban-rpc instance. You can use an existing/running instance if reachable or can use the quickstart image `stellar/quickstart:soroban-dev` from dockerhub to run the latest stable target network stack locally, or build quickstart with specific versions of core, horizon and soroban rpc first [following these instructions](https://github.com/stellar/quickstart#building-custom-images) and run `stellar/quickstart:dev` locally.
      ```
      docker run --rm -it -p 8000:8000 --name stellar stellar/quickstart:dev --standalone --enable-soroban-rpc
