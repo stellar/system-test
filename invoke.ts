@@ -6,12 +6,12 @@ import {
   Contract,
   Keypair,
   TransactionBuilder,
-  SorobanRpc,
+  rpc,
   scValToNative,
   xdr,
 } from '@stellar/stellar-sdk';
 
-const { Server } = SorobanRpc;
+const { Server, Api } = rpc;
 
 async function main() {
   const parser = new ArgumentParser({ description: 'Invoke a contract function' })
@@ -85,13 +85,13 @@ async function main() {
     let response = await server.getTransaction(send.hash);
     for (let i = 0; i < 50; i++) {
       switch (response.status) {
-      case "NOT_FOUND": {
+      case Api.GetTransactionStatus.NOT_FOUND: {
         // retry
         await new Promise(resolve => setTimeout(resolve, 100));
         response = await server.getTransaction(send.hash);
         break;
       }
-      case "SUCCESS": {
+      case Api.GetTransactionStatus.SUCCESS: {
         if (!response.returnValue) {
           throw new Error(`No invoke host fn return value provided: ${JSON.stringify(response)}`);
         }
@@ -100,11 +100,11 @@ async function main() {
         console.log(JSON.stringify(parsed));
         return;
       }
-      case "FAILED": {
+      case Api.GetTransactionStatus.FAILED: {
         throw new Error(`Transaction failed: ${JSON.stringify(response)}`);
       }
       default:
-        throw new Error(`Unknown transaction status: ${response.status}`);
+        throw new Error(`Unknown transaction status: ${response}`);
       }
     }
   }

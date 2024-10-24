@@ -1,7 +1,7 @@
 #!/usr/bin/env ts-node-script
 
 import { ArgumentParser } from 'argparse';
-import { Contract, SorobanRpc } from '@stellar/stellar-sdk';
+import { Contract, rpc } from '@stellar/stellar-sdk';
 
 async function main() {
   const parser = new ArgumentParser({ description: 'Get contract events' })
@@ -17,9 +17,9 @@ async function main() {
     ledgerFrom,
   } = parser.parse_args() as Record<string, string>;
 
-  const server = new SorobanRpc.Server(rpcUrl, { allowHttp: true });
+  const server = new rpc.Server(rpcUrl, { allowHttp: true });
 
-  let filters: SorobanRpc.Api.EventFilter[] = [];
+  let filters: rpc.Api.EventFilter[] = [];
 
   if (contractId != null) {
     filters.push({
