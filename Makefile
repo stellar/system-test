@@ -2,7 +2,7 @@ SHELL:=/bin/bash
 MAKEFILE_DIR:=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 .EXPORT_ALL_VARIABLES:
-.PHONY: build build-quickstart build-core build-friendbot build-horizon build-soroban-rpc
+.PHONY: build build-quickstart build-core build-friendbot build-horizon build-stellar-rpc
 
 SYSTEM_TEST_SHA=$(shell git rev-parse HEAD)
 QUICKSTART_STAGE_IMAGE=stellar/system-test-base:dev
@@ -10,7 +10,7 @@ CORE_STAGE_IMAGE=stellar/system-test-core:dev
 HORIZON_STAGE_IMAGE=stellar/system-test-horizon:dev
 RS_XDR_STAGE_IMAGE=stellar/system-test-rs-xdr:dev
 FRIENDBOT_STAGE_IMAGE=stellar/system-test-friendbot:dev
-SOROBAN_RPC_STAGE_IMAGE=stellar/system-test-soroban-rpc:dev
+STELLAR_RPC_STAGE_IMAGE=stellar/system-test-stellar-rpc:dev
 SOROBAN_CLI_STAGE_IMAGE=stellar/system-test-soroban-cli:dev
 
 # The rest of these variables can be set as environment variables to the makefile
@@ -23,7 +23,7 @@ PROTOCOL_VERSION_DEFAULT=
 
 # variables to set for source code, can be any valid docker context url local path github remote repo `https://github.com/repo#<ref>`
 CORE_GIT_REF=https://github.com/stellar/stellar-core.git\#master
-SOROBAN_RPC_GIT_REF=https://github.com/stellar/soroban-rpc.git\#main
+STELLAR_RPC_GIT_REF=https://github.com/stellar/stellar-rpc.git\#main
 SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git\#main
 GO_GIT_REF=https://github.com/stellar/go.git\#master
 RS_XDR_GIT_REPO=https://github.com/stellar/rs-stellar-xdr
@@ -40,8 +40,8 @@ JS_STELLAR_SDK_NPM_VERSION=https://github.com/stellar/js-stellar-sdk.git\#master
 # image must have soroban cli bin at /usr/local/cargo/bin/soroban
 SOROBAN_CLI_IMAGE=
 #
-# image must have soroban rpc bin at /bin/soroban-rpc
-SOROBAN_RPC_IMAGE=
+# image must have soroban rpc bin at /bin/stellar-rpc
+STELLAR_RPC_IMAGE=
 #
 # image must have horizon bin at /go/bin/horizon
 HORIZON_IMAGE=
@@ -103,16 +103,16 @@ build-rs-xdr:
 		-f Dockerfile.xdr "$$SOURCE_URL"; \
 	fi	
 
-build-soroban-rpc:
-	if [ -z "$(QUICKSTART_IMAGE)" ] && [ -z "$(SOROBAN_RPC_IMAGE)" ]; then \
-		SOURCE_URL="$(SOROBAN_RPC_GIT_REF)"; \
-		if [[ ! "$(SOROBAN_RPC_GIT_REF)" =~ \.git ]]; then \
-			pushd "$(SOROBAN_RPC_GIT_REF)"; \
+build-stellar-rpc:
+	if [ -z "$(QUICKSTART_IMAGE)" ] && [ -z "$(STELLAR_RPC_IMAGE)" ]; then \
+		SOURCE_URL="$(STELLAR_RPC_GIT_REF)"; \
+		if [[ ! "$(STELLAR_RPC_GIT_REF)" =~ \.git ]]; then \
+			pushd "$(STELLAR_RPC_GIT_REF)"; \
 			SOURCE_URL=.; \
 		fi; \
-		docker build -t "$(SOROBAN_RPC_STAGE_IMAGE)" --target build \
+		docker build -t "$(STELLAR_RPC_STAGE_IMAGE)" --target build \
 		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
-		-f cmd/soroban-rpc/docker/Dockerfile "$$SOURCE_URL"; \
+		-f cmd/stellar-rpc/docker/Dockerfile "$$SOURCE_URL"; \
 	fi
 
 build-soroban-cli:
@@ -156,12 +156,12 @@ build-core:
 		-f Dockerfile.core .; \
 	fi
 
-build-quickstart: build-core build-friendbot build-horizon build-rs-xdr build-soroban-rpc
+build-quickstart: build-core build-friendbot build-horizon build-rs-xdr build-stellar-rpc
 	if [ -z "$(QUICKSTART_IMAGE)" ]; then \
 		CORE_IMAGE_REF=$$( [[ -z "$(CORE_IMAGE)"  ||  ! -z "$(CORE_IMAGE_BIN_PATH)" ]] && echo "$(CORE_STAGE_IMAGE)" || echo "$(CORE_IMAGE)"); \
 		HORIZON_IMAGE_REF=$$( [ -z "$(HORIZON_IMAGE)" ] && echo "$(HORIZON_STAGE_IMAGE)" || echo "$(HORIZON_IMAGE)"); \
 		FRIENDBOT_IMAGE_REF=$$( [ -z "$(FRIENDBOT_IMAGE)" ] && echo "$(FRIENDBOT_STAGE_IMAGE)" || echo "$(FRIENDBOT_IMAGE)"); \
-		SOROBAN_RPC_IMAGE_REF=$$( [ -z "$(SOROBAN_RPC_IMAGE)" ] && echo "$(SOROBAN_RPC_STAGE_IMAGE)" || echo "$(SOROBAN_RPC_IMAGE)"); \
+		STELLAR_RPC_IMAGE_REF=$$( [ -z "$(STELLAR_RPC_IMAGE)" ] && echo "$(STELLAR_RPC_STAGE_IMAGE)" || echo "$(STELLAR_RPC_IMAGE)"); \
 		RS_XDR_IMAGE_REF=$$( [ -z "$(RS_XDR_IMAGE)" ] && echo "$(RS_XDR_STAGE_IMAGE)" || echo "$(RS_XDR_IMAGE)"); \
 		SOURCE_URL="$(QUICKSTART_GIT_REF)"; \
 		if [[ ! "$(QUICKSTART_GIT_REF)" =~ \.git ]]; then \
@@ -177,7 +177,7 @@ build-quickstart: build-core build-friendbot build-horizon build-rs-xdr build-so
 		--build-arg CORE_SUPPORTS_TESTING_SOROBAN_HIGH_LIMIT_OVERRIDE=true \
 		--build-arg HORIZON_IMAGE_REF=$$HORIZON_IMAGE_REF \
 		--build-arg FRIENDBOT_IMAGE_REF=$$FRIENDBOT_IMAGE_REF \
-		--build-arg SOROBAN_RPC_IMAGE_REF=$$SOROBAN_RPC_IMAGE_REF \
+		--build-arg STELLAR_RPC_IMAGE_REF=$$STELLAR_RPC_IMAGE_REF \
 		-f Dockerfile "$$SOURCE_URL"; \
 	fi
 

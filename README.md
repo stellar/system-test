@@ -11,7 +11,7 @@
        QUICKSTART_GIT_REF=? \
        CORE_GIT_REF=? \
        CORE_COMPILE_CONFIGURE_FLAGS=? \
-       SOROBAN_RPC_GIT_REF=? \
+       STELLAR_RPC_GIT_REF=? \
        SOROBAN_CLI_GIT_REF=? \
        GO_GIT_REF=? \
        RUST_TOOLCHAIN_VERSION=? \
@@ -26,7 +26,7 @@
   ```
   make CORE_GIT_REF=https://github.com/stellar/stellar-core.git#f1dc39f0f146815e5e3a94ed162e2f0639cb433f \
          CORE_COMPILE_CONFIGURE_FLAGS="--disable-tests --enable-next-protocol-version-unsafe-for-production" \
-         SOROBAN_RPC_GIT_REF=https://github.com/stellar/soroban-tools.git#main \
+         STELLAR_RPC_GIT_REF=https://github.com/stellar/soroban-tools.git#main \
          RUST_TOOLCHAIN_VERSION=stable \
          SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git#main \
          QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git#master \
@@ -44,7 +44,7 @@
   some settings have defaults pre-set, and optionally be overriden:
   ```
   SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git#main
-  SOROBAN_RPC_GIT_REF=https://github.com/stellar/soroban-tools.git#main
+  STELLAR_RPC_GIT_REF=https://github.com/stellar/soroban-tools.git#main
   RUST_TOOLCHAIN_VERSION=stable
   QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git#master
   # the GO_GIT_REF provides the reference on the stellar/go repo from which
@@ -73,7 +73,7 @@
   # platform arch as the build host is running on, i.e. linux/amd64 or linux/arm64.
   # Otherwise, build will fail if image is not available for matching host platform.
   #
-  # this will skip building from source for core(CORE_GIT_REF), rpc(SOROBAN_RPC_GIT_REF) and quickstart(QUICKSTART_GIT_REF), instead
+  # this will skip building from source for core(CORE_GIT_REF), rpc(STELLAR_RPC_GIT_REF) and quickstart(QUICKSTART_GIT_REF), instead
   # will use the versions already compiled in the existing quickstart docker image provided:
   QUICKSTART_IMAGE=<docker registry>/<docker image name>:<docker tag>
 
@@ -85,9 +85,9 @@
   # to override the default of /usr/local/bin/stellar-core
   CORE_IMAGE_BIN_PATH=
 
-  # this will skip building soroban-rpc from SOROBAN_RPC_GIT_REF and instead
-  # will use the bin already compiled at /bin/soroban-rpc in the existing docker image provided:
-  SOROBAN_RPC_IMAGE=<docker registry>/<docker image name>:<docker tag>
+  # this will skip building stellar-rpc from STELLAR_RPC_GIT_REF and instead
+  # will use the bin already compiled at /bin/stellar-rpc in the existing docker image provided:
+  STELLAR_RPC_IMAGE=<docker registry>/<docker image name>:<docker tag>
 
   # this will skip building soroban-cli from SOROBAN_CLI_GIT_REF and instead
   # will use the bin already compiled at /usr/local/cargo/bin/soroban in the existing docker image provided:
@@ -165,9 +165,9 @@ This approach allows to run the tests from source code directly on host as go te
  1. go 1.18 or above - https://go.dev/doc/install
  2. rust toolchain(cargo and rustc), install the version per testing requirements or stable, - use rustup - https://www.rust-lang.org/tools/install
  3. `soroban` cli, compile or install via cargo crate a version of soroban cli onto your machine and accessible from PATH.
- 4. target network stack for the tests to access soroban-rpc instance. You can use an existing/running instance if reachable or can use the quickstart image `stellar/quickstart:soroban-dev` from dockerhub to run the latest stable target network stack locally, or build quickstart with specific versions of core, horizon and soroban rpc first [following these instructions](https://github.com/stellar/quickstart#building-custom-images) and run `stellar/quickstart:dev` locally.
+ 4. target network stack for the tests to access stellar-rpc instance. You can use an existing/running instance if reachable or can use the quickstart image `stellar/quickstart:soroban-dev` from dockerhub to run the latest stable target network stack locally, or build quickstart with specific versions of core, horizon and soroban rpc first [following these instructions](https://github.com/stellar/quickstart#building-custom-images) and run `stellar/quickstart:dev` locally.
      ```
-     docker run --rm -it -p 8000:8000 --name stellar stellar/quickstart:dev --standalone --enable-soroban-rpc
+     docker run --rm -it -p 8000:8000 --name stellar stellar/quickstart:dev --standalone --enable-stellar-rpc
      ```
  5. locally checkout stellar/system-test GH repo and go into top folder - `git clone https://github.com/stellar/system-test.git;cd system-test`
 

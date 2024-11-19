@@ -20,7 +20,7 @@ env:
   PUSH_ENABLED: ${{ secrets.DOCKERHUB_TOKEN && github.ref_type == 'tag' && startsWith(github.ref_name, 'v') != true && 'true' || 'false' }}
   IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository, github.ref_type == 'tag' && github.ref_name || github.event.ref || 'latest') }}
   CORE_GIT_REF: https://github.com/stellar/stellar-core.git#master
-  SOROBAN_RPC_GIT_REF: https://github.com/stellar/soroban-rpc.git#main
+  STELLAR_RPC_GIT_REF: https://github.com/stellar/stellar-rpc.git#main
   RUST_TOOLCHAIN_VERSION: stable
   SOROBAN_CLI_GIT_REF: https://github.com/stellar/soroban-tools.git#main
   QUICKSTART_GIT_REF: https://github.com/stellar/quickstart.git#master
@@ -50,7 +50,7 @@ jobs:
       run: |
         make CORE_GIT_REF=${{ env.CORE_GIT_REF }} \
              CORE_COMPILE_CONFIGURE_FLAGS="${{ env.CORE_COMPILE_CONFIGURE_FLAGS }}" \
-             SOROBAN_RPC_GIT_REF=${{ env.SOROBAN_RPC_GIT_REF }} \
+             STELLAR_RPC_GIT_REF=${{ env.STELLAR_RPC_GIT_REF }} \
              RUST_TOOLCHAIN_VERSION=${{ env.RUST_TOOLCHAIN_VERSION }} \
              SOROBAN_CLI_GIT_REF=${{ env.SOROBAN_CLI_GIT_REF }} \
              SYSTEM_TEST_IMAGE=${{ env.PUSH_ENABLED == 'true' && env.IMAGE || 'stellar/system-test:dev' }} \
