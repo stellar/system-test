@@ -64,7 +64,7 @@ jobs:
         docker save ${{ env.IMAGE }} -o /tmp/image;
     - if: ${{ env.PUSH_ENABLED == 'true' }}
       name: Upload System Test Image
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: image-Dockerfile
         path: /tmp/image
