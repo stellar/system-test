@@ -90,16 +90,16 @@ function main() {
 
     if [ "$VERBOSE_OUTPUT" = "true" ]; then
         # redirects all quickstart output to console during test execution
-        /start --$TARGET_NETWORK --enable-soroban-rpc $ENABLE_SOROBAN_DIAGNOSTIC_EVENTS --logs 2>&1 &
+        /start --$TARGET_NETWORK --enable-stellar-rpc $ENABLE_SOROBAN_DIAGNOSTIC_EVENTS --logs 2>&1 &
     else
         # don't show any quickstart output on console during test execution
         # all quickstart output is redirected(buffering disabled) to log file, which will be dumped to
         # console if tests fail.
-        stdbuf -o0 -e0 /start --$TARGET_NETWORK --enable-soroban-rpc $ENABLE_SOROBAN_DIAGNOSTIC_EVENTS --logs >> $QUICKSTART_LOG_FILE 2>&1 &
+        stdbuf -o0 -e0 /start --$TARGET_NETWORK --enable-stellar-rpc $ENABLE_SOROBAN_DIAGNOSTIC_EVENTS --logs >> $QUICKSTART_LOG_FILE 2>&1 &
     fi
   fi
 
-  soroban_rpc_status 
+  stellar_rpc_status
 
   # quickstart runs horizon, but sys tests don't need it.
   if [ "$LOCAL_CORE" = "true" ]; then
@@ -199,7 +199,7 @@ function process_args() {
   fi 
 }
 
-function soroban_rpc_status () {
+function stellar_rpc_status () {
   print_screen_output "waiting for soroban rpc to report ready state..." 
   COUNTER=1
   while ! $(curl --silent --location --request POST "$TARGET_NETWORK_RPC_URL" \
