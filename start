@@ -90,12 +90,12 @@ function main() {
 
     if [ "$VERBOSE_OUTPUT" = "true" ]; then
         # redirects all quickstart output to console during test execution
-        /start --$TARGET_NETWORK --enable-stellar-rpc $ENABLE_SOROBAN_DIAGNOSTIC_EVENTS --logs 2>&1 &
+        /start --$TARGET_NETWORK --enable-rpc $ENABLE_SOROBAN_DIAGNOSTIC_EVENTS --logs 2>&1 &
     else
         # don't show any quickstart output on console during test execution
         # all quickstart output is redirected(buffering disabled) to log file, which will be dumped to
         # console if tests fail.
-        stdbuf -o0 -e0 /start --$TARGET_NETWORK --enable-stellar-rpc $ENABLE_SOROBAN_DIAGNOSTIC_EVENTS --logs >> $QUICKSTART_LOG_FILE 2>&1 &
+        stdbuf -o0 -e0 /start --$TARGET_NETWORK --enable-rpc $ENABLE_SOROBAN_DIAGNOSTIC_EVENTS --logs >> $QUICKSTART_LOG_FILE 2>&1 &
     fi
   fi
 
