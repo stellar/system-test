@@ -23,7 +23,7 @@ env:
   STELLAR_RPC_GIT_REF: https://github.com/stellar/stellar-rpc.git#main
   RUST_TOOLCHAIN_VERSION: stable
   SOROBAN_CLI_GIT_REF: https://github.com/stellar/soroban-tools.git#main
-  QUICKSTART_GIT_REF: https://github.com/stellar/quickstart.git#1a831b2350dd3928b60eb745d0862ee19dd2aaaa
+  QUICKSTART_GIT_REF: https://github.com/stellar/quickstart.git#e1f62bf34cf047156dbb599b3c7dff52283ac696
   # leaving sdk npm version blank defaults to whatever npm has for latest version
   # rather than build from git source, which is fine for ci test build
   JS_STELLAR_SDK_NPM_VERSION: 
