@@ -167,7 +167,7 @@ This approach allows to run the tests from source code directly on host as go te
  3. `soroban` cli, compile or install via cargo crate a version of soroban cli onto your machine and accessible from PATH.
  4. target network stack for the tests to access stellar-rpc instance. You can use an existing/running instance if reachable or can use the quickstart image `stellar/quickstart:soroban-dev` from dockerhub to run the latest stable target network stack locally, or build quickstart with specific versions of core, horizon and soroban rpc first [following these instructions](https://github.com/stellar/quickstart#building-custom-images) and run `stellar/quickstart:dev` locally.
      ```
-     docker run --rm -it -p 8000:8000 --name stellar stellar/quickstart:dev --standalone --enable-rpc
+     docker run --rm -it -p 8000:8000 --name stellar stellar/quickstart:dev --standalone --enable rpc
      ```
  5. locally checkout stellar/system-test GH repo and go into top folder - `git clone https://github.com/stellar/system-test.git;cd system-test`
 
