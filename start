@@ -36,7 +36,7 @@ print_screen_output "Starting system test ..."
 trap printout SIGINT
 printout() {
   echo "Cancelling and exit."
-  exit
+  exit 1
 }
 
 trap finish EXIT
@@ -218,7 +218,7 @@ function stellar_rpc_status () {
 
     if [ $COUNTER -gt 900 ]; then
       echo "Waited longer than 15 minutes for rpc, cancelling and exit."
-      exit
+      exit 1
     fi  
 
     sleep 5
