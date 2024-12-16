@@ -82,7 +82,7 @@ function main() {
     print_screen_output "starting target stack on $TARGET_NETWORK with following server versions:"
     print_screen_output "  CORE VERSION=$(stellar-core version 2>/dev/null || echo "n/a")"
     print_screen_output "  HORIZON VERSION=$(stellar-horizon version 2>/dev/null || echo "n/a")"
-    print_screen_output "  SOROBAN RPC VERSION=$(stellar-soroban-rpc version 2>/dev/null || echo "n/a")"
+    print_screen_output "  STELLAR RPC VERSION=$(stellar-rpc version 2>/dev/null || echo "n/a")"
       
     if [ "$TARGET_NETWORK" = "futurenet" ]; then
         TARGET_NETWORK_PASSPHRASE="Test SDF Future Network ; October 2022"
@@ -212,18 +212,18 @@ function stellar_rpc_status () {
     }' | jq --exit-status '.result.status == "healthy"' 2>/dev/null | grep -o true || echo false ); 
   do
     if [ $(expr $COUNTER % 12) -eq 0 ]; then 
-      print_screen_output "waited $(expr $COUNTER / 12) minutes for soroban rpc to report ready state..." 
+      print_screen_output "waited $(expr $COUNTER / 12) minutes for Stellar RPC to report ready state..."
     fi
     COUNTER=$[$COUNTER +1]  
 
     if [ $COUNTER -gt 900 ]; then
-      echo "Waited longer than 15 minutes for rpc, cancelling and exit."
+      echo "Waited longer than 15 minutes for Stellar RPC, cancelling and exit."
       exit 1
     fi  
 
     sleep 5
   done 
-  print_screen_output "soroban rpc reported ready status, the service can be used by tools/cli now ..." 
+  print_screen_output "Stellar RPC reported ready status, the service can be used by tools/cli now ..."
 }
 
 main "$@"
