@@ -5,13 +5,11 @@ import { ArgumentParser } from 'argparse';
 import {
   Contract,
   Keypair,
+  rpc,
   TransactionBuilder,
-  SorobanRpc,
   scValToNative,
   xdr,
 } from '@stellar/stellar-sdk';
-
-const { Server } = SorobanRpc;
 
 async function main() {
   const parser = new ArgumentParser({ description: 'Invoke a contract function' })
@@ -61,7 +59,7 @@ async function main() {
     console.log(JSON.stringify(result));
     return;
   } else {
-    const server = new Server(rpcUrl, { allowHttp: true });
+    const server = new rpc.Server(rpcUrl, { allowHttp: true });
     const sourceAccount = await server.getAccount(account);
     const contract = new Contract(contractId);
     // Some hacky param-parsing as csv. Generated Typescript bindings would be better.
