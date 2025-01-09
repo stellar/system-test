@@ -6,6 +6,7 @@ FROM $DOCKERHUB_RUST_VERSION AS builder
 WORKDIR /soroban-tools
 COPY . .
 
+run apt update && apt install -y libdbus-1-dev libudev-dev
 run if [ ! -z "$SOROBAN_CLI_CRATE_VERSION" ]; then \
 		cargo install \
 		--config net.git-fetch-with-cli=true \
