@@ -3,6 +3,7 @@ package dapp_develop
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/go-cmd/cmd"
@@ -99,7 +100,8 @@ func getEventsFromCliTool(ledgerFrom uint32, deployedContractId string, size uin
 	}
 
 	// put commas between any json event objects if more than one found
-	stdOutEventsValidJson := strings.ReplaceAll(strings.Join(stdOutLines, "\n"), `\n}\n{\n`, `\n}\n,\n{\n`)
+	regex := regexp.MustCompile(`\n}\n{\n`) // Create a regex pattern
+	stdOutEventsValidJson := regex.ReplaceAllString(strings.Join(stdOutLines, "\n"), "\n}\n,\n{\n")
 	// wrap the json objects in json array brackets
 	stdOutEventsValidJson = "[" + stdOutEventsValidJson + "]"
 

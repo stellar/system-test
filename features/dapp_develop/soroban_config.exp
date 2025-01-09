@@ -3,6 +3,6 @@ set KEY_NAME [lindex $argv 0]
 set KEY [lindex $argv 1]
 set timeout -1
 spawn soroban keys add --secret-key $KEY_NAME
-expect -exact "Type a secret key: \r"
+expect "Type a secret key"
 send -- "$KEY\r"
 expect eof
