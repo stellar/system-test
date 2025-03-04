@@ -7,6 +7,7 @@ WORKDIR /soroban-tools
 COPY . .
 
 run apt update && apt install -y libdbus-1-dev libudev-dev
+RUN rustup show active-toolchain || rustup toolchain install
 run if [ ! -z "$SOROBAN_CLI_CRATE_VERSION" ]; then \
 		cargo install \
 		--config net.git-fetch-with-cli=true \
