@@ -87,9 +87,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: stellar/actions/rust-cache@main
       - run: rustup update
-      - run: cargo install --git https://github.com/stellar/stellar-cli --rev ${{ inputs.SOROBAN_CLI_REF }}
+      - run: cargo install --git https://github.com/stellar/stellar-cli soroban-cli --rev ${{ inputs.SOROBAN_CLI_REF }}
         if: ${{ inputs.SOROBAN_CLI_REF != '' }}
-      - run: cargo install --git https://github.com/stellar/stellar-cli --branch ${{ inputs.SOROBAN_CLI_BRANCH }}
+      - run: cargo install --git https://github.com/stellar/stellar-cli soroban-cli --branch ${{ inputs.SOROBAN_CLI_BRANCH }}
         if: ${{ inputs.SOROBAN_CLI_REF == '' }}
       - run: sudo apt update && sudo apt install -y libudev-dev libdbus-1-dev
       - run: go mod download
