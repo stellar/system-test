@@ -36,6 +36,7 @@ ENV RUSTUP_HOME=/rust/.rust
 ENV RUST_TOOLCHAIN_VERSION=$RUST_TOOLCHAIN_VERSION
 ENV PATH="/usr/local/go/bin:$CARGO_HOME/bin:${PATH}"
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain "$RUST_TOOLCHAIN_VERSION"
+RUN rustup show active-toolchain || rustup toolchain install
 
 # Use a non-root user
 ARG USERNAME=tester
