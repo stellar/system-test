@@ -40,7 +40,7 @@ RUN rustup show active-toolchain || rustup toolchain install
 # Older toolchain to compile soroban examples
 RUN rustup toolchain install 1.81-x86_64-unknown-linux-gnu
 # Wasm toolchain to compile contracts
-RUN rustup toolchain install wasm32-unknown-unknown
+RUN rustup target add wasm32-unknown-unknown
 
 # Use a non-root user
 ARG USERNAME=tester
