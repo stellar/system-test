@@ -91,6 +91,7 @@ jobs:
       - run: rustup show active-toolchain || rustup toolchain install
       - run: rustup toolchain install 1.81-x86_64-unknown-linux-gnu
       - run: rustup target add wasm32-unknown-unknown
+      - run: rustup target add wasm32-unknown-unknown --toolchain 1.81-x86_64-unknown-linux-gnu
       - run: cargo install --git https://github.com/stellar/stellar-cli soroban-cli --rev ${{ inputs.SOROBAN_CLI_REF }}
         if: ${{ inputs.SOROBAN_CLI_REF != '' }}
       - run: cargo install --git https://github.com/stellar/stellar-cli soroban-cli --branch ${{ inputs.SOROBAN_CLI_BRANCH }}
