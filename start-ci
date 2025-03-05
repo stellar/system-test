@@ -21,7 +21,7 @@ ENABLE_SOROBAN_DIAGNOSTIC_EVENTS=--enable-soroban-diagnostic-events
 # each row in example data for a scenario outline is postfixed with '#01', '#02', example:
 # TestDappDevelop/DApp developer compiles, deploys and invokes a contract#01
 TEST_FILTER=""
-VERBOSE_OUTPUT=false
+VERBOSE_OUTPUT=TRUE
 CANCELLED=false
 # the relative path to runtime directory on image that feature files will be found at 
 # these files are aggregated into this directory by Dockerfile
