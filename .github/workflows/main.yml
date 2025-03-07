@@ -81,8 +81,10 @@ env:
   TargetNetworkPassPhrase: "Standalone Network ; February 2017"
   TargetNetworkSecretKey: "SC5O7VZUXDJ6JBDSZ74DSERXL7W3Y5LTOAMRF7RQRL3TAGAPS7LUVG3L"
   TargetNetworkPublicKey: "GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI"
+  TargetNetworkRPCURL: "http://localhost:8000/soroban/rpc"
   # the relative path to runtime directory on image that feature files will be found at (constant)
   FeaturePath: .
+  LocalCore: false
 
 jobs:
   systems-test:
