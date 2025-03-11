@@ -11,6 +11,7 @@ on:
       stellar-cli-version:
         required: false
         type: string
+        default: "22.3.0"
 
       # example filter for all combos of one scenario outline: ^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$
       # each row in example data for a scenario outline is postfixed with '#01', '#02', example:
@@ -122,9 +123,9 @@ jobs:
       - run: rustup target add wasm32-unknown-unknown --toolchain 1.81-x86_64-unknown-linux-gnu
       - run: cargo install --git https://github.com/stellar/stellar-cli soroban-cli --rev ${{ inputs.stellar-cli-ref }}
         if: ${{ inputs.stellar-cli-ref != '' }}
-      - uses: stellar/stellar-cli@761446e3bdca0aff59dfe738a6bcf3d4b9ef83cf
-#        with:
-#          version: ${{ inputs.stellar-cli-version }}
+      - uses: stellar/stellar-cli@main
+        with:
+          version: ${{ inputs.stellar-cli-version }}
         if: ${{ inputs.stellar-cli-ref == '' }}
       - run: go mod download
       - run: |
