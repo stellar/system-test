@@ -6,15 +6,17 @@ on:
       # the soroban CLI source code to compile and run from system test
       # refers to checked out source of current GitHub ref context or branch
       stellar-cli-ref:
+        required: false
         type: string
-      stellar-cli-branch:
+      stellar-cli-version:
+        required: false
         type: string
-        default: main
 
       # example filter for all combos of one scenario outline: ^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$
       # each row in example data for a scenario outline is postfixed with '#01', '#02', example:
       # TestDappDevelop/DApp developer compiles, deploys and invokes a contract#01
       test-filter:
+        required: false
         type: string
         default: ""
 
@@ -22,11 +24,13 @@ on:
       # resolution options, using npm release or a gh ref:
       # option #1, set the version of stellar-sdk based on a npm release version
       js-stellar-sdk-npm-version:
+        required: false
         type: string
         default: 12.2.0
 
       # triggers system test to log out details from test steps
       verbose-output:
+        required: false
         type: boolean
         default: true
 
@@ -107,6 +111,8 @@ jobs:
           --health-retries 50
     steps:
       - uses: actions/checkout@v4
+        with:
+          repository: "stellar/system-test"
       - uses: stellar/actions/rust-cache@main
       - run: sudo apt update && sudo apt install -y expect libudev-dev libdbus-1-dev
       - run: rustup update
@@ -116,7 +122,9 @@ jobs:
       - run: rustup target add wasm32-unknown-unknown --toolchain 1.81-x86_64-unknown-linux-gnu
       - run: cargo install --git https://github.com/stellar/stellar-cli soroban-cli --rev ${{ inputs.stellar-cli-ref }}
         if: ${{ inputs.stellar-cli-ref != '' }}
-      - run: cargo install --git https://github.com/stellar/stellar-cli soroban-cli --branch ${{ inputs.stellar-cli-branch }}
+      - uses: stellar/stellar-cli@main
+        with:
+          version: ${{ inputs.stellar-cli-version }}
         if: ${{ inputs.stellar-cli-ref == '' }}
       - run: go mod download
       - run: |
