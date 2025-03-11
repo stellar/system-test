@@ -122,9 +122,9 @@ jobs:
       - run: rustup target add wasm32-unknown-unknown --toolchain 1.81-x86_64-unknown-linux-gnu
       - run: cargo install --git https://github.com/stellar/stellar-cli soroban-cli --rev ${{ inputs.stellar-cli-ref }}
         if: ${{ inputs.stellar-cli-ref != '' }}
-      - uses: stellar/stellar-cli@d8b0dab3ed513aacf50c9bed7568328d7eb3249d
-        with:
-          version: ${{ inputs.stellar-cli-version }}
+      - uses: stellar/stellar-cli@761446e3bdca0aff59dfe738a6bcf3d4b9ef83cf
+#        with:
+#          version: ${{ inputs.stellar-cli-version }}
         if: ${{ inputs.stellar-cli-ref == '' }}
       - run: go mod download
       - run: |
