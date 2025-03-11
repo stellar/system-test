@@ -12,4 +12,4 @@ concurrency:
 jobs:
   systems-test:
     name: System tests
-    uses: ./.github/workflows/main.yml
+    uses: ./.github/workflows/test.yml

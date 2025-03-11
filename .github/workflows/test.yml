@@ -5,28 +5,28 @@ on:
     inputs:
       # the soroban CLI source code to compile and run from system test
       # refers to checked out source of current GitHub ref context or branch
-      SOROBAN_CLI_REF:
+      stellar-cli-ref:
         type: string
-      SOROBAN_CLI_BRANCH:
+      stellar-cli-branch:
         type: string
         default: main
 
       # example filter for all combos of one scenario outline: ^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$
       # each row in example data for a scenario outline is postfixed with '#01', '#02', example:
       # TestDappDevelop/DApp developer compiles, deploys and invokes a contract#01
-      TEST_FILTER:
+      test-filter:
         type: string
         default: ""
 
       # set the version of js-stellar-sdk to use, need to choose one of either
       # resolution options, using npm release or a gh ref:
       # option #1, set the version of stellar-sdk based on a npm release version
-      JS_STELLAR_SDK_NPM_VERSION:
+      js-stellar-sdk-npm-version:
         type: string
         default: 12.2.0
 
       # triggers system test to log out details from test steps
-      VERBOSE_OUTPUT:
+      verbose-output:
         type: boolean
         default: true
 
@@ -70,7 +70,7 @@ on:
       # TODO allow other options
       # option #2, set the version of stellar-sdk used as a ref to a gh repo if
       # a value is set on SYSTEM_TEST_JS_STELLAR_SDK_GH_REPO, it takes
-      # precedence over any SYSTEM_TEST_JS_STELLAR_SDK_NPM_VERSION
+      # precedence over any SYSTEM_TEST_js-stellar-sdk-npm-version
       # SYSTEM_TEST_JS_STELLAR_SDK_GH_REPO:
       # SYSTEM_TEST_JS_STELLAR_SDK_GH_REF:
 
@@ -114,10 +114,10 @@ jobs:
       - run: rustup toolchain install 1.81-x86_64-unknown-linux-gnu
       - run: rustup target add wasm32-unknown-unknown
       - run: rustup target add wasm32-unknown-unknown --toolchain 1.81-x86_64-unknown-linux-gnu
-      - run: cargo install --git https://github.com/stellar/stellar-cli soroban-cli --rev ${{ inputs.SOROBAN_CLI_REF }}
-        if: ${{ inputs.SOROBAN_CLI_REF != '' }}
-      - run: cargo install --git https://github.com/stellar/stellar-cli soroban-cli --branch ${{ inputs.SOROBAN_CLI_BRANCH }}
-        if: ${{ inputs.SOROBAN_CLI_REF == '' }}
+      - run: cargo install --git https://github.com/stellar/stellar-cli soroban-cli --rev ${{ inputs.stellar-cli-ref }}
+        if: ${{ inputs.stellar-cli-ref != '' }}
+      - run: cargo install --git https://github.com/stellar/stellar-cli soroban-cli --branch ${{ inputs.stellar-cli-branch }}
+        if: ${{ inputs.stellar-cli-ref == '' }}
       - run: go mod download
       - run: |
           go test -c -o ./bin/dapp_develop_test.bin ./features/dapp_develop/...
@@ -126,17 +126,17 @@ jobs:
           cp invoke.ts ./bin
           cp events.ts ./bin
       - run: npm install -g ts-node
-      - run: yarn add "@stellar/stellar-sdk@${{ inputs.JS_STELLAR_SDK_NPM_VERSION }}" --network-concurrency 1
+      - run: yarn add "@stellar/stellar-sdk@${{ inputs.js-stellar-sdk-npm-version }}" --network-concurrency 1
       - run: |
           for file in ./*;
           do
             if [[ "$file" =~ ^.*\.bin$ ]]; then
                 # these bin files were compiled from go feature tests in the Dockerfile during image build
                 echo "Running test binary ${file} ... "
-                ${file} -test.v ${{ inputs.TEST_FILTER }}
+                ${file} -test.v ${{ inputs.test-filter }}
             fi
           done
         name: "System test"
         working-directory: "./bin"
         env:
-          VerboseOutput: ${{ inputs.VERBOSE_OUTPUT}}
+          VerboseOutput: ${{ inputs.verbose-output}}
