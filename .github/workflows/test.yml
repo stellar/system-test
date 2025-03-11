@@ -115,7 +115,7 @@ jobs:
         with:
           repository: "stellar/system-test"
       - uses: stellar/actions/rust-cache@main
-      - run: sudo apt update && sudo apt install -y expect libudev-dev libdbus-1-dev openssl
+      - run: sudo apt update && sudo apt install -y expect libudev-dev libdbus-1-dev
       - run: rustup update
       - run: rustup show active-toolchain || rustup toolchain install
       - run: rustup toolchain install 1.81-x86_64-unknown-linux-gnu
@@ -123,9 +123,7 @@ jobs:
       - run: rustup target add wasm32-unknown-unknown --toolchain 1.81-x86_64-unknown-linux-gnu
       - run: cargo install --git https://github.com/stellar/stellar-cli soroban-cli --rev ${{ inputs.stellar-cli-ref }}
         if: ${{ inputs.stellar-cli-ref != '' }}
-      - uses: stellar/stellar-cli@main
-        with:
-          version: ${{ inputs.stellar-cli-version }}
+      - run: cargo install stellar-cli@${{ inputs.stellar-cli-version }}
         if: ${{ inputs.stellar-cli-ref == '' }}
       - run: go mod download
       - run: |
