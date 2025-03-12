@@ -43,7 +43,7 @@ func deployContract(compiledContractFileName string, contractWorkingDirectory st
 	var envCmd *cmd.Cmd
 
 	if installedContractId != "" {
-		envCmd = cmd.NewCmd("soroban",
+		envCmd = cmd.NewCmd("stellar",
 			"contract",
 			"deploy",
 			"--quiet",
@@ -52,7 +52,7 @@ func deployContract(compiledContractFileName string, contractWorkingDirectory st
 			"--source", e2eConfig.TargetNetworkSecretKey,
 			"--network-passphrase", e2eConfig.TargetNetworkPassPhrase)
 	} else {
-		envCmd = cmd.NewCmd("soroban",
+		envCmd = cmd.NewCmd("stellar",
 			"contract",
 			"deploy",
 			"--quiet",
@@ -65,18 +65,18 @@ func deployContract(compiledContractFileName string, contractWorkingDirectory st
 	status, stdOut, err := e2e.RunCommand(envCmd, e2eConfig)
 
 	if status != 0 || err != nil {
-		return "", fmt.Errorf("soroban cli deployment of example contract %s had error %v, %v", compiledContractFileName, status, err)
+		return "", fmt.Errorf("stellar cli deployment of example contract %s had error %v, %v", compiledContractFileName, status, err)
 	}
 
 	if len(stdOut) < 1 {
-		return "", fmt.Errorf("soroban cli deployment of example contract %s returned no contract id", compiledContractFileName)
+		return "", fmt.Errorf("stellar cli deployment of example contract %s returned no contract id", compiledContractFileName)
 	}
 
 	return stdOut[0], nil
 }
 
 func deployContractUsingConfigParams(compiledContractFileName string, contractWorkingDirectory string, contractExamplesSubPath string, identityName string, networkConfigName string, e2eConfig *e2e.E2EConfig) (string, error) {
-	envCmd := cmd.NewCmd("soroban",
+	envCmd := cmd.NewCmd("stellar",
 		"contract",
 		"deploy",
 		"--quiet",
@@ -87,11 +87,11 @@ func deployContractUsingConfigParams(compiledContractFileName string, contractWo
 	status, stdOut, err := e2e.RunCommand(envCmd, e2eConfig)
 
 	if status != 0 || err != nil {
-		return "", fmt.Errorf("soroban cli deployment of example contract %s had error %v, %v", compiledContractFileName, status, err)
+		return "", fmt.Errorf("stellar cli deployment of example contract %s had error %v, %v", compiledContractFileName, status, err)
 	}
 
 	if len(stdOut) < 1 {
-		return "", fmt.Errorf("soroban cli deployment of example contract %s returned no contract id", compiledContractFileName)
+		return "", fmt.Errorf("stellar cli deployment of example contract %s returned no contract id", compiledContractFileName)
 	}
 
 	return stdOut[0], nil
@@ -99,7 +99,7 @@ func deployContractUsingConfigParams(compiledContractFileName string, contractWo
 
 // returns the installed contract id
 func installContract(compiledContractFileName string, contractWorkingDirectory string, contractExamplesSubPath string, e2eConfig *e2e.E2EConfig) (string, error) {
-	envCmd := cmd.NewCmd("soroban",
+	envCmd := cmd.NewCmd("stellar",
 		"contract",
 		"install",
 		"--quiet",
@@ -111,18 +111,18 @@ func installContract(compiledContractFileName string, contractWorkingDirectory s
 	status, stdOut, err := e2e.RunCommand(envCmd, e2eConfig)
 
 	if status != 0 || err != nil {
-		return "", fmt.Errorf("soroban cli install of example contract %s had error %v, %v", compiledContractFileName, status, err)
+		return "", fmt.Errorf("stellar cli install of example contract %s had error %v, %v", compiledContractFileName, status, err)
 	}
 
 	if len(stdOut) < 1 {
-		return "", fmt.Errorf("soroban cli install of example contract %s returned no contract id", compiledContractFileName)
+		return "", fmt.Errorf("stellar cli install of example contract %s returned no contract id", compiledContractFileName)
 	}
 
 	return stdOut[0], nil
 }
 
 func createNetworkConfig(configName string, rpcUrl string, networkPassphrase string, e2eConfig *e2e.E2EConfig) error {
-	envCmd := cmd.NewCmd("soroban",
+	envCmd := cmd.NewCmd("stellar",
 		"network",
 		"add",
 		"--rpc-url", rpcUrl,
@@ -132,7 +132,7 @@ func createNetworkConfig(configName string, rpcUrl string, networkPassphrase str
 	status, _, err := e2e.RunCommand(envCmd, e2eConfig)
 
 	if status != 0 || err != nil {
-		return fmt.Errorf("soroban cli create network config %s had error %v, %v", configName, status, err)
+		return fmt.Errorf("stellar cli create network config %s had error %v, %v", configName, status, err)
 	}
 
 	return nil
@@ -148,7 +148,7 @@ func createIdentityConfig(identityName string, secretKey string, e2eConfig *e2e.
 	status, _, err := e2e.RunCommand(envCmd, e2eConfig)
 
 	if status != 0 || err != nil {
-		return fmt.Errorf("soroban cli create identity config %s had error %v, %v", identityName, status, err)
+		return fmt.Errorf("stellar cli create identity config %s had error %v, %v", identityName, status, err)
 	}
 
 	return nil

@@ -1,0 +1,149 @@
+name: Systems test workflow
+
+on:
+  workflow_call:
+    inputs:
+      # the soroban CLI source code to compile and run from system test
+      # refers to checked out source of current GitHub ref context or branch
+      stellar-cli-ref:
+        required: false
+        type: string
+      stellar-cli-version:
+        required: false
+        type: string
+        default: "22.3.0"
+
+      # example filter for all combos of one scenario outline: ^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$
+      # each row in example data for a scenario outline is postfixed with '#01', '#02', example:
+      # TestDappDevelop/DApp developer compiles, deploys and invokes a contract#01
+      test-filter:
+        required: false
+        type: string
+        default: ""
+
+      # set the version of js-stellar-sdk to use, need to choose one of either
+      # resolution options, using npm release or a gh ref:
+      # option #1, set the version of stellar-sdk based on a npm release version
+      js-stellar-sdk-npm-version:
+        required: false
+        type: string
+        default: 12.2.0
+
+      # triggers system test to log out details from test steps
+      verbose-output:
+        required: false
+        type: boolean
+        default: true
+
+############################################################################################################
+        ################## Configurations above are supported by original start.sh but    ##################
+        ################## is not yet supported here (not used by stellar-cli e2e tests)  ##################
+############################################################################################################
+
+      # the pre-compiled image to use of quickstart, or the git ref to build
+      # from source.
+      # TODO: allow other versions
+      #      SYSTEM_TEST_QUICKSTART_IMAGE:
+      #        required: true
+      #        type: string
+      # TODO allow building from source
+      # SYSTEM_TEST_QUICKSTART_GIT_REF: "https://github.com/stellar/quickstart.git#master"
+
+
+      # the version of components built in quickstart. only used if quickstart
+      # is configured above to build from source.
+      # SYSTEM_TEST_PROTOCOL_VERSION_DEFAULT: 21
+      # SYSTEM_TEST_RS_XDR_GIT_REF: v21.0.1
+      # SYSTEM_TEST_CORE_IMAGE:
+      # SYSTEM_TEST_CORE_GIT_REF: https://github.com/stellar/stellar-core.git#v21.0.0rc1
+      # SYSTEM_TEST_CORE_COMPILE_CONFIGURE_FLAGS: "--disable-tests"
+      # SYSTEM_TEST_SOROBAN_RPC_REF: https://github.com/stellar/soroban-rpc.git#v21.0.1
+
+      # TODO
+      # the soroban test cases will compile various contracts from the examples repo
+      # SOROBAN_EXAMPLES_GIT_HASH:
+        #type: string
+
+      # TODO: do we still want it?
+      # sets the version of rust toolchain that will be pre-installed in the
+      # test runtime environment, tests invoke rustc/cargo
+      #      SYSTEM_TEST_RUST_TOOLCHAIN_VERSION:
+      #        required: true
+      #        type: string
+      #        default: stable
+
+      # TODO allow other options
+      # option #2, set the version of stellar-sdk used as a ref to a gh repo if
+      # a value is set on SYSTEM_TEST_JS_STELLAR_SDK_GH_REPO, it takes
+      # precedence over any SYSTEM_TEST_js-stellar-sdk-npm-version
+      # SYSTEM_TEST_JS_STELLAR_SDK_GH_REPO:
+      # SYSTEM_TEST_JS_STELLAR_SDK_GH_REF:
+
+env:
+  SorobanExamplesGitHash: "main"
+  SorobanExamplesRepoURL: "https://github.com/stellar/soroban-examples.git"
+  # the target network under test
+  TargetNetworkPassPhrase: "Standalone Network ; February 2017"
+  TargetNetworkSecretKey: "SC5O7VZUXDJ6JBDSZ74DSERXL7W3Y5LTOAMRF7RQRL3TAGAPS7LUVG3L"
+  TargetNetworkPublicKey: "GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI"
+  TargetNetworkRPCURL: "http://localhost:8000/soroban/rpc"
+  # the relative path to runtime directory on image that feature files will be found at (constant)
+  FeaturePath: .
+  LocalCore: false
+
+jobs:
+  systems-test:
+    # TODO: allow other runners
+    runs-on: ubuntu-latest
+    # TODO: allow other versions
+    services:
+      rpc:
+        image: stellar/quickstart:testing
+        ports:
+          - 8000:8000
+        env:
+          ENABLE_LOGS: true
+          NETWORK: local
+          ENABLE_SOROBAN_RPC: true
+        options: >-
+          --health-cmd "curl --no-progress-meter --fail-with-body -X POST \"http://localhost:8000/rpc\" -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"id\":8675309,\"method\":\"getNetwork\"}' && curl --no-progress-meter \"http://localhost:8000/friendbot\" | grep '\"invalid_field\": \"addr\"'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: "stellar/system-test"
+      - uses: stellar/actions/rust-cache@main
+      - run: sudo apt update && sudo apt install -y expect libudev-dev libdbus-1-dev
+      - run: rustup update
+      - run: rustup show active-toolchain || rustup toolchain install
+      - run: rustup toolchain install 1.81-x86_64-unknown-linux-gnu
+      - run: rustup target add wasm32-unknown-unknown
+      - run: rustup target add wasm32-unknown-unknown --toolchain 1.81-x86_64-unknown-linux-gnu
+      - run: cargo install --git https://github.com/stellar/stellar-cli soroban-cli --rev ${{ inputs.stellar-cli-ref }}
+        if: ${{ inputs.stellar-cli-ref != '' }}
+      - run: cargo install stellar-cli@${{ inputs.stellar-cli-version }}
+        if: ${{ inputs.stellar-cli-ref == '' }}
+      - run: go mod download
+      - run: |
+          go test -c -o ./bin/dapp_develop_test.bin ./features/dapp_develop/...
+          cp features/dapp_develop/dapp_develop.feature ./bin
+          cp features/dapp_develop/soroban_config.exp ./bin
+          cp invoke.ts ./bin
+          cp events.ts ./bin
+      - run: npm install -g ts-node
+      - run: yarn add "@stellar/stellar-sdk@${{ inputs.js-stellar-sdk-npm-version }}" --network-concurrency 1
+      - run: |
+          for file in ./*;
+          do
+            if [[ "$file" =~ ^.*\.bin$ ]]; then
+                # these bin files were compiled from go feature tests in the Dockerfile during image build
+                echo "Running test binary ${file} ... "
+                ${file} -test.v ${{ inputs.test-filter }}
+            fi
+          done
+        name: "System test"
+        working-directory: "./bin"
+        env:
+          VerboseOutput: ${{ inputs.verbose-output}}
