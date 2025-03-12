@@ -95,6 +95,7 @@ USER root
 
 ADD start /home/tester
 COPY --from=soroban-cli /usr/local/cargo/bin/soroban $CARGO_HOME/bin/
+COPY --from=soroban-cli /usr/local/cargo/bin/stellar $CARGO_HOME/bin/
 COPY --from=go /test/bin/ /home/tester/bin
 
 ENTRYPOINT ["/home/tester/start"]
