@@ -3,9 +3,22 @@ name: Systems test workflow
 on:
   workflow_call:
     inputs:
-      # the soroban CLI source code to compile and run from system test
-      # refers to checked out source of current GitHub ref context or branch
+      runner:
+        description: "GitHub runner to use"
+        required: true
+        type: string
+        default: "ubuntu-latest"
+
+      quickstart-ref:
+        description: Docker tag of quickstart image to use
+        required: true
+        type: string
+        default: "latest"
+
       stellar-cli-ref:
+        description: |
+          the soroban CLI source code to compile and run from system test
+          refers to checked out source of current GitHub ref context or branch
         required: false
         type: string
       stellar-cli-version:
@@ -13,18 +26,20 @@ on:
         type: string
         default: "22.3.0"
 
-      # example filter for all combos of one scenario outline: ^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$
-      # each row in example data for a scenario outline is postfixed with '#01', '#02', example:
-      # TestDappDevelop/DApp developer compiles, deploys and invokes a contract#01
       test-filter:
+        description: |
+          example filter for all combos of one scenario outline: ^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$
+          each row in example data for a scenario outline is postfixed with '#01', '#02', example:
+          TestDappDevelop/DApp developer compiles, deploys and invokes a contract#01
         required: false
         type: string
         default: ""
 
-      # set the version of js-stellar-sdk to use, need to choose one of either
-      # resolution options, using npm release or a gh ref:
-      # option #1, set the version of stellar-sdk based on a npm release version
       js-stellar-sdk-npm-version:
+        description: |
+          set the version of js-stellar-sdk to use, need to choose one of either
+          resolution options, using npm release or a gh ref:
+          option #1, set the version of stellar-sdk based on a npm release version
         required: false
         type: string
         default: 12.2.0
@@ -40,12 +55,6 @@ on:
         ################## is not yet supported here (not used by stellar-cli e2e tests)  ##################
 ############################################################################################################
 
-      # the pre-compiled image to use of quickstart, or the git ref to build
-      # from source.
-      # TODO: allow other versions
-      #      SYSTEM_TEST_QUICKSTART_IMAGE:
-      #        required: true
-      #        type: string
       # TODO allow building from source
       # SYSTEM_TEST_QUICKSTART_GIT_REF: "https://github.com/stellar/quickstart.git#master"
 
@@ -93,27 +102,12 @@ env:
 
 jobs:
   systems-test:
-    # TODO: allow other runners
-    runs-on: ubuntu-latest
-    # TODO: allow other versions
-    services:
-      rpc:
-        image: stellar/quickstart:testing
-        ports:
-          - 8000:8000
-        env:
-          ENABLE_LOGS: true
-          NETWORK: local
-          ENABLE_SOROBAN_RPC: true
-        options: >-
-          --health-cmd "curl --no-progress-meter --fail-with-body -X POST \"http://localhost:8000/rpc\" -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"id\":8675309,\"method\":\"getNetwork\"}' && curl --no-progress-meter \"http://localhost:8000/friendbot\" | grep '\"invalid_field\": \"addr\"'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 50
+    runs-on: ${{ inputs.runner }}
     steps:
       - uses: actions/checkout@v4
         with:
           repository: "stellar/system-test"
+      - uses: stellar/quickstart@6313dbd6925469c619191ebc3a67f039c25c0c07
       - uses: stellar/actions/rust-cache@main
       - run: sudo apt update && sudo apt install -y expect libudev-dev libdbus-1-dev
       - run: rustup update
