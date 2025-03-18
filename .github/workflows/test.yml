@@ -5,13 +5,13 @@ on:
     inputs:
       runner:
         description: "GitHub runner to use"
-        required: true
+        required: false
         type: string
         default: "ubuntu-latest"
 
       quickstart-ref:
         description: Docker tag of quickstart image to use
-        required: true
+        required: false
         type: string
         default: "latest"
 
