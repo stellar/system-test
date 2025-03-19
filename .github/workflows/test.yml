@@ -147,3 +147,5 @@ jobs:
         working-directory: "./bin"
         env:
           VerboseOutput: ${{ inputs.verbose-output}}
+      - run: docker logs quickstart
+        if: ${{ failure() }}
