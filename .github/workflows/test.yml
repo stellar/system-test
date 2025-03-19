@@ -112,6 +112,9 @@ jobs:
           version: ${{ inputs.quickstart-ref }}
       - uses: stellar/actions/rust-cache@main
       - run: sudo apt update && sudo apt install -y expect libudev-dev libdbus-1-dev
+        if: runner.os == 'Linux'
+      - run: brew install expect
+        if: runner.os == 'macos'
       - run: rustup update
       - run: rustup show active-toolchain || rustup toolchain install
         # 1.81 is required for soroban examples
