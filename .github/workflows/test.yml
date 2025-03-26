@@ -107,7 +107,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: "stellar/system-test"
-      - uses: stellar/quickstart@master
+      - uses: stellar/quickstart@main
         with:
           tag: ${{ inputs.quickstart-ref }}
       - uses: stellar/actions/rust-cache@main
