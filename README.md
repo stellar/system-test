@@ -29,7 +29,7 @@
          STELLAR_RPC_GIT_REF=https://github.com/stellar/soroban-tools.git#main \
          RUST_TOOLCHAIN_VERSION=stable \
          SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git#main \
-         QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git#master \
+         QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git#main \
          JS_STELLAR_SDK_NPM_VERSION=https://github.com/stellar/js-stellar-sdk.git#master \
          build
   ```
@@ -46,7 +46,7 @@
   SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git#main
   STELLAR_RPC_GIT_REF=https://github.com/stellar/soroban-tools.git#main
   RUST_TOOLCHAIN_VERSION=stable
-  QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git#master
+  QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git#main
   # the GO_GIT_REF provides the reference on the stellar/go repo from which
   # to build horizon
   GO_GIT_REF=https://github.com/stellar/go.git#master

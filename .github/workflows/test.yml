@@ -47,7 +47,7 @@ on:
       #        required: true
       #        type: string
       # TODO allow building from source
-      # SYSTEM_TEST_QUICKSTART_GIT_REF: "https://github.com/stellar/quickstart.git#master"
+      # SYSTEM_TEST_QUICKSTART_GIT_REF: "https://github.com/stellar/quickstart.git#main"
 
 
       # the version of components built in quickstart. only used if quickstart
