@@ -9,7 +9,7 @@ on:
         type: string
         default: "ubuntu-latest"
 
-      quickstart-ref:
+      quickstart-tag:
         description: Docker tag of quickstart image to use
         required: false
         type: string
@@ -109,7 +109,7 @@ jobs:
           repository: "stellar/system-test"
       - uses: stellar/quickstart@main
         with:
-          tag: ${{ inputs.quickstart-ref }}
+          tag: ${{ inputs.quickstart-tag }}
       - uses: stellar/actions/rust-cache@main
       - run: sudo apt update && sudo apt install -y expect libudev-dev libdbus-1-dev
         if: runner.os == 'Linux'
