@@ -26,9 +26,9 @@
   ```
   make CORE_GIT_REF=https://github.com/stellar/stellar-core.git#f1dc39f0f146815e5e3a94ed162e2f0639cb433f \
          CORE_COMPILE_CONFIGURE_FLAGS="--disable-tests --enable-next-protocol-version-unsafe-for-production" \
-         STELLAR_RPC_GIT_REF=https://github.com/stellar/soroban-tools.git#main \
+         STELLAR_RPC_GIT_REF=https://github.com/stellar/stellar-rpc.git#main \
          RUST_TOOLCHAIN_VERSION=stable \
-         SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git#main \
+         STELLAR_CLI_GIT_REF=https://github.com/stellar/stellar-cli.git#main \
          QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git#main \
          JS_STELLAR_SDK_NPM_VERSION=https://github.com/stellar/js-stellar-sdk.git#master \
          build
@@ -38,13 +38,13 @@
   ```
   make QUICKSTART_IMAGE=stellar/quickstart:soroban-dev \
          RUST_TOOLCHAIN_VERSION=1.66.0 \
-         SOROBAN_CLI_GIT_REF=/Users/user/soroban-tools build
+         STELLAR_CLI_GIT_REF=/Users/user/stellar-cli build
   ```
 
   some settings have defaults pre-set, and optionally be overriden:
   ```
-  SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git#main
-  STELLAR_RPC_GIT_REF=https://github.com/stellar/soroban-tools.git#main
+  STELLAR_CLI_GIT_REF=https://github.com/stellar/stellar-cli.git#main
+  STELLAR_RPC_GIT_REF=https://github.com/stellar/stellar-rpc.git#main
   RUST_TOOLCHAIN_VERSION=stable
   QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git#main
   # the GO_GIT_REF provides the reference on the stellar/go repo from which
@@ -57,8 +57,8 @@
 
   optional params to set:
   ```
-  # this will override SOROBAN_CLI_GIT_REF, and install soroban cli from crates repo instead
-  SOROBAN_CLI_CRATE_VERSION=0.4.0
+  # this will override STELLAR_CLI_GIT_REF, and install soroban cli from crates repo instead
+  STELLAR_CLI_CRATE_VERSION=0.4.0
 
   # this will override the default Node JS vm version used for running the JS code:
   NODE_VERSION=16.20.2
