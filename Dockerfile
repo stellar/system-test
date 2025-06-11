@@ -1,5 +1,5 @@
 ARG QUICKSTART_IMAGE_REF=stellar/quickstart:latest
-ARG CLI_CRATE_VERSION=stellar/system-test-stellar-cli:dev
+ARG CLI_IMAGE_REF=stellar/system-test-stellar-cli:dev
 
 FROM golang:1.21 as go
 
@@ -20,9 +20,9 @@ ADD features/dapp_develop/dapp_develop.feature ./bin
 # copy over a dapp develop test specific file, used for expect/tty usage
 ADD features/dapp_develop/soroban_config.exp ./bin
 
-FROM $CLI_CRATE_VERSION as stellar-cli
-
+FROM $CLI_IMAGE_REF as stellar-cli
 FROM $QUICKSTART_IMAGE_REF as base
+
 ARG RUST_TOOLCHAIN_VERSION
 ARG NODE_VERSION
 
