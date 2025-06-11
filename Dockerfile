@@ -1,7 +1,7 @@
 ARG QUICKSTART_IMAGE_REF=stellar/quickstart:latest
 ARG CLI_IMAGE_REF=stellar/system-test-stellar-cli:dev
 
-FROM golang:1.21 as go
+FROM golang:1.24 as go
 
 RUN ["mkdir", "-p", "/test"]
 RUN ["mkdir", "-p", "/test/bin"]
