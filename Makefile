@@ -110,7 +110,7 @@ build-stellar-rpc:
 			pushd "$(STELLAR_RPC_GIT_REF)"; \
 			SOURCE_URL=.; \
 		fi; \
-		docker build -t "$(STELLAR_RPC_STAGE_IMAGE)" --target build \
+		docker build -t "$(RPC_STAGE_IMAGE)" --target build \
 		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
 		-f cmd/stellar-rpc/docker/Dockerfile "$$SOURCE_URL"; \
 	fi
@@ -161,7 +161,7 @@ build-quickstart: build-core build-friendbot build-horizon build-rs-xdr build-st
 		CORE_IMAGE_REF=$$( [[ -z "$(CORE_IMAGE)"  ||  ! -z "$(CORE_IMAGE_BIN_PATH)" ]] && echo "$(CORE_STAGE_IMAGE)" || echo "$(CORE_IMAGE)"); \
 		HORIZON_IMAGE_REF=$$( [ -z "$(HORIZON_IMAGE)" ] && echo "$(HORIZON_STAGE_IMAGE)" || echo "$(HORIZON_IMAGE)"); \
 		FRIENDBOT_IMAGE_REF=$$( [ -z "$(FRIENDBOT_IMAGE)" ] && echo "$(FRIENDBOT_STAGE_IMAGE)" || echo "$(FRIENDBOT_IMAGE)"); \
-		STELLAR_RPC_IMAGE_REF=$$( [ -z "$(STELLAR_RPC_IMAGE)" ] && echo "$(STELLAR_RPC_STAGE_IMAGE)" || echo "$(STELLAR_RPC_IMAGE)"); \
+		STELLAR_RPC_IMAGE_REF=$$( [ -z "$(STELLAR_RPC_IMAGE)" ] && echo "$(RPC_STAGE_IMAGE)" || echo "$(STELLAR_RPC_IMAGE)"); \
 		RS_XDR_IMAGE_REF=$$( [ -z "$(RS_XDR_IMAGE)" ] && echo "$(RS_XDR_STAGE_IMAGE)" || echo "$(RS_XDR_IMAGE)"); \
 		SOURCE_URL="$(QUICKSTART_GIT_REF)"; \
 		if [[ ! "$(QUICKSTART_GIT_REF)" =~ \.git ]]; then \
