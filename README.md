@@ -12,10 +12,10 @@
        CORE_GIT_REF=? \
        CORE_COMPILE_CONFIGURE_FLAGS=? \
        STELLAR_RPC_GIT_REF=? \
-       SOROBAN_CLI_GIT_REF=? \
+       STELLAR_CLI_GIT_REF=? \
        GO_GIT_REF=? \
        RUST_TOOLCHAIN_VERSION=? \
-       SOROBAN_CLI_CRATE_VERSION=? \
+       STELLAR_CLI_CRATE_VERSION=? \
        JS_STELLAR_SDK_NPM_VERSION=? \
        NODE_VERSION=? \
        PROTOCOL_VERSION_DEFAULT=? \
@@ -81,7 +81,7 @@
   # will use the `stellar-core` by default at /usr/local/bin/stellar-core in the existing docker image provided:
   CORE_IMAGE=<docker registry>/<docker image name>:<docker tag>
 
-  # define a custom path that `stellar-core` bin is located on CORE_IMAGE, 
+  # define a custom path that `stellar-core` bin is located on CORE_IMAGE,
   # to override the default of /usr/local/bin/stellar-core
   CORE_IMAGE_BIN_PATH=
 
@@ -101,7 +101,7 @@
   # will use the bin already compiled at /app/friendbot in the existing docker image provided:
   FRIENDBOT_IMAGE=<docker registry>/<docker image name>:<docker tag>
 
-  # set the default network protocol version which the internal core runtime built from `CORE_GIT_REF` should start with. 
+  # set the default network protocol version which the internal core runtime built from `CORE_GIT_REF` should start with.
   # Should typically be set to the maximum supported protocol version of all components.
   # If not set or set to empty, will default to the core max supported protocol version defined in quickstart.
   PROTOCOL_VERSION_DEFAULT=

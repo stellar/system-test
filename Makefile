@@ -37,7 +37,7 @@ JS_STELLAR_SDK_NPM_VERSION=https://github.com/stellar/js-stellar-sdk.git\#master
 # image during build. if using this option, the image ref should provide a version for same
 # platform arch as the build host is on, i.e. linux/amd64 or linux/arm64.
 #
-# image must have soroban cli bin at /usr/local/cargo/bin/stellar
+# image must have stellar cli bin at /usr/local/cargo/bin/stellar
 STELLAR_CLI_IMAGE=
 #
 # image must have soroban rpc bin at /bin/stellar-rpc

@@ -74,7 +74,7 @@ This version of tests is based on [Soroban Preview 7](https://soroban.stellar.or
 
 #### 1.0.4
 
-* Fixed git ref resolution to detached head state when compiling soroban cli during image build [system-test, #23](https://github.com/stellar/system-test/pull/23), to build [Stellar Quickstart](https://github.com/stellar/quickstart).
+* Fixed git ref resolution to detached head state when compiling cli during image build [system-test, #23](https://github.com/stellar/system-test/pull/23), to build [Stellar Quickstart](https://github.com/stellar/quickstart).
 
 This version of tests is based on [Soroban Preview 7](https://soroban.stellar.org/docs/releases) system interfaces.
 
