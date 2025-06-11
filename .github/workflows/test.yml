@@ -121,7 +121,7 @@ jobs:
       - run: rustup toolchain install 1.81
       - run: rustup target add wasm32-unknown-unknown
       - run: rustup target add wasm32-unknown-unknown --toolchain 1.81
-      - run: cargo install --git https://github.com/stellar/stellar-cli soroban-cli --rev ${{ inputs.stellar-cli-ref }}
+      - run: cargo install --git https://github.com/stellar/stellar-cli stellar-cli --rev ${{ inputs.stellar-cli-ref }}
         if: ${{ inputs.stellar-cli-ref != '' }}
       - run: cargo install stellar-cli@${{ inputs.stellar-cli-version }}
         if: ${{ inputs.stellar-cli-ref == '' }}
