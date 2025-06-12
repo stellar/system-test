@@ -23,7 +23,7 @@ ENABLE_SOROBAN_DIAGNOSTIC_EVENTS=--enable-soroban-diagnostic-events
 TEST_FILTER=""
 VERBOSE_OUTPUT=false
 CANCELLED=false
-# the relative path to runtime directory on image that feature files will be found at 
+# the relative path to runtime directory on image that feature files will be found at
 # these files are aggregated into this directory by Dockerfile
 FEATURE_PATH=.
 
@@ -31,7 +31,7 @@ function print_screen_output() {
   echo "$1"
 }
 
-print_screen_output "Starting system test ..." 
+print_screen_output "Starting system test ..."
 
 trap printout SIGINT
 printout() {
@@ -49,13 +49,13 @@ function finish {
     echo "" >&2
     echo "" >&2
     cat $QUICKSTART_LOG_FILE >&2
-  fi  
-  
+  fi
+
   CANCELLED=true
   if [ "$DEBUG_MODE" = "true" ]; then
       print_screen_output "** DEBUG MODE Enabled **"
-      read -p 'Debug mode, you can shell into the container now, hit enter to let container stop: ' 
-  fi  
+      read -p 'Debug mode, you can shell into the container now, hit enter to let container stop: '
+  fi
 }
 
 function main() {
@@ -64,7 +64,7 @@ function main() {
   if [ ! -z "$TARGET_NETWORK_RPC_URL" ] && [ ! -z "$TARGET_NETWORK" ]; then
       echo "Invalid TargetNetwork config, must set TargetNetwork or TargetNetworkRPCURL, aborting test ..." >&2
       exit 1
-  fi  
+  fi
 
   if [ -z "$TARGET_NETWORK_RPC_URL" ] && \
      [ "$TARGET_NETWORK" != "standalone" ] && \
@@ -73,7 +73,7 @@ function main() {
      [ "$TARGET_NETWORK" != "testnet" && ]; then
       echo "Invalid TargetNetwork, must be one of: standalone or local(both mean the same), futurenet, or testnet, aborting test ..." >&2
       exit 1
-  fi  
+  fi
 
   if [ -z "$TARGET_NETWORK_RPC_URL" ]; then
 
@@ -83,10 +83,10 @@ function main() {
     print_screen_output "  CORE VERSION=$(stellar-core version 2>/dev/null || echo "n/a")"
     print_screen_output "  HORIZON VERSION=$(stellar-horizon version 2>/dev/null || echo "n/a")"
     print_screen_output "  STELLAR RPC VERSION=$(stellar-rpc version 2>/dev/null || echo "n/a")"
-      
+
     if [ "$TARGET_NETWORK" = "futurenet" ]; then
         TARGET_NETWORK_PASSPHRASE="Test SDF Future Network ; October 2022"
-    fi       
+    fi
 
     if [ "$VERBOSE_OUTPUT" = "true" ]; then
         # redirects all quickstart output to console during test execution
@@ -100,11 +100,13 @@ function main() {
   fi
 
   stellar_rpc_status
+  service supervisord stop
+  service supervisord start
 
   # quickstart runs horizon, but sys tests don't need it.
   if [ "$LOCAL_CORE" = "true" ]; then
       supervisorctl stop horizon
-  fi  
+  fi
 
   print_screen_output "  RUST_TOOLCHAIN_VERSION=$(rustc --version 2>/dev/null || echo"n/a" )"
   print_screen_output "  SOROBAN_CLI_CRATE_VERSION=$(soroban version 2>/dev/null || echo "n/a" )"
@@ -116,7 +118,7 @@ function main() {
   print_screen_output "  TARGET_NETWORK_PUBLIC_KEY=$TARGET_NETWORK_PUBLIC_KEY"
   print_screen_output "  TARGET_NETWORK_RPC_URL=$TARGET_NETWORK_RPC_URL"
   print_screen_output "  TEST_FILTER=${TEST_FILTER}"
-  print_screen_output "Tests can now begin ..." 
+  print_screen_output "Tests can now begin ..."
 
   cd /home/tester/bin
 
@@ -153,54 +155,54 @@ function process_args() {
     --DebugMode)
       DEBUG_MODE="$1"
       shift
-      ;;    
+      ;;
     --SorobanExamplesGitHash)
       SOROBAN_EXAMPLES_GIT_HASH="$1"
       shift
-      ;;     
+      ;;
     --SorobanExamplesRepoURL)
       SOROBAN_EXAMPLES_REPO_URL="$1"
       shift
-      ;;   
+      ;;
     --TestFilter)
       TEST_FILTER="-test.run ""$1"""
       shift
-      ;;     
+      ;;
     --VerboseOutput)
       VERBOSE_OUTPUT="$1"
       shift
-      ;;  
+      ;;
     --TargetNetwork)
       TARGET_NETWORK="$1"
       shift
-      ;;  
-    --TargetNetworkPassphrase) 
+      ;;
+    --TargetNetworkPassphrase)
       TARGET_NETWORK_PASSPHRASE="$1"
       shift
-      ;;    
-    --TargetNetworkTestAccountSecret) 
+      ;;
+    --TargetNetworkTestAccountSecret)
       TARGET_NETWORK_SECRET_KEY="$1"
       shift
-      ;;    
-    --TargetNetworkTestAccountPublic) 
+      ;;
+    --TargetNetworkTestAccountPublic)
       TARGET_NETWORK_PUBLIC_KEY="$1"
       shift
-      ;;       
-    --TargetNetworkRPCURL) 
+      ;;
+    --TargetNetworkRPCURL)
       TARGET_NETWORK_RPC_URL="$1"
       shift
-      ;;            
+      ;;
     *)
     esac
   done
 
   if [ -z "$TARGET_NETWORK_RPC_URL" ] && [ -z "$TARGET_NETWORK" ]; then
       TARGET_NETWORK=local
-  fi 
+  fi
 }
 
 function stellar_rpc_status () {
-  print_screen_output "waiting for soroban rpc to report ready state..." 
+  print_screen_output "waiting for soroban rpc to report ready state..."
   COUNTER=1
   while ! $(curl --silent --location --request POST "$TARGET_NETWORK_RPC_URL" \
     --header 'Content-Type: application/json' \
@@ -208,21 +210,21 @@ function stellar_rpc_status () {
         "jsonrpc": "2.0",
         "id": 10235,
         "method": "getHealth"
-        
-    }' | jq --exit-status '.result.status == "healthy"' 2>/dev/null | grep -o true || echo false ); 
+
+    }' | jq --exit-status '.result.status == "healthy"' 2>/dev/null | grep -o true || echo false );
   do
-    if [ $(expr $COUNTER % 12) -eq 0 ]; then 
+    if [ $(expr $COUNTER % 12) -eq 0 ]; then
       print_screen_output "waited $(expr $COUNTER / 12) minutes for Stellar RPC to report ready state..."
     fi
-    COUNTER=$[$COUNTER +1]  
+    COUNTER=$[$COUNTER +1]
 
     if [ $COUNTER -gt 900 ]; then
       echo "Waited longer than 15 minutes for Stellar RPC, cancelling and exit."
       exit 1
-    fi  
+    fi
 
     sleep 5
-  done 
+  done
   print_screen_output "Stellar RPC reported ready status, the service can be used by tools/cli now ..."
 }
 

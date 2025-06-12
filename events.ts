@@ -34,7 +34,10 @@ async function main() {
   });
 
   if (!response.events) {
-      throw new Error(`No events in response: ${JSON.stringify(response)}`);
+    throw new Error(`No events in response: ${JSON.stringify(response)}`);
+  }
+  if (response.events.length > Number(size)) {
+    throw new Error(`Events 'limit' not respected: ${JSON.stringify(response)}`);
   }
 
   console.log(JSON.stringify(response.events));
