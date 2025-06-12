@@ -17,7 +17,6 @@ import (
 	"github.com/stellar/go/keypair"
 	"github.com/stellar/go/txnbuild"
 	"github.com/stellar/go/xdr"
-	"github.com/stellar/stellar-rpc/protocol"
 	e2e "github.com/stellar/system-test"
 	"github.com/stretchr/testify/assert"
 )
@@ -41,7 +40,7 @@ type testConfig struct {
 	Identities               map[string]string
 	ContractEvents           []xdr.DiagnosticEvent
 	DiagnosticEvents         []xdr.DiagnosticEvent
-	InitialNetworkState      protocol.GetLatestLedgerResponse
+	InitialNetworkState      e2e.LatestLedgerResult
 }
 
 func TestDappDevelop(t *testing.T) {
@@ -205,13 +204,8 @@ func noOpStep(ctx context.Context) error {
 func theContractEventsShouldBeStep(ctx context.Context, expectedContractEventsCount int, expectedContractDiagEventsCount int, contractName string, tool string) error {
 	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
 
-	jsonResults, err := getEvents(
-		testConfig.InitialNetworkState.Sequence,
-		testConfig.DeployedContractId,
-		tool,
-		10,
-		testConfig.E2EConfig,
-	)
+	jsonResults, err := getEvents(testConfig.InitialNetworkState.Sequence, testConfig.DeployedContractId, tool, 10, testConfig.E2EConfig)
+
 	if err != nil {
 		return err
 	}
