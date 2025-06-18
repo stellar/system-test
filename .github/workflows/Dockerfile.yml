@@ -22,11 +22,11 @@ env:
   CORE_GIT_REF: https://github.com/stellar/stellar-core.git#master
   STELLAR_RPC_GIT_REF: https://github.com/stellar/stellar-rpc.git#main
   RUST_TOOLCHAIN_VERSION: stable
-  SOROBAN_CLI_GIT_REF: https://github.com/stellar/soroban-tools.git#main
+  STELLAR_CLI_GIT_REF: https://github.com/stellar/stellar-cli.git#main
   QUICKSTART_GIT_REF: https://github.com/stellar/quickstart.git#38176e8aa7aad5c7eabadc065534bec371681292
   # leaving sdk npm version blank defaults to whatever npm has for latest version
   # rather than build from git source, which is fine for ci test build
-  JS_STELLAR_SDK_NPM_VERSION: 
+  JS_STELLAR_SDK_NPM_VERSION:
   RS_XDR_GIT_REPO: https://github.com/stellar/rs-stellar-xdr
   RS_XDR_GIT_REF: main
 jobs:
@@ -52,7 +52,7 @@ jobs:
              CORE_COMPILE_CONFIGURE_FLAGS="${{ env.CORE_COMPILE_CONFIGURE_FLAGS }}" \
              STELLAR_RPC_GIT_REF=${{ env.STELLAR_RPC_GIT_REF }} \
              RUST_TOOLCHAIN_VERSION=${{ env.RUST_TOOLCHAIN_VERSION }} \
-             SOROBAN_CLI_GIT_REF=${{ env.SOROBAN_CLI_GIT_REF }} \
+             STELLAR_CLI_GIT_REF=${{ env.STELLAR_CLI_GIT_REF }} \
              SYSTEM_TEST_IMAGE=${{ env.PUSH_ENABLED == 'true' && env.IMAGE || 'stellar/system-test:dev' }} \
              JS_STELLAR_SDK_NPM_VERSION=${{ env.JS_STELLAR_SDK_NPM_VERSION }} \
              RS_XDR_GIT_REPO=${{ env.RS_XDR_GIT_REPO }} \

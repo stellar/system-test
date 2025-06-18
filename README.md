@@ -12,10 +12,10 @@
        CORE_GIT_REF=? \
        CORE_COMPILE_CONFIGURE_FLAGS=? \
        STELLAR_RPC_GIT_REF=? \
-       SOROBAN_CLI_GIT_REF=? \
+       STELLAR_CLI_GIT_REF=? \
        GO_GIT_REF=? \
        RUST_TOOLCHAIN_VERSION=? \
-       SOROBAN_CLI_CRATE_VERSION=? \
+       STELLAR_CLI_CRATE_VERSION=? \
        JS_STELLAR_SDK_NPM_VERSION=? \
        NODE_VERSION=? \
        PROTOCOL_VERSION_DEFAULT=? \
@@ -26,9 +26,9 @@
   ```
   make CORE_GIT_REF=https://github.com/stellar/stellar-core.git#f1dc39f0f146815e5e3a94ed162e2f0639cb433f \
          CORE_COMPILE_CONFIGURE_FLAGS="--disable-tests --enable-next-protocol-version-unsafe-for-production" \
-         STELLAR_RPC_GIT_REF=https://github.com/stellar/soroban-tools.git#main \
+         STELLAR_RPC_GIT_REF=https://github.com/stellar/stellar-rpc.git#main \
          RUST_TOOLCHAIN_VERSION=stable \
-         SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git#main \
+         STELLAR_CLI_GIT_REF=https://github.com/stellar/stellar-cli.git#main \
          QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git#main \
          JS_STELLAR_SDK_NPM_VERSION=https://github.com/stellar/js-stellar-sdk.git#master \
          build
@@ -38,13 +38,13 @@
   ```
   make QUICKSTART_IMAGE=stellar/quickstart:soroban-dev \
          RUST_TOOLCHAIN_VERSION=1.66.0 \
-         SOROBAN_CLI_GIT_REF=/Users/user/soroban-tools build
+         STELLAR_CLI_GIT_REF=/Users/user/stellar-cli build
   ```
 
   some settings have defaults pre-set, and optionally be overriden:
   ```
-  SOROBAN_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git#main
-  STELLAR_RPC_GIT_REF=https://github.com/stellar/soroban-tools.git#main
+  STELLAR_CLI_GIT_REF=https://github.com/stellar/stellar-cli.git#main
+  STELLAR_RPC_GIT_REF=https://github.com/stellar/stellar-rpc.git#main
   RUST_TOOLCHAIN_VERSION=stable
   QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git#main
   # the GO_GIT_REF provides the reference on the stellar/go repo from which
@@ -57,8 +57,8 @@
 
   optional params to set:
   ```
-  # this will override SOROBAN_CLI_GIT_REF, and install soroban cli from crates repo instead
-  SOROBAN_CLI_CRATE_VERSION=0.4.0
+  # this will override STELLAR_CLI_GIT_REF, and install soroban cli from crates repo instead
+  STELLAR_CLI_CRATE_VERSION=0.4.0
 
   # this will override the default Node JS vm version used for running the JS code:
   NODE_VERSION=16.20.2
@@ -81,7 +81,7 @@
   # will use the `stellar-core` by default at /usr/local/bin/stellar-core in the existing docker image provided:
   CORE_IMAGE=<docker registry>/<docker image name>:<docker tag>
 
-  # define a custom path that `stellar-core` bin is located on CORE_IMAGE, 
+  # define a custom path that `stellar-core` bin is located on CORE_IMAGE,
   # to override the default of /usr/local/bin/stellar-core
   CORE_IMAGE_BIN_PATH=
 
@@ -101,7 +101,7 @@
   # will use the bin already compiled at /app/friendbot in the existing docker image provided:
   FRIENDBOT_IMAGE=<docker registry>/<docker image name>:<docker tag>
 
-  # set the default network protocol version which the internal core runtime built from `CORE_GIT_REF` should start with. 
+  # set the default network protocol version which the internal core runtime built from `CORE_GIT_REF` should start with.
   # Should typically be set to the maximum supported protocol version of all components.
   # If not set or set to empty, will default to the core max supported protocol version defined in quickstart.
   PROTOCOL_VERSION_DEFAULT=
