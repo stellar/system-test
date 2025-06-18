@@ -17,6 +17,7 @@ import (
 	"github.com/stellar/go/keypair"
 	"github.com/stellar/go/txnbuild"
 	"github.com/stellar/go/xdr"
+	"github.com/stellar/stellar-rpc/protocol"
 	e2e "github.com/stellar/system-test"
 	"github.com/stretchr/testify/assert"
 )
@@ -40,7 +41,7 @@ type testConfig struct {
 	Identities               map[string]string
 	ContractEvents           []xdr.DiagnosticEvent
 	DiagnosticEvents         []xdr.DiagnosticEvent
-	InitialNetworkState      e2e.LatestLedgerResult
+	InitialNetworkState      protocol.GetLatestLedgerResponse
 }
 
 func TestDappDevelop(t *testing.T) {
@@ -201,33 +202,27 @@ func noOpStep(ctx context.Context) error {
 	return nil
 }
 
-func theContractEventsShouldBeStep(ctx context.Context, expectedContractEventsCount int, expectedContractDiagEventsCount int, contractName string, tool string) error {
+func theContractEventsShouldBeStep(ctx context.Context, expectedContractEventsCount int, contractName string, tool string) error {
 	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
 
-	jsonResults, err := getEvents(testConfig.InitialNetworkState.Sequence, testConfig.DeployedContractId, tool, 10, testConfig.E2EConfig)
-
+	jsonResults, err := getEvents(
+		testConfig.InitialNetworkState.Sequence,
+		testConfig.DeployedContractId,
+		tool,
+		10,
+		testConfig.E2EConfig,
+	)
 	if err != nil {
 		return err
 	}
 
-	var contractEventsCount int
-	var diagEventsCount int
-
-	for _, v := range jsonResults {
-		if v["type"] == "diagnostic" {
-			diagEventsCount++
-		} else {
-			contractEventsCount++
-		}
-	}
+	contractEventsCount := len(jsonResults)
 
 	var t e2e.Asserter
 	assert.Equal(&t, expectedContractEventsCount, contractEventsCount, "Expected %v contract events for %v using %v but got %v", expectedContractEventsCount, contractName, tool, contractEventsCount)
 	if t.Err != nil {
 		return t.Err
 	}
-
-	assert.Equal(&t, expectedContractDiagEventsCount, diagEventsCount, "Expected %v diagnostic events for %v using %v but got %v", expectedContractDiagEventsCount, contractName, tool, diagEventsCount)
 
 	return t.Err
 }
@@ -342,7 +337,7 @@ func initializeScenario(scenarioCtx *godog.ScenarioContext) {
 		scenarioCtx.Step(`^I invoke function ([\S|\s]+) on ([\S|\s]+) with request parameters ([\S|\s]*) from tool ([\S|\s]+) using Identity ([\S|\s]+) as invoker and Network Config ([\S|\s]+)$`, invokeContractStepWithConfig)
 		scenarioCtx.Step(`^I invoke function ([\S|\s]+) on ([\S|\s]+) with request parameters ([\S|\s]*) from tool ([\S|\s]+) using my secret key$`, invokeContractStep)
 		scenarioCtx.Step(`^The result should be (\S+)$`, theResultShouldBeStep)
-		scenarioCtx.Step(`^The result should be to receive ([\S|\s]+) contract events and ([\S|\s]+) diagnostic events for ([\S|\s]+) from ([\S|\s]+)$`, theContractEventsShouldBeStep)
+		scenarioCtx.Step(`^The result should be to receive ([\S|\s]+) contract events for ([\S|\s]+) from ([\S|\s]+)$`, theContractEventsShouldBeStep)
 
 		return ctx, nil
 	})
