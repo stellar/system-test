@@ -42,7 +42,7 @@ on:
           option #1, set the version of stellar-sdk based on a npm release version
         required: false
         type: string
-        default: 12.2.0
+        default: 14.0.0-rc.3
 
       # triggers system test to log out details from test steps
       verbose-output:
