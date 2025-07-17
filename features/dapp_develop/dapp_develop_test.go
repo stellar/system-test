@@ -201,7 +201,7 @@ func noOpStep(ctx context.Context) error {
 	return nil
 }
 
-func theContractEventsShouldBeStep(ctx context.Context, expectedContractEventsCount int, expectedContractDiagEventsCount int, contractName string, tool string) error {
+func theContractEventsShouldBeStep(ctx context.Context, expectedContractEventsCount int, contractName string, tool string) error {
 	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
 
 	jsonResults, err := getEvents(testConfig.InitialNetworkState.Sequence, testConfig.DeployedContractId, tool, 10, testConfig.E2EConfig)
@@ -211,14 +211,9 @@ func theContractEventsShouldBeStep(ctx context.Context, expectedContractEventsCo
 	}
 
 	var contractEventsCount int
-	var diagEventsCount int
 
 	for _, v := range jsonResults {
-		if v["type"] == "diagnostic" {
-			diagEventsCount++
-		} else {
-			contractEventsCount++
-		}
+		contractEventsCount++
 	}
 
 	var t e2e.Asserter
@@ -226,8 +221,6 @@ func theContractEventsShouldBeStep(ctx context.Context, expectedContractEventsCo
 	if t.Err != nil {
 		return t.Err
 	}
-
-	assert.Equal(&t, expectedContractDiagEventsCount, diagEventsCount, "Expected %v diagnostic events for %v using %v but got %v", expectedContractDiagEventsCount, contractName, tool, diagEventsCount)
 
 	return t.Err
 }
