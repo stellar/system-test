@@ -1,5 +1,5 @@
 ARG DOCKERHUB_RUST_VERSION
-ARG SOROBAN_CLI_CRATE_VERSION
+ARG STELLAR_CLI_CRATE_VERSION
 
 FROM $DOCKERHUB_RUST_VERSION AS builder
 
@@ -8,11 +8,11 @@ COPY . .
 
 run apt update && apt install -y libdbus-1-dev libudev-dev
 RUN rustup show active-toolchain || rustup toolchain install
-run if [ ! -z "$SOROBAN_CLI_CRATE_VERSION" ]; then \
+run if [ ! -z "$STELLAR_CLI_CRATE_VERSION" ]; then \
 		cargo install \
 		--config net.git-fetch-with-cli=true \
-		--config build.jobs=6 -f --locked soroban-cli \
-		--version "$SOROBAN_CLI_CRATE_VERSION"; \
+		--config build.jobs=6 -f --locked stellar-cli \
+		--version "$STELLAR_CLI_CRATE_VERSION"; \
 	else \
 		make install_rust; \
 	fi	
