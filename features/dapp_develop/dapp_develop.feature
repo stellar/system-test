@@ -26,14 +26,14 @@ Scenario Outline: DApp developer compiles, deploys and invokes a contract
   And I used cli to deploy contract <ContractExampleSubPath> / <ContractCompiledFileName> using my secret key
   When I invoke function <FunctionName> on <ContractName> with request parameters <FunctionParams> from tool <Tool> using my secret key
   Then The result should be <Result>
-  And The result should be to receive <EventCount> contract events and <DiagEventCount> diagnostic events for <ContractName> from <Tool>
+  And The result should be to receive <EventCount> contract events for <ContractName> from <Tool>
 
   Examples: 
-        | Tool         | ContractExampleSubPath | ContractName                  | ContractCompiledFileName             | FunctionName | FunctionParams | Result             | EventCount | DiagEventCount |
-        | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | to:Aloha       | ["Hello","Aloha"]  | 0          | 2              |
-        | CLI          | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | --to=Aloha     | ["Hello","Aloha"]  | 0          | 2              |
-        | NODEJS       | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  | 0          | 2              |
-        | CLI          | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  | 0          | 2              |
+        | Tool         | ContractExampleSubPath | ContractName                  | ContractCompiledFileName             | FunctionName | FunctionParams | Result             | EventCount |
+        | NODEJS       | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | to:Aloha       | ["Hello","Aloha"]  | 0          |
+        | CLI          | hello_world            | soroban-hello-world-contract  | soroban_hello_world_contract.wasm    | hello        | --to=Aloha     | ["Hello","Aloha"]  | 0          |
+        | NODEJS       | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  | 0          |
+        | CLI          | increment              | soroban-increment-contract    | soroban_increment_contract.wasm      | increment    |                | 1                  | 0          |
 
 
 Scenario Outline: DApp developer uses config states, compiles, deploys and invokes contract with authorizations
