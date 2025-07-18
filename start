@@ -77,7 +77,7 @@ function main() {
 
   if [ -z "$TARGET_NETWORK_RPC_URL" ]; then
 
-    TARGET_NETWORK_RPC_URL=http://localhost:8000/soroban/rpc
+    TARGET_NETWORK_RPC_URL=http://localhost:8000/rpc
     LOCAL_CORE=true
     print_screen_output "starting target stack on $TARGET_NETWORK with following server versions:"
     print_screen_output "  CORE VERSION=$(stellar-core version 2>/dev/null || echo "n/a")"
