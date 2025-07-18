@@ -201,7 +201,7 @@ func noOpStep(ctx context.Context) error {
 	return nil
 }
 
-func theContractEventsShouldBeStep(ctx context.Context, expectedContractEventsCount int, expectedContractDiagEventsCount int, contractName string, tool string) error {
+func theContractEventsShouldBeStep(ctx context.Context, expectedContractEventsCount int, contractName string, tool string) error {
 	testConfig := ctx.Value(e2e.TestConfigContextKey).(*testConfig)
 
 	jsonResults, err := getEvents(testConfig.InitialNetworkState.Sequence, testConfig.DeployedContractId, tool, 10, testConfig.E2EConfig)
@@ -210,16 +210,7 @@ func theContractEventsShouldBeStep(ctx context.Context, expectedContractEventsCo
 		return err
 	}
 
-	var contractEventsCount int
-	var diagEventsCount int
-
-	for _, v := range jsonResults {
-		if v["type"] == "diagnostic" {
-			diagEventsCount++
-		} else {
-			contractEventsCount++
-		}
-	}
+	var contractEventsCount int = len(jsonResults)
 
 	var t e2e.Asserter
 	assert.Equal(&t, expectedContractEventsCount, contractEventsCount, "Expected %v contract events for %v using %v but got %v", expectedContractEventsCount, contractName, tool, contractEventsCount)
@@ -227,9 +218,7 @@ func theContractEventsShouldBeStep(ctx context.Context, expectedContractEventsCo
 		return t.Err
 	}
 
-	assert.Equal(&t, expectedContractDiagEventsCount, diagEventsCount, "Expected %v diagnostic events for %v using %v but got %v", expectedContractDiagEventsCount, contractName, tool, diagEventsCount)
-
-	return t.Err
+	return nil
 }
 
 func queryAccountStep(ctx context.Context) error {
@@ -342,7 +331,7 @@ func initializeScenario(scenarioCtx *godog.ScenarioContext) {
 		scenarioCtx.Step(`^I invoke function ([\S|\s]+) on ([\S|\s]+) with request parameters ([\S|\s]*) from tool ([\S|\s]+) using Identity ([\S|\s]+) as invoker and Network Config ([\S|\s]+)$`, invokeContractStepWithConfig)
 		scenarioCtx.Step(`^I invoke function ([\S|\s]+) on ([\S|\s]+) with request parameters ([\S|\s]*) from tool ([\S|\s]+) using my secret key$`, invokeContractStep)
 		scenarioCtx.Step(`^The result should be (\S+)$`, theResultShouldBeStep)
-		scenarioCtx.Step(`^The result should be to receive ([\S|\s]+) contract events and ([\S|\s]+) diagnostic events for ([\S|\s]+) from ([\S|\s]+)$`, theContractEventsShouldBeStep)
+		scenarioCtx.Step(`^The result should be to receive ([\S|\s]+) contract events for ([\S|\s]+) from ([\S|\s]+)$`, theContractEventsShouldBeStep)
 
 		return ctx, nil
 	})

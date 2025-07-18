@@ -13,7 +13,7 @@ on:
         description: Docker tag of quickstart image to use
         required: false
         type: string
-        default: "latest"
+        default: "testing"
 
       stellar-cli-ref:
         description: |
@@ -24,7 +24,7 @@ on:
       stellar-cli-version:
         required: false
         type: string
-        default: "22.3.0"
+        default: "23.0.0"
 
       test-filter:
         description: |
@@ -42,7 +42,7 @@ on:
           option #1, set the version of stellar-sdk based on a npm release version
         required: false
         type: string
-        default: 12.2.0
+        default: 14.0.0-rc.3
 
       # triggers system test to log out details from test steps
       verbose-output:
@@ -121,7 +121,7 @@ jobs:
       - run: rustup toolchain install 1.81
       - run: rustup target add wasm32-unknown-unknown
       - run: rustup target add wasm32-unknown-unknown --toolchain 1.81
-      - run: cargo install --git https://github.com/stellar/stellar-cli soroban-cli --rev ${{ inputs.stellar-cli-ref }}
+      - run: cargo install --git https://github.com/stellar/stellar-cli stellar-cli --rev ${{ inputs.stellar-cli-ref }}
         if: ${{ inputs.stellar-cli-ref != '' }}
       - run: cargo install stellar-cli@${{ inputs.stellar-cli-version }}
         if: ${{ inputs.stellar-cli-ref == '' }}
