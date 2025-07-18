@@ -221,7 +221,7 @@ SorobanExamplesRepoURL="https://github.com/stellar/soroban-examples.git" \
 TargetNetworkPassPhrase="Standalone Network ; February 2017" \
 TargetNetworkSecretKey="SC5O7VZUXDJ6JBDSZ74DSERXL7W3Y5LTOAMRF7RQRL3TAGAPS7LUVG3L" \
 TargetNetworkPublicKey="GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI" \
-TargetNetworkRPCURL="http://localhost:8000/soroban/rpc" \
+TargetNetworkRPCURL="http://localhost:8000/rpc" \
 VerboseOutput=false \
 go test -v --run "^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$" ./features/dapp_develop/...
 ```
