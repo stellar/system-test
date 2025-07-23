@@ -1,7 +1,7 @@
 ARG QUICKSTART_IMAGE_REF=stellar/quickstart:soroban-dev
 ARG STELLAR_CLI_IMAGE_REF=stellar/system-test-soroban-cli:dev
 
-FROM golang:1.21 as go
+FROM golang:1.24 as go
 
 RUN ["mkdir", "-p", "/test"]
 RUN ["mkdir", "-p", "/test/bin"]
