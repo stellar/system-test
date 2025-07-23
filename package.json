@@ -11,10 +11,10 @@
   "dependencies": {
     "argparse": "^2.0.1",
     "tslib": "^2.5.0",
-    "typescript": "^4.9.5"
+    "typescript": "^5.8.3"
   },
   "devDependencies": {
     "@types/argparse": "^2.0.10",
-    "@types/node": "^18.14.6"
+    "@types/node": "^24.1.0"
   }
 }
