@@ -1,7 +1,7 @@
 ARG QUICKSTART_IMAGE_REF=stellar/quickstart:soroban-dev
 ARG STELLAR_CLI_IMAGE_REF=stellar/system-test-soroban-cli:dev
 
-FROM golang:1.24 as go
+FROM golang:1.24 AS go
 
 RUN ["mkdir", "-p", "/test"]
 RUN ["mkdir", "-p", "/test/bin"]
@@ -20,9 +20,9 @@ ADD features/dapp_develop/dapp_develop.feature ./bin
 # copy over a dapp develop test specific file, used for expect/tty usage
 ADD features/dapp_develop/soroban_config.exp ./bin
 
-FROM $STELLAR_CLI_IMAGE_REF as stellar-cli
+FROM $STELLAR_CLI_IMAGE_REF AS stellar-cli
+FROM $QUICKSTART_IMAGE_REF AS base
 
-FROM $QUICKSTART_IMAGE_REF as base
 ARG RUST_TOOLCHAIN_VERSION
 ARG NODE_VERSION
 

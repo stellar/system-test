@@ -26,7 +26,7 @@ func compileContract(contractExamplesSubPath string, contractWorkingDirectory st
 		return fmt.Errorf("git checkout %v of sample contracts repo %s had error %v, %v", e2eConfig.SorobanExamplesGitHash, e2eConfig.SorobanExamplesRepoURL, status, err)
 	}
 
-	envCmd = cmd.NewCmd("cargo", "build", "--config", "net.git-fetch-with-cli=true", "--target", "wasm32-unknown-unknown", "--release")
+	envCmd = cmd.NewCmd("stellar", "contract", "build")
 	envCmd.Dir = fmt.Sprintf("%s/%s", contractWorkingDirectory, contractExamplesSubPath)
 
 	status, _, err = e2e.RunCommand(envCmd, e2eConfig)

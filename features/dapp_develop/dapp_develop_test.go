@@ -107,11 +107,13 @@ func installContractStep(ctx context.Context, contractExamplesSubPath string, co
 	contractWorkingDirectory := fmt.Sprintf("%s/soroban_examples", testConfig.TestWorkingDir)
 
 	var err error
-	if testConfig.InstalledContractId, err = installContract(compiledContractFileName, contractWorkingDirectory, contractExamplesSubPath, testConfig.E2EConfig); err != nil {
-		return err
-	}
+	testConfig.InstalledContractId, err = installContract(
+		compiledContractFileName, 
+		contractWorkingDirectory, 
+		contractExamplesSubPath, 
+		testConfig.E2EConfig)
 
-	return nil
+	return err
 }
 
 func invokeContractStep(ctx context.Context, functionName string, contractName string, parameters string, tool string) error {
