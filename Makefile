@@ -165,7 +165,7 @@ build-lab:
 	if [ -z "$(QUICKSTART_IMAGE)" ]; then \
 		docker build -t "$(LAB_IMAGE)" \
 			--build-arg NEXT_PUBLIC_COMMIT_HASH=main \
-			-f Dockerfile.lab .;
+			-f Dockerfile.lab .; \
 	fi
 
 build-quickstart: build-lab build-core build-friendbot build-horizon build-rs-xdr build-stellar-rpc
