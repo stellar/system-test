@@ -190,7 +190,7 @@ build-quickstart: build-lab build-core build-friendbot build-horizon build-rs-xd
 			--build-arg HORIZON_IMAGE_REF=$$HORIZON_IMAGE_REF \
 			--build-arg FRIENDBOT_IMAGE_REF=$$FRIENDBOT_IMAGE_REF \
 			--build-arg STELLAR_RPC_IMAGE_REF=$$STELLAR_RPC_IMAGE_REF \
-			--build-arg LAB_IMAGE_REF=stellar-lab:main \
+			--build-arg LAB_IMAGE_REF=$(LAB_IMAGE) \
 			-f Dockerfile "$$SOURCE_URL"; \
 	fi
 
