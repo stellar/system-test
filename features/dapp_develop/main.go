@@ -214,9 +214,5 @@ func getEvents(ledgerFrom uint32, deployedContractId string, tool string, size u
 		err = fmt.Errorf("%s tool not supported for events retrieval yet", tool)
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return response, err
 }
