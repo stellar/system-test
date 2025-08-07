@@ -56,7 +56,7 @@ func deployContract(compiledContractFileName string, contractWorkingDirectory st
 			"contract",
 			"deploy",
 			"--quiet",
-			"--wasm", fmt.Sprintf("./%s/%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, contractExamplesSubPath, compiledContractFileName),
+			"--wasm", fmt.Sprintf("./%s/%s/target/wasm32v1-none/release/%s", contractWorkingDirectory, contractExamplesSubPath, compiledContractFileName),
 			"--rpc-url", e2eConfig.TargetNetworkRPCURL,
 			"--source", e2eConfig.TargetNetworkSecretKey,
 			"--network-passphrase", e2eConfig.TargetNetworkPassPhrase)
@@ -80,7 +80,7 @@ func deployContractUsingConfigParams(compiledContractFileName string, contractWo
 		"contract",
 		"deploy",
 		"--quiet",
-		"--wasm", fmt.Sprintf("./%s/%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, contractExamplesSubPath, compiledContractFileName),
+		"--wasm", fmt.Sprintf("./%s/%s/target/wasm32v1-none/release/%s", contractWorkingDirectory, contractExamplesSubPath, compiledContractFileName),
 		"--network", networkConfigName,
 		"--source", identityName)
 
