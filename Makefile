@@ -12,6 +12,7 @@ RS_XDR_STAGE_IMAGE=stellar/system-test-rs-xdr:dev
 FRIENDBOT_STAGE_IMAGE=stellar/system-test-friendbot:dev
 STELLAR_RPC_STAGE_IMAGE=stellar/system-test-stellar-rpc:dev
 STELLAR_CLI_STAGE_IMAGE=stellar/system-test-stellar-cli:dev
+LAB_STAGE_IMAGE=stellar/system-test-stellar-laboratory:dev
 
 # The rest of these variables can be set as environment variables to the makefile
 # to modify how system test is built.
@@ -21,7 +22,8 @@ STELLAR_CLI_STAGE_IMAGE=stellar/system-test-stellar-cli:dev
 # If not set will default to the core max supported protocol version in quickstart.
 PROTOCOL_VERSION_DEFAULT=23
 
-# variables to set for source code, can be any valid docker context url local path github remote repo `https://github.com/repo#<ref>`
+# variables to set for source code, can be any valid docker context url local
+# path github remote repo `https://github.com/repo#<ref>`
 CORE_GIT_REF=https://github.com/stellar/stellar-core.git\#master
 STELLAR_RPC_GIT_REF=https://github.com/stellar/stellar-rpc.git\#main
 STELLAR_CLI_GIT_REF=https://github.com/stellar/stellar-cli.git\#main
@@ -29,7 +31,8 @@ GO_GIT_REF=https://github.com/stellar/go.git\#master
 RS_XDR_GIT_REPO=https://github.com/stellar/rs-stellar-xdr
 RS_XDR_GIT_REF=main
 QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git\#main
-# specify the published npm repo version of soroban-client js library, 
+
+# specify the published npm repo version of soroban-client js library,
 # or you can specify gh git ref url as the version
 JS_STELLAR_SDK_NPM_VERSION=https://github.com/stellar/js-stellar-sdk.git\#master
 
@@ -63,7 +66,7 @@ CORE_IMAGE_BIN_PATH=
 # work those images whether the build host is arm64 or amd64.
 QUICKSTART_IMAGE=
 
-NODE_VERSION?=18.19.0
+NODE_VERSION?=20.19.4
 
 # if crate version is set, then it overrides STELLAR_CLI_GIT_REF, cli will be installed from this create instead
 STELLAR_CLI_CRATE_VERSION=
@@ -89,7 +92,7 @@ build-friendbot:
 		-f services/friendbot/docker/Dockerfile "$$SOURCE_URL"; \
 	fi
 
-build-rs-xdr: 
+build-rs-xdr:
 	if [ -z "$(QUICKSTART_IMAGE)" ] && [ -z "$(RS_XDR_IMAGE)" ]; then \
 		SOURCE_URL="$(QUICKSTART_GIT_REF)"; \
 		if [[ ! "$(QUICKSTART_GIT_REF)" =~ \.git ]]; then \
@@ -101,7 +104,7 @@ build-rs-xdr:
 		--build-arg REPO=$$RS_XDR_GIT_REPO \
 		--build-arg REF=$$RS_XDR_GIT_REF \
 		-f Dockerfile.xdr "$$SOURCE_URL"; \
-	fi	
+	fi
 
 build-stellar-rpc:
 	if [ -z "$(QUICKSTART_IMAGE)" ] && [ -z "$(STELLAR_RPC_IMAGE)" ]; then \
@@ -156,7 +159,21 @@ build-core:
 		-f Dockerfile.core .; \
 	fi
 
-build-quickstart: build-core build-friendbot build-horizon build-rs-xdr build-stellar-rpc
+build-lab:
+	# only build if we don't have a qs image
+	if [ -z "$(QUICKSTART_IMAGE)" ]; then \
+		SOURCE_URL="$(QUICKSTART_GIT_REF)"; \
+		if [[ ! "$(QUICKSTART_GIT_REF)" =~ \.git ]]; then \
+			pushd "$(QUICKSTART_GIT_REF)"; \
+			SOURCE_URL=.; \
+		fi; \
+		docker build -t "$(LAB_STAGE_IMAGE)" \
+			--build-arg NEXT_PUBLIC_COMMIT_HASH=main \
+			--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
+			-f Dockerfile.lab "$$SOURCE_URL"; \
+	fi
+
+build-quickstart: build-lab build-core build-friendbot build-horizon build-rs-xdr build-stellar-rpc
 	if [ -z "$(QUICKSTART_IMAGE)" ]; then \
 		CORE_IMAGE_REF=$$( [[ -z "$(CORE_IMAGE)"  ||  ! -z "$(CORE_IMAGE_BIN_PATH)" ]] && echo "$(CORE_STAGE_IMAGE)" || echo "$(CORE_IMAGE)"); \
 		HORIZON_IMAGE_REF=$$( [ -z "$(HORIZON_IMAGE)" ] && echo "$(HORIZON_STAGE_IMAGE)" || echo "$(HORIZON_IMAGE)"); \
@@ -169,16 +186,17 @@ build-quickstart: build-core build-friendbot build-horizon build-rs-xdr build-st
 			SOURCE_URL=.; \
 		fi; \
 		docker build -t "$(QUICKSTART_STAGE_IMAGE)" \
-		--build-arg PROTOCOL_VERSION_DEFAULT=$$PROTOCOL_VERSION_DEFAULT \
-		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
-		--build-arg STELLAR_CORE_IMAGE_REF=$$CORE_IMAGE_REF \
-		--build-arg STELLAR_XDR_IMAGE_REF=$$RS_XDR_IMAGE_REF \
-		--build-arg CORE_SUPPORTS_ENABLE_SOROBAN_DIAGNOSTIC_EVENTS=true \
-		--build-arg CORE_SUPPORTS_TESTING_SOROBAN_HIGH_LIMIT_OVERRIDE=true \
-		--build-arg HORIZON_IMAGE_REF=$$HORIZON_IMAGE_REF \
-		--build-arg FRIENDBOT_IMAGE_REF=$$FRIENDBOT_IMAGE_REF \
-		--build-arg STELLAR_RPC_IMAGE_REF=$$STELLAR_RPC_IMAGE_REF \
-		-f Dockerfile "$$SOURCE_URL"; \
+			--build-arg PROTOCOL_VERSION_DEFAULT=$$PROTOCOL_VERSION_DEFAULT \
+			--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
+			--build-arg STELLAR_CORE_IMAGE_REF=$$CORE_IMAGE_REF \
+			--build-arg STELLAR_XDR_IMAGE_REF=$$RS_XDR_IMAGE_REF \
+			--build-arg CORE_SUPPORTS_ENABLE_SOROBAN_DIAGNOSTIC_EVENTS=true \
+			--build-arg CORE_SUPPORTS_TESTING_SOROBAN_HIGH_LIMIT_OVERRIDE=true \
+			--build-arg HORIZON_IMAGE_REF=$$HORIZON_IMAGE_REF \
+			--build-arg FRIENDBOT_IMAGE_REF=$$FRIENDBOT_IMAGE_REF \
+			--build-arg STELLAR_RPC_IMAGE_REF=$$STELLAR_RPC_IMAGE_REF \
+			--build-arg LAB_IMAGE_REF=$(LAB_STAGE_IMAGE) \
+			-f Dockerfile "$$SOURCE_URL"; \
 	fi
 
 build: build-quickstart build-stellar-cli

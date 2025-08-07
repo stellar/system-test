@@ -20,13 +20,13 @@ env:
   PUSH_ENABLED: ${{ secrets.DOCKERHUB_TOKEN && github.ref_type == 'tag' && startsWith(github.ref_name, 'v') != true && 'true' || 'false' }}
   IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository, github.ref_type == 'tag' && github.ref_name || github.event.ref || 'latest') }}
   CORE_GIT_REF: https://github.com/stellar/stellar-core.git#master
-  STELLAR_RPC_GIT_REF: https://github.com/stellar/stellar-rpc.git#main
+  STELLAR_RPC_GIT_REF: https://github.com/stellar/stellar-rpc.git#protocol-23
   RUST_TOOLCHAIN_VERSION: stable
   SOROBAN_CLI_GIT_REF: https://github.com/stellar/soroban-tools.git#main
-  QUICKSTART_GIT_REF: https://github.com/stellar/quickstart.git#38176e8aa7aad5c7eabadc065534bec371681292
+  QUICKSTART_GIT_REF: https://github.com/stellar/quickstart.git#main
   # leaving sdk npm version blank defaults to whatever npm has for latest version
   # rather than build from git source, which is fine for ci test build
-  JS_STELLAR_SDK_NPM_VERSION: 
+  JS_STELLAR_SDK_NPM_VERSION:
   RS_XDR_GIT_REPO: https://github.com/stellar/rs-stellar-xdr
   RS_XDR_GIT_REF: main
 jobs:

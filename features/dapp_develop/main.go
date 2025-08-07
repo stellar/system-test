@@ -26,7 +26,7 @@ func compileContract(contractExamplesSubPath string, contractWorkingDirectory st
 		return fmt.Errorf("git checkout %v of sample contracts repo %s had error %v, %v", e2eConfig.SorobanExamplesGitHash, e2eConfig.SorobanExamplesRepoURL, status, err)
 	}
 
-	envCmd = cmd.NewCmd("cargo", "build", "--config", "net.git-fetch-with-cli=true", "--target", "wasm32-unknown-unknown", "--release")
+	envCmd = cmd.NewCmd("stellar", "contract", "build")
 	envCmd.Dir = fmt.Sprintf("%s/%s", contractWorkingDirectory, contractExamplesSubPath)
 
 	status, _, err = e2e.RunCommand(envCmd, e2eConfig)
@@ -56,7 +56,7 @@ func deployContract(compiledContractFileName string, contractWorkingDirectory st
 			"contract",
 			"deploy",
 			"--quiet",
-			"--wasm", fmt.Sprintf("./%s/%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, contractExamplesSubPath, compiledContractFileName),
+			"--wasm", fmt.Sprintf("./%s/%s/target/wasm32v1-none/release/%s", contractWorkingDirectory, contractExamplesSubPath, compiledContractFileName),
 			"--rpc-url", e2eConfig.TargetNetworkRPCURL,
 			"--source", e2eConfig.TargetNetworkSecretKey,
 			"--network-passphrase", e2eConfig.TargetNetworkPassPhrase)
@@ -80,7 +80,7 @@ func deployContractUsingConfigParams(compiledContractFileName string, contractWo
 		"contract",
 		"deploy",
 		"--quiet",
-		"--wasm", fmt.Sprintf("./%s/%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, contractExamplesSubPath, compiledContractFileName),
+		"--wasm", fmt.Sprintf("./%s/%s/target/wasm32v1-none/release/%s", contractWorkingDirectory, contractExamplesSubPath, compiledContractFileName),
 		"--network", networkConfigName,
 		"--source", identityName)
 
@@ -103,7 +103,7 @@ func installContract(compiledContractFileName string, contractWorkingDirectory s
 		"contract",
 		"install",
 		"--quiet",
-		"--wasm", fmt.Sprintf("./%s/%s/target/wasm32-unknown-unknown/release/%s", contractWorkingDirectory, contractExamplesSubPath, compiledContractFileName),
+		"--wasm", fmt.Sprintf("./%s/%s/target/wasm32v1-none/release/%s", contractWorkingDirectory, contractExamplesSubPath, compiledContractFileName),
 		"--rpc-url", e2eConfig.TargetNetworkRPCURL,
 		"--source", e2eConfig.TargetNetworkSecretKey,
 		"--network-passphrase", e2eConfig.TargetNetworkPassPhrase)

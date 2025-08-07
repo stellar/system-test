@@ -117,10 +117,10 @@ jobs:
         if: runner.os == 'macos'
       - run: rustup update
       - run: rustup show active-toolchain || rustup toolchain install
-        # 1.81 is required for soroban examples
-      - run: rustup toolchain install 1.81
-      - run: rustup target add wasm32-unknown-unknown
-      - run: rustup target add wasm32-unknown-unknown --toolchain 1.81
+        # 1.84 is required for soroban examples + correct toolchain
+      - run: rustup toolchain install 1.84
+      - run: rustup target add wasm32v1-none
+      - run: rustup target add wasm32v1-none --toolchain 1.84
       - run: cargo install --git https://github.com/stellar/stellar-cli stellar-cli --rev ${{ inputs.stellar-cli-ref }}
         if: ${{ inputs.stellar-cli-ref != '' }}
       - run: cargo install stellar-cli@${{ inputs.stellar-cli-version }}
