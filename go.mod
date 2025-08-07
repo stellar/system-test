@@ -2,7 +2,7 @@ module github.com/stellar/system-test
 
 go 1.24
 
-toolchain go1.24.2
+toolchain go1.24.5
 
 require (
 	github.com/cucumber/godog v0.15.1
