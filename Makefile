@@ -169,6 +169,7 @@ build-lab:
 		fi; \
 		docker build -t "$(LAB_STAGE_IMAGE)" \
 			--build-arg NEXT_PUBLIC_COMMIT_HASH=main \
+			--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
 			-f Dockerfile.lab "$$SOURCE_URL"; \
 	fi
 
