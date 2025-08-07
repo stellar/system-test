@@ -12,6 +12,7 @@ RS_XDR_STAGE_IMAGE=stellar/system-test-rs-xdr:dev
 FRIENDBOT_STAGE_IMAGE=stellar/system-test-friendbot:dev
 STELLAR_RPC_STAGE_IMAGE=stellar/system-test-stellar-rpc:dev
 STELLAR_CLI_STAGE_IMAGE=stellar/system-test-stellar-cli:dev
+LAB_STAGE_IMAGE=stellar/system-test-stellar-laboratory:dev
 
 # The rest of these variables can be set as environment variables to the makefile
 # to modify how system test is built.
@@ -58,8 +59,6 @@ RS_XDR_IMAGE=
 CORE_IMAGE=
 # define a custom path that core bin is located on CORE_IMAGE, other than /usr/local/bin/stellar-core
 CORE_IMAGE_BIN_PATH=
-# what to name the lab image, default is fine
-LAB_IMAGE=stellar/system-test-stellar-laboratory:dev
 #
 # a prebuilt 'soroban-dev' image from the quickstart repo, if this is supplied,
 # the other core, rpc, horizon, friendbot config settings are mostly ignored, since the quickstart image
@@ -163,9 +162,14 @@ build-core:
 build-lab:
 	# only build if we don't have a qs image
 	if [ -z "$(QUICKSTART_IMAGE)" ]; then \
-		docker build -t "$(LAB_IMAGE)" \
+		SOURCE_URL="$(QUICKSTART_GIT_REF)"; \
+		if [[ ! "$(QUICKSTART_GIT_REF)" =~ \.git ]]; then \
+			pushd "$(QUICKSTART_GIT_REF)"; \
+			SOURCE_URL=.; \
+		fi; \
+		docker build -t "$(LAB_STAGE_IMAGE)" \
 			--build-arg NEXT_PUBLIC_COMMIT_HASH=main \
-			-f Dockerfile.lab .; \
+			-f Dockerfile.lab "$$SOURCE_URL"; \
 	fi
 
 build-quickstart: build-lab build-core build-friendbot build-horizon build-rs-xdr build-stellar-rpc
@@ -190,7 +194,7 @@ build-quickstart: build-lab build-core build-friendbot build-horizon build-rs-xd
 			--build-arg HORIZON_IMAGE_REF=$$HORIZON_IMAGE_REF \
 			--build-arg FRIENDBOT_IMAGE_REF=$$FRIENDBOT_IMAGE_REF \
 			--build-arg STELLAR_RPC_IMAGE_REF=$$STELLAR_RPC_IMAGE_REF \
-			--build-arg LAB_IMAGE_REF=$(LAB_IMAGE) \
+			--build-arg LAB_IMAGE_REF=$(LAB_STAGE_IMAGE) \
 			-f Dockerfile "$$SOURCE_URL"; \
 	fi
 
