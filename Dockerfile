@@ -3,6 +3,7 @@ ARG STELLAR_CLI_IMAGE_REF=stellar/system-test-soroban-cli:dev
 
 FROM golang:1.24 AS go
 
+SHELL ["/bin/bash", "-c"]
 RUN ["mkdir", "-p", "/test"]
 RUN ["mkdir", "-p", "/test/bin"]
 
@@ -40,7 +41,7 @@ RUN rustup show active-toolchain || rustup toolchain install
 # Older toolchain to compile soroban examples
 RUN rustup toolchain install 1.81-x86_64-unknown-linux-gnu
 # Wasm toolchain to compile contracts
-RUN rustup target add wasm32-unknown-unknown
+RUN rustup target add wasm32v1-none
 
 # Use a non-root user
 ARG USERNAME=tester
@@ -63,10 +64,12 @@ RUN echo "StrictHostKeyChecking no" >> ~/.ssh/config
 # Install Node.js
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
 ENV NVM_DIR=/home/tester/.nvm
-RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
-RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
-RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
-ENV PATH="/home/tester/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+RUN . "$NVM_DIR/nvm.sh" && \
+  nvm install ${NODE_VERSION} && \
+  nvm alias default v${NODE_VERSION} && \
+  nvm use default
+ENV PATH "$NVM_DIR/versions/node/v${NODE_VERSION}/bin/:$PATH"
+RUN echo $PATH; node --version; npm --version
 RUN npm install -g ts-node yarn
 
 # Install js-stellar-sdk
@@ -88,7 +91,7 @@ RUN if echo "$JS_STELLAR_SDK_NPM_VERSION" | grep -q '.*file:.*'; then \
 ADD *.ts /home/tester/bin/
 RUN ["sudo", "chmod", "+x", "/home/tester/bin/invoke.ts"]
 
-FROM base as build
+FROM base AS build
 
 # Tests expect to be run as root so they can launch stuff
 USER root
