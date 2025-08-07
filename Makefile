@@ -67,7 +67,7 @@ LAB_IMAGE=stellar/system-test-stellar-laboratory:dev
 # work those images whether the build host is arm64 or amd64.
 QUICKSTART_IMAGE=
 
-NODE_VERSION?=18.19.0
+NODE_VERSION?=20
 
 # if crate version is set, then it overrides STELLAR_CLI_GIT_REF, cli will be installed from this create instead
 STELLAR_CLI_CRATE_VERSION=
