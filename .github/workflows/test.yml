@@ -104,7 +104,7 @@ jobs:
   systems-test:
     runs-on: ${{ inputs.runner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: "stellar/system-test"
       - uses: stellar/quickstart@main
