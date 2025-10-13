@@ -1,4 +1,4 @@
-ARG QUICKSTART_IMAGE_REF=stellar/quickstart:soroban-dev
+ARG BASE_IMAGE_REF=ubuntu:24.04
 ARG STELLAR_CLI_IMAGE_REF=stellar/system-test-soroban-cli:dev
 
 FROM golang:1.24 AS go
@@ -22,13 +22,13 @@ ADD features/dapp_develop/dapp_develop.feature ./bin
 ADD features/dapp_develop/soroban_config.exp ./bin
 
 FROM $STELLAR_CLI_IMAGE_REF AS stellar-cli
-FROM $QUICKSTART_IMAGE_REF AS base
+FROM $BASE_IMAGE_REF AS base
 
 ARG RUST_TOOLCHAIN_VERSION
 ARG NODE_VERSION
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y build-essential expect git libdbus-1-dev libudev-dev && apt-get clean
+RUN apt-get update && apt-get install -y build-essential expect curl jq git libdbus-1-dev libudev-dev  && apt-get clean
 
 # Install Rust
 RUN ["mkdir", "-p", "/rust"]
@@ -38,14 +38,12 @@ ENV RUST_TOOLCHAIN_VERSION=$RUST_TOOLCHAIN_VERSION
 ENV PATH="/usr/local/go/bin:$CARGO_HOME/bin:${PATH}"
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain "$RUST_TOOLCHAIN_VERSION"
 RUN rustup show active-toolchain || rustup toolchain install
-# Older toolchain to compile soroban examples
-RUN rustup toolchain install 1.81-x86_64-unknown-linux-gnu
 # Wasm toolchain to compile contracts
 RUN rustup target add wasm32v1-none
 
 # Use a non-root user
 ARG USERNAME=tester
-ARG USER_UID=1000
+ARG USER_UID=1018
 ARG USER_GID=$USER_UID
 RUN groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \

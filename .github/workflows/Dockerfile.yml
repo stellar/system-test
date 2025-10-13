@@ -19,16 +19,10 @@ env:
   # the only time system test image needs to be defined for a push is when it's a non 'v' tag creation
   PUSH_ENABLED: ${{ secrets.DOCKERHUB_TOKEN && github.ref_type == 'tag' && startsWith(github.ref_name, 'v') != true && 'true' || 'false' }}
   IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository, github.ref_type == 'tag' && github.ref_name || github.event.ref || 'latest') }}
-  CORE_GIT_REF: https://github.com/stellar/stellar-core.git#master
-  STELLAR_RPC_GIT_REF: https://github.com/stellar/stellar-rpc.git#protocol-23
-  RUST_TOOLCHAIN_VERSION: stable
   SOROBAN_CLI_GIT_REF: https://github.com/stellar/soroban-tools.git#main
-  QUICKSTART_GIT_REF: https://github.com/stellar/quickstart.git#main
   # leaving sdk npm version blank defaults to whatever npm has for latest version
   # rather than build from git source, which is fine for ci test build
   JS_STELLAR_SDK_NPM_VERSION:
-  RS_XDR_GIT_REPO: https://github.com/stellar/rs-stellar-xdr
-  RS_XDR_GIT_REF: main
 jobs:
   complete:
     if: always()
@@ -48,16 +42,10 @@ jobs:
         ref: ${{ env.HEAD_SHA }}
     - name: Build System Test Image
       run: |
-        make CORE_GIT_REF=${{ env.CORE_GIT_REF }} \
-             CORE_COMPILE_CONFIGURE_FLAGS="${{ env.CORE_COMPILE_CONFIGURE_FLAGS }}" \
-             STELLAR_RPC_GIT_REF=${{ env.STELLAR_RPC_GIT_REF }} \
-             RUST_TOOLCHAIN_VERSION=${{ env.RUST_TOOLCHAIN_VERSION }} \
-             SOROBAN_CLI_GIT_REF=${{ env.SOROBAN_CLI_GIT_REF }} \
+        make SOROBAN_CLI_GIT_REF=${{ env.SOROBAN_CLI_GIT_REF }} \
              SYSTEM_TEST_IMAGE=${{ env.PUSH_ENABLED == 'true' && env.IMAGE || 'stellar/system-test:dev' }} \
              JS_STELLAR_SDK_NPM_VERSION=${{ env.JS_STELLAR_SDK_NPM_VERSION }} \
-             RS_XDR_GIT_REPO=${{ env.RS_XDR_GIT_REPO }} \
-             RS_XDR_GIT_REF=${{ env.RS_XDR_GIT_REF }} \
-             QUICKSTART_GIT_REF=${{ env.QUICKSTART_GIT_REF }} build;
+             build;
     - if: ${{ env.PUSH_ENABLED == 'true' }}
       name: Save Docker Image to file
       run: |
