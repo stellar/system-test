@@ -240,6 +240,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
+          repository: stellar/system-test
           ref: ${{ inputs.system-test-git-ref }}
           path: system-test
 
