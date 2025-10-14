@@ -111,7 +111,7 @@ on:
         default: "https://github.com/stellar/soroban-examples"
 
 env:
-  SYSTEM_TEST_IMAGE: ${{ github.repository }}:system-test
+  SYSTEM_TEST_IMAGE: stellar/system-test:cache
   SYSTEM_TEST_IMAGE_CACHE_REGISTRY: ghcr.io
   
 jobs:
@@ -146,7 +146,12 @@ jobs:
       - id: set-cache-key
         run: |
           # Fetch commit SHAs for each dependency repo
-          SYSTEM_TEST_SHA="${{ github.sha }}"
+
+          SYSTEM_TEST_SHA=$(git ls-remote https://github.com/stellar/system-test ${{ inputs.system-test-git-ref }} | awk '{print $1}')
+          if [ -z "$SYSTEM_TEST_SHA" ]; then
+            echo "Error: Could not find ref ${{ inputs.system-test-git-ref }} in stellar/system-test"
+            exit 1
+          fi
 
           # Parse STELLAR_CLI_REF which is in format: URL#ref
           CLI_URL_REF="${{ inputs.stellar-cli-ref }}"
