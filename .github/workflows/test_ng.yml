@@ -150,12 +150,21 @@ jobs:
 
           # Parse STELLAR_CLI_REF which is in format: URL#ref
           CLI_URL_REF="${{ inputs.stellar-cli-ref }}"
-          CLI_URL="${CLI_URL_REF%#*}"
-          CLI_REF="${CLI_URL_REF##*#}"
-          STELLAR_CLI_SHA=$(git ls-remote "$CLI_URL" "$CLI_REF" | awk '{print $1}')
-          if [ -z "$STELLAR_CLI_SHA" ]; then
-            echo "Error: Could not find ref $CLI_REF in $CLI_URL"
-            exit 1
+          
+          # Only fetch if stellar-cli-ref is provided
+          if [ -n "$CLI_URL_REF" ]; then
+            # Split on # to get URL and ref
+            CLI_URL=$(echo "$CLI_URL_REF" | cut -d'#' -f1)
+            CLI_REF=$(echo "$CLI_URL_REF" | cut -d'#' -f2)
+            
+            STELLAR_CLI_SHA=$(git ls-remote "$CLI_URL" "$CLI_REF" | awk '{print $1}')
+            if [ -z "$STELLAR_CLI_SHA" ]; then
+              echo "Error: Could not find ref $CLI_REF in $CLI_URL"
+              exit 1
+            fi
+          else
+            # If no CLI ref provided
+            STELLAR_CLI_SHA="${{ inputs.stellar-cli-version }}"
           fi
 
           # Handle JS Stellar SDK
