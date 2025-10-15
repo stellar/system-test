@@ -307,6 +307,12 @@ jobs:
     env:
       SYSTEM_TEST_IMAGE: ${{ needs.prepare-config.outputs.system-test-image-cached }}
     steps:
+      - name: Start quickstart with rpc
+        uses: stellar/quickstart@main
+        with:
+          artifact: image-quickstart-rpc-custom-amd64.tar
+          tag: rpc-custom-amd64
+          enable: core,rpc
       - name: download system-test image
         if: needs.build-system-test.result == 'skipped'
         run: |
@@ -324,18 +330,9 @@ jobs:
         if: needs.build-system-test.result != 'skipped' && needs.prepare-config.outputs.registry_allowed != 'true'
         run: |
           docker load -i /tmp/image.tar
-          docker images | grep system-test || true
           
-      - name: Start quickstart with rpc
-        uses: stellar/quickstart@main
-        with:
-          artifact: image-quickstart-rpc-custom-amd64.tar
-          tag: rpc-custom-amd64
-          enable: core,rpc
-
       - name: Run system test scenarios
         run: |
-          docker images | grep system-test || true
           docker run \
           --rm -t --name e2e_test $SYSTEM_TEST_IMAGE \
           --VerboseOutput ${{ inputs.verbose-output }}  \
