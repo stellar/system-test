@@ -335,6 +335,7 @@ jobs:
 
       - name: Run system test scenarios
         run: |
+          docker images | grep system-test || true
           docker run \
           --rm -t --name e2e_test $SYSTEM_TEST_IMAGE \
           --VerboseOutput ${{ inputs.verbose-output }}  \
