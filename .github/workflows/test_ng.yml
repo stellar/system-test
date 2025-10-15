@@ -292,13 +292,13 @@ jobs:
       - name: extract image to artifact when no gchr
         if: needs.prepare-config.outputs.ghcr_allowed != 'true'
         run: |
-          docker save $SYSTEM_TEST_IMAGE -o $GITHUB_WORKSPACE/system-test/image.tar     
+          docker save $SYSTEM_TEST_IMAGE -o /tmp/image.tar
       - name: save to artifact when no ghcr
         if: needs.prepare-config.outputs.ghcr_allowed != 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: image-system-test    
-          path: $GITHUB_WORKSPACE/system-test/image.tar
+          name: image-system-test
+          path: /tmp/image.tar
 
   integration:
     name: System tests
