@@ -126,12 +126,12 @@ jobs:
       images-config: ${{ steps.set-config.outputs.images }}
       system-test-image-cache-registry: ${{ env.SYSTEM_TEST_IMAGE_CACHE_REGISTRY }}
       system-test-image-cached: "${{ env.SYSTEM_TEST_IMAGE}}_${{ steps.set-cache-key.outputs.cache-key }}"
-      registry_allowed: ${{ steps.check-fork.outputs.registry-allowed }}
+      registry_allowed: ${{ steps.check-registry.outputs.registry-allowed }}
     steps:
-      - id: check-fork
+      - id: check-registry
         name: Check if registry access is allowed
         run: |
-          if [ "${{ github.event_name }}" != "pull_request" ] || [ "${{ github.event.pull_request.head.repo.fork }}" == "false" ]; then
+          if [ "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
             echo "registry-allowed=true" >> $GITHUB_OUTPUT
           else
             echo "registry-allowed=false" >> $GITHUB_OUTPUT
@@ -275,8 +275,8 @@ jobs:
         uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
         with:
           registry: ${{ needs.prepare-config.outputs.system-test-image-cache-registry }}
-          username: ${{ secrets.DOCKERHUB_USERNAME || github.actor }}
-          password: ${{ secrets.DOCKERHUB_TOKEN || github.token }}
+          username: ${{ secrets.DOCKERHUB_USERNAME  }}
+          password: ${{ secrets.DOCKERHUB_TOKEN  }}
       - name: Publish system-test image
         if: needs.prepare-config.outputs.registry_allowed == 'true'
         run: |
