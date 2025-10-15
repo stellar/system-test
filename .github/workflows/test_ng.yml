@@ -2,6 +2,11 @@ name: Systems test workflow, next gen, uses quickstart pipelines
 
 on:
   workflow_call:
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: false
+      DOCKERHUB_TOKEN:
+        required: false
     inputs:
       runner:
         description: "GitHub runner to use"
@@ -112,7 +117,7 @@ on:
 
 env:
   SYSTEM_TEST_IMAGE: stellar/system-test:cache
-  SYSTEM_TEST_IMAGE_CACHE_REGISTRY: ghcr.io
+  SYSTEM_TEST_IMAGE_CACHE_REGISTRY: docker.io
   
 jobs:
   prepare-config:
@@ -120,29 +125,17 @@ jobs:
     outputs:
       images-config: ${{ steps.set-config.outputs.images }}
       system-test-image-cache-registry: ${{ env.SYSTEM_TEST_IMAGE_CACHE_REGISTRY }}
-      system-test-image-cached: "${{ steps.set-image-name.outputs.base-image }}_${{ steps.set-cache-key.outputs.cache-key }}"
-      ghcr_allowed: ${{ steps.check-fork.outputs.ghcr-allowed }}
+      system-test-image-cached: "${{ env.SYSTEM_TEST_IMAGE}}_${{ steps.set-cache-key.outputs.cache-key }}"
+      registry_allowed: ${{ steps.check-fork.outputs.registry-allowed }}
     steps:
       - id: check-fork
-        name: Check if GHCR access is allowed
+        name: Check if registry access is allowed
         run: |
           if [ "${{ github.event_name }}" != "pull_request" ] || [ "${{ github.event.pull_request.head.repo.fork }}" == "false" ]; then
-            echo "ghcr-allowed=true" >> $GITHUB_OUTPUT
+            echo "registry-allowed=true" >> $GITHUB_OUTPUT
           else
-            echo "ghcr-allowed=false" >> $GITHUB_OUTPUT
-          fi
-      
-      - id: set-image-name
-        name: Set system test image name with optional registry prefix
-        run: |
-          if [ "${{ steps.check-fork.outputs.ghcr-allowed }}" == "true" ]; then
-            IMAGE_NAME="${{ env.SYSTEM_TEST_IMAGE_CACHE_REGISTRY }}/${{ env.SYSTEM_TEST_IMAGE }}"
-          else
-            IMAGE_NAME="${{ env.SYSTEM_TEST_IMAGE }}"
-          fi
-          echo "base-image=${IMAGE_NAME}" >> $GITHUB_OUTPUT
-          echo "Using image name: ${IMAGE_NAME}"
-      
+            echo "registry-allowed=false" >> $GITHUB_OUTPUT
+          fi 
       - id: set-cache-key
         run: |
           # Fetch commit SHAs for each dependency repo
@@ -228,7 +221,7 @@ jobs:
       - id: check
         name: Check if cached system-test image exists
         run: |
-          if docker manifest inspect ${{ needs.prepare-config.outputs.system-test-image-cached }} > /dev/null 2>&1; then
+          if docker manifest inspect ${{ needs.prepare-config.outputs.system-test-image-cache-registry }}/${{ needs.prepare-config.outputs.system-test-image-cached }} > /dev/null 2>&1; then
             echo "Image exists in registry"
             echo "exists=true" >> $GITHUB_OUTPUT
           else
@@ -277,24 +270,25 @@ jobs:
             JS_STELLAR_SDK_NPM_VERSION=$JS_STELLAR_SDK_REF \
             SYSTEM_TEST_IMAGE=$SYSTEM_TEST_IMAGE \
             build
-      - name: login to ghcr
-        if: needs.prepare-config.outputs.ghcr_allowed == 'true'
+      - name: login to registry
+        if: needs.prepare-config.outputs.registry_allowed == 'true'
         uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
         with:
           registry: ${{ needs.prepare-config.outputs.system-test-image-cache-registry }}
-          username: ${{ github.actor }}
-          password: ${{ github.token }}
+          username: ${{ secrets.DOCKERHUB_USERNAME || github.actor }}
+          password: ${{ secrets.DOCKERHUB_TOKEN || github.token }}
       - name: Publish system-test image
-        if: needs.prepare-config.outputs.ghcr_allowed == 'true'
+        if: needs.prepare-config.outputs.registry_allowed == 'true'
         run: |
-          docker push $SYSTEM_TEST_IMAGE
+          dockder tag $SYSTEM_TEST_IMAGE ${{ needs.prepare-config.outputs.system-test-image-cache-registry }}/$SYSTEM_TEST_IMAGE
+          docker push ${{ needs.prepare-config.outputs.system-test-image-cache-registry }}/$SYSTEM_TEST_IMAGE
 
-      - name: extract image to artifact when no gchr
-        if: needs.prepare-config.outputs.ghcr_allowed != 'true'
+      - name: extract image to artifact when no registry
+        if: needs.prepare-config.outputs.registry_allowed != 'true'
         run: |
           docker save $SYSTEM_TEST_IMAGE -o /tmp/image.tar
-      - name: save to artifact when no ghcr
-        if: needs.prepare-config.outputs.ghcr_allowed != 'true'
+      - name: save to artifact when no registry
+        if: needs.prepare-config.outputs.registry_allowed != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: image-system-test
@@ -313,28 +307,21 @@ jobs:
     env:
       SYSTEM_TEST_IMAGE: ${{ needs.prepare-config.outputs.system-test-image-cached }}
     steps:
-      - name: login to ghcr
-        if: needs.prepare-config.outputs.ghcr_allowed == 'true'
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
-        with:
-          registry: ${{ needs.prepare-config.outputs.system-test-image-cache-registry }}
-          username: ${{  github.actor }}
-          password: ${{ github.token }}
-
       - name: download system-test image
-        if: needs.prepare-config.outputs.ghcr_allowed == 'true'
+        if: needs.build-system-test.result == 'skipped'
         run: |
-          docker pull $SYSTEM_TEST_IMAGE
+          docker pull ${{ needs.prepare-config.outputs.system-test-image-cache-registry }}/$SYSTEM_TEST_IMAGE
+          docker tag ${{ needs.prepare-config.outputs.system-test-image-cache-registry }}/$SYSTEM_TEST_IMAGE $SYSTEM_TEST_IMAGE
 
-      - name: download artifact if no ghcr 
-        if: needs.prepare-config.outputs.ghcr_allowed != 'true'
+      - name: download artifact if no registry
+        if: needs.build-system-test.result != 'skipped' && needs.prepare-config.outputs.registry_allowed != 'true'
         uses: actions/download-artifact@v4
         with:
           name: image-system-test
           path: /tmp/
 
-      - name: load system-test image if no ghcr
-        if: needs.prepare-config.outputs.ghcr_allowed != 'true'
+      - name: load system-test image if no registry
+        if: needs.build-system-test.result != 'skipped' && needs.prepare-config.outputs.registry_allowed != 'true'
         run: |
           docker load -i /tmp/image.tar
       - name: Start quickstart with rpc
