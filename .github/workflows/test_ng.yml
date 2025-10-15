@@ -280,7 +280,7 @@ jobs:
       - name: Publish system-test image
         if: needs.prepare-config.outputs.registry_allowed == 'true'
         run: |
-          dockder tag $SYSTEM_TEST_IMAGE ${{ needs.prepare-config.outputs.system-test-image-cache-registry }}/$SYSTEM_TEST_IMAGE
+          docker tag $SYSTEM_TEST_IMAGE ${{ needs.prepare-config.outputs.system-test-image-cache-registry }}/$SYSTEM_TEST_IMAGE
           docker push ${{ needs.prepare-config.outputs.system-test-image-cache-registry }}/$SYSTEM_TEST_IMAGE
 
       - name: extract image to artifact when no registry
@@ -324,6 +324,8 @@ jobs:
         if: needs.build-system-test.result != 'skipped' && needs.prepare-config.outputs.registry_allowed != 'true'
         run: |
           docker load -i /tmp/image.tar
+          docker images | grep system-test || true
+          
       - name: Start quickstart with rpc
         uses: stellar/quickstart@main
         with:
