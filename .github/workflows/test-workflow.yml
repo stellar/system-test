@@ -131,10 +131,10 @@ jobs:
       - id: check-registry
         name: Check if registry access is allowed
         run: |
-          if [ "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
-            echo "registry-allowed=true" >> $GITHUB_OUTPUT
-          else
+          if [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
             echo "registry-allowed=false" >> $GITHUB_OUTPUT
+          else
+            echo "registry-allowed=true" >> $GITHUB_OUTPUT
           fi 
       - id: set-cache-key
         run: |
