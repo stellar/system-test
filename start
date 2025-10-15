@@ -151,22 +151,12 @@ function stellar_rpc_status () {
         
     }' | jq --exit-status '.result.status == "healthy"' 2>/dev/null | grep -o true || echo false ); 
   do
-
-    curl --location --request POST "$TARGET_NETWORK_RPC_URL" \
-    --header 'Content-Type: application/json' \
-    --data-raw '{
-        "jsonrpc": "2.0",
-        "id": 10235,
-        "method": "getHealth"
-        
-    }'
-
     if [ $(expr $COUNTER % 12) -eq 0 ]; then 
       print_screen_output "waited $(expr $COUNTER / 12) minutes for Stellar RPC to report ready state..."
     fi
     COUNTER=$[$COUNTER +1]  
 
-    if [ $COUNTER -gt 900 ]; then
+    if [ $COUNTER -gt 180 ]; then
       echo "Waited longer than 15 minutes for Stellar RPC, cancelling and exit."
       exit 1
     fi  

@@ -334,6 +334,7 @@ jobs:
       - name: Run system test scenarios
         run: |
           docker run \
+          --add-host=host.docker.internal:host-gateway \
           --rm -t --name e2e_test $SYSTEM_TEST_IMAGE \
           --VerboseOutput ${{ inputs.verbose-output }}  \
           --TargetNetworkRPCURL http://host.docker.internal:8000/rpc \
