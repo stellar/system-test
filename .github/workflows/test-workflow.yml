@@ -18,19 +18,24 @@ on:
         description: "the git ref (branch, tag, sha) to use for system-test"
         required: false
         type: string
-        default: master   
+        default: master
 
+      stellar-cli-repo:
+        description: "The git repo for stellar-cli"
+        required: false
+        type: string
+        default: "stellar/stellar-cli"
       stellar-cli-ref:
         description: |
-          the soroban CLI source code to compile and run from system test
-          refers to checked out source of current GitHub ref context or branch
+          git ref of stellar cli software version to build
         required: false
         type: string
 
-      stellar-cli-version:
+      stellar-cli-crate-version:
+        description: |
+          version of stellar-cli crate to use, if not using git ref and repo
         required: false
         type: string
-        default: "23.0.0"
 
       test-filter:
         description: |
@@ -44,15 +49,13 @@ on:
       js-stellar-sdk-npm-version:
         description: |
           set the version of js-stellar-sdk to use, need to choose one of either
-          resolution options, using npm release or a gh ref:
-          option #1, set the version of stellar-sdk based on a npm release version
+          resolution options, using this for npm release or a gh ref using js-stellar-sdk-gh-ref:
         required: false
         type: string
-        default: 14.0.0-rc.3
 
       js-stellar-sdk-gh-repo:
         description: |
-          option #2, set the version of stellar-sdk based on a gh repo, e.g. stellar/js-stellar-sdk
+          set the version of stellar-sdk based on a gh repo, e.g. stellar/js-stellar-sdk
           if set, takes precedence over js-stellar-sdk-npm-version
         required: false
         type: string
@@ -62,62 +65,55 @@ on:
         required: false
         type: string  
 
-      stellar-xdr-version:
-        description: "Version of stellar-xdr to use"
-        required: false
+      stellar-xdr-ref:
+        description: "git ref of stellar-xdr to use"
+        required: true
         type: string
-        default: "v23.0.0"
 
-      stellar-core-version:
-        description: "Version of stellar-core to use"
-        required: false
+      stellar-core-ref:
+        description: "git ref of stellar-core to use"
+        required: true
         type: string
-        default: "v23.0.1"
       stellar-rpc-repo:
-        description: "The git repo URL to use for stellar-rpc"
+        description: "The git repo to use for stellar-rpc"
         required: false
         type: string
         default: "stellar/stellar-rpc"
 
-      stellar-rpc-version:
-        description: "Version of stellar-rpc to use"
-        required: false
+      stellar-rpc-ref:
+        description: "git ref of stellar-rpc to use"
+        required: true
         type: string
-        default: ""  
-      horizon-version:
-        description: "Version of horizon to use"
-        required: false
-        type: string
-        default: "horizon-v23.0.0"
 
-      lab-version:
-        description: "Version of stellar laboratory to use"
-        required: false
+      horizon-ref:
+        description: "git ref of horizon to use"
+        required: true
         type: string
-        default: "main"
+
+      lab-ref:
+        description: "git ref of stellar laboratory to use"
+        required: true
+        type: string
 
       protocol-version:
         description: "Protocol version to use"
-        required: false
+        required: true
         type: string
-        default: "23"
 
       rust-toolchain-version:
         description: "Version of Rust toolchain to use in test runtime environment"
-        required: false
+        required: true
         type: string
-        default: "stable"
 
       verbose-output:
         required: false
         type: boolean
         default: true
 
-      soroban-examples-git-hash:
+      soroban-examples-ref:
         description: "The git ref (branch, tag, sha) to use for soroban-examples"
-        required: false
+        required: true
         type: string
-        default: "v22.0.1"
         
       soroban-examples-repo-url:
         description: "The git repo URL to use for soroban-examples"
@@ -156,14 +152,12 @@ jobs:
             exit 1
           fi
 
-          # Parse STELLAR_CLI_REF which is in format: URL#ref
-          CLI_URL_REF="${{ inputs.stellar-cli-ref }}"
+          CLI_REF="${{ inputs.stellar-cli-ref }}"
+          CLI_REPO="${{ inputs.stellar-cli-repo }}"
           
-          # Only fetch if stellar-cli-ref is provided
-          if [ -n "$CLI_URL_REF" ]; then
-            # Split on # to get URL and ref
-            CLI_URL=$(echo "$CLI_URL_REF" | cut -d'#' -f1)
-            CLI_REF=$(echo "$CLI_URL_REF" | cut -d'#' -f2)
+          # Only fetch if stellar-cli-ref and repo is provided
+          if [ -n "$CLI_REF" ] && [ -n "$CLI_REPO" ]; then
+            CLI_URL=https://github.com/$CLI_REPO
             
             STELLAR_CLI_SHA=$(git ls-remote "$CLI_URL" "$CLI_REF" | awk '{print $1}')
             if [ -z "$STELLAR_CLI_SHA" ]; then
@@ -172,7 +166,7 @@ jobs:
             fi
           else
             # If no CLI ref provided
-            STELLAR_CLI_SHA="${{ inputs.stellar-cli-version }}"
+            STELLAR_CLI_SHA="${{ inputs.stellar-cli-crate-version }}"
           fi
 
           # Handle JS Stellar SDK
@@ -203,12 +197,12 @@ jobs:
                 "protocol_version_default": ${{ inputs.protocol-version }}
               },
               "deps": [
-                { "name": "xdr", "repo": "stellar/rs-stellar-xdr", "ref": "${{ inputs.stellar-xdr-version }}" },
-                { "name": "core", "repo": "stellar/stellar-core", "ref": "${{ inputs.stellar-core-version }}", "options": { "configure_flags": "--disable-tests" } },
-                { "name": "rpc", "repo": "${{ inputs.stellar-rpc-repo }}", "ref": "${{ inputs.stellar-rpc-version }}" },
-                { "name": "horizon", "repo": "stellar/go", "ref": "${{ inputs.horizon-version }}" },
-                { "name": "friendbot", "repo": "stellar/go", "ref": "${{ inputs.horizon-version }}" },
-                { "name": "lab", "repo": "stellar/laboratory", "ref": "${{ inputs.lab-version }}" }
+                { "name": "xdr", "repo": "stellar/rs-stellar-xdr", "ref": "${{ inputs.stellar-xdr-ref }}" },
+                { "name": "core", "repo": "stellar/stellar-core", "ref": "${{ inputs.stellar-core-ref }}", "options": { "configure_flags": "--disable-tests" } },
+                { "name": "rpc", "repo": "${{ inputs.stellar-rpc-repo }}", "ref": "${{ inputs.stellar-rpc-ref }}" },
+                { "name": "horizon", "repo": "stellar/go", "ref": "${{ inputs.horizon-ref }}" },
+                { "name": "friendbot", "repo": "stellar/go", "ref": "${{ inputs.horizon-ref }}" },
+                { "name": "lab", "repo": "stellar/laboratory", "ref": "${{ inputs.lab-ref }}" }
               ],
               "additional-tests": []
             }
@@ -274,8 +268,15 @@ jobs:
           else \
             JS_STELLAR_SDK_REF="file:/home/tester/js-stellar-sdk"; \
           fi
+          if [ -n "${{ inputs.stellar-cli-ref }}" ] && [ -n "${{ inputs.stellar-cli-repo }}" ]; then \
+            STELLAR_CLI_GIT_REF="https://github.com/${{ inputs.stellar-cli-repo }}#${{ inputs.stellar-cli-ref }}"; \
+          else \
+            STELLAR_CLI_CRATE_VERSION="${{ inputs.stellar-cli-crate-version }}"; \
+          fi
+           
           make \
-            STELLAR_CLI_GIT_REF=${{ inputs.stellar-cli-ref }} \
+            STELLAR_CLI_GIT_REF=$STELLAR_CLI_GIT_REF \
+            STELLAR_CLI_CRATE_VERSION=$STELLAR_CLI_CRATE_VERSION \
             RUST_TOOLCHAIN_VERSION=${{ inputs.rust-toolchain-version }} \
             JS_STELLAR_SDK_NPM_VERSION=$JS_STELLAR_SDK_REF \
             SYSTEM_TEST_IMAGE=$SYSTEM_TEST_IMAGE \
