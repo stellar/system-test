@@ -115,11 +115,11 @@ on:
         required: true
         type: string
         
-      soroban-examples-repo-url:
-        description: "The git repo URL to use for soroban-examples"
+      soroban-examples-repo:
+        description: "The git repo to use for soroban-examples"
         required: false
         type: string
-        default: "https://github.com/stellar/soroban-examples"
+        default: "stellar/soroban-examples"
 
 env:
   SYSTEM_TEST_IMAGE: stellar/system-test:cache
@@ -350,5 +350,5 @@ jobs:
           --VerboseOutput ${{ inputs.verbose-output }}  \
           --TargetNetworkRPCURL http://host.docker.internal:8000/rpc \
           --TestFilter "${{ matrix.scenario-filter }}" \
-          --SorobanExamplesGitHash ${{ inputs.soroban-examples-git-hash }} \
-          --SorobanExamplesRepoURL ${{ inputs.soroban-examples-repo-url }}
+          --SorobanExamplesGitHash ${{ inputs.soroban-examples-ref }} \
+          --SorobanExamplesRepoURL https://github.com/${{ inputs.soroban-examples-repo }}
