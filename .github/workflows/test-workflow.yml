@@ -49,18 +49,18 @@ on:
       js-stellar-sdk-npm-version:
         description: |
           set the version of js-stellar-sdk to use, need to choose one of either
-          resolution options, using this for npm release or a gh ref using js-stellar-sdk-gh-ref:
+          resolution options, using this for npm release or a gh ref using js-stellar-sdk-ref:
         required: false
         type: string
 
-      js-stellar-sdk-gh-repo:
+      js-stellar-sdk-repo:
         description: |
           set the version of stellar-sdk based on a gh repo, e.g. stellar/js-stellar-sdk
           if set, takes precedence over js-stellar-sdk-npm-version
         required: false
         type: string
 
-      js-stellar-sdk-gh-ref:
+      js-stellar-sdk-ref:
         description: "The git ref (branch, tag, sha) to use for js-stellar-sdk if using gh repo option"
         required: false
         type: string  
@@ -170,10 +170,10 @@ jobs:
           fi
 
           # Handle JS Stellar SDK
-          if [ -n "${{ inputs.js-stellar-sdk-gh-repo }}" ]; then
-            JS_SDK_PART=$(git ls-remote https://github.com/${{ inputs.js-stellar-sdk-gh-repo }} ${{ inputs.js-stellar-sdk-gh-ref }} | awk '{print $1}')
+          if [ -n "${{ inputs.js-stellar-sdk-repo }}" ]; then
+            JS_SDK_PART=$(git ls-remote https://github.com/${{ inputs.js-stellar-sdk-repo }} ${{ inputs.js-stellar-sdk-ref }} | awk '{print $1}')
             if [ -z "$JS_SDK_PART" ]; then
-              echo "Error: Could not find ref ${{ inputs.js-stellar-sdk-gh-ref }} in ${{ inputs.js-stellar-sdk-gh-repo }}"
+              echo "Error: Could not find ref ${{ inputs.js-stellar-sdk-ref }} in ${{ inputs.js-stellar-sdk-repo }}"
               exit 1
             fi
           else
@@ -246,16 +246,16 @@ jobs:
           ref: ${{ inputs.system-test-git-ref }}
           path: system-test
 
-      - if: inputs.js-stellar-sdk-gh-repo != ''
+      - if: inputs.js-stellar-sdk-repo != ''
         name: prepare local js-stellar-sdk
         run: |
           rm -rf $GITHUB_WORKSPACE/system-test/js-stellar-sdk;
 
-      - if: inputs.js-stellar-sdk-gh-repo != ''
+      - if: inputs.js-stellar-sdk-repo != ''
         uses: actions/checkout@v4
         with:
-          repository: ${{ inputs.js-stellar-sdk-gh-repo }}
-          ref: ${{ inputs.js-stellar-sdk-gh-ref }}
+          repository: ${{ inputs.js-stellar-sdk-repo }}
+          ref: ${{ inputs.js-stellar-sdk-ref }}
           path: system-test/js-stellar-sdk
 
       - uses: stellar/actions/rust-cache@main
@@ -263,7 +263,7 @@ jobs:
       - name: Build system test with component versions
         run: |
           cd $GITHUB_WORKSPACE/system-test
-          if [ -z "${{ inputs.js-stellar-sdk-gh-repo }}" ]; then \
+          if [ -z "${{ inputs.js-stellar-sdk-repo }}" ]; then \
             JS_STELLAR_SDK_REF="${{ inputs.js-stellar-sdk-npm-version }}"; \
           else \
             JS_STELLAR_SDK_REF="file:/home/tester/js-stellar-sdk"; \
