@@ -298,7 +298,7 @@ jobs:
     name: System tests
     needs: [build-system-test, build-quickstart, prepare-config]
     # Run if build-system-test succeeded OR was skipped because image is already in built(cache hit)
-    if: needs.build-system-test.result == 'success' || needs.build-system-test.result == 'skipped'
+    if: always() && (needs.build-system-test.result == 'success' || needs.build-system-test.result == 'skipped')
     
     strategy:
       matrix:
