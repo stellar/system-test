@@ -269,7 +269,7 @@ jobs:
             JS_STELLAR_SDK_REF="file:/home/tester/js-stellar-sdk"; \
           fi
           if [ -n "${{ inputs.stellar-cli-ref }}" ] && [ -n "${{ inputs.stellar-cli-repo }}" ]; then \
-            STELLAR_CLI_GIT_REF="https://github.com/${{ inputs.stellar-cli-repo }}#${{ inputs.stellar-cli-ref }}"; \
+            STELLAR_CLI_GIT_REF="https://github.com/${{ inputs.stellar-cli-repo }}.git#${{ inputs.stellar-cli-ref }}"; \
           else \
             STELLAR_CLI_CRATE_VERSION="${{ inputs.stellar-cli-crate-version }}"; \
           fi
