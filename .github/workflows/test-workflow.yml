@@ -73,7 +73,17 @@ on:
         required: false
         type: string
         default: "v23.0.1"
+      stellar-rpc-repo:
+        description: "The git repo URL to use for stellar-rpc"
+        required: false
+        type: string
+        default: "stellar/stellar-rpc"
 
+      stellar-rpc-version:
+        description: "Version of stellar-rpc to use"
+        required: false
+        type: string
+        default: ""  
       horizon-version:
         description: "Version of horizon to use"
         required: false
@@ -195,7 +205,7 @@ jobs:
               "deps": [
                 { "name": "xdr", "repo": "stellar/rs-stellar-xdr", "ref": "${{ inputs.stellar-xdr-version }}" },
                 { "name": "core", "repo": "stellar/stellar-core", "ref": "${{ inputs.stellar-core-version }}", "options": { "configure_flags": "--disable-tests" } },
-                { "name": "rpc", "repo": "${{ github.repository }}", "ref": "${{ github.ref }}" },
+                { "name": "rpc", "repo": "${{ inputs.stellar-rpc-repo }}", "ref": "${{ inputs.stellar-rpc-version }}" },
                 { "name": "horizon", "repo": "stellar/go", "ref": "${{ inputs.horizon-version }}" },
                 { "name": "friendbot", "repo": "stellar/go", "ref": "${{ inputs.horizon-version }}" },
                 { "name": "lab", "repo": "stellar/laboratory", "ref": "${{ inputs.lab-version }}" }
