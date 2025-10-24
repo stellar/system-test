@@ -37,6 +37,19 @@ RUST_TOOLCHAIN_VERSION=stable
 # the final image name that is created in local docker images store for system test
 SYSTEM_TEST_IMAGE=stellar/system-test:dev
 
+# set to true to enable github actions cache for layer caching during build
+USE_GHA_CACHE=false
+
+# github actions cache arguments for docker build
+GHA_CACHE_ARGS=--cache-from=type=gha --cache-to=type=gha,mode=max,compression=zstd
+
+# set cache args based on USE_GHA_CACHE flag
+ifeq ($(USE_GHA_CACHE),true)
+	CACHE_ARGS=$(GHA_CACHE_ARGS)
+else
+	CACHE_ARGS=
+endif
+
 build-stellar-cli:
 	if [ -z "$(STELLAR_CLI_IMAGE)" ]; then \
 		DOCKERHUB_RUST_VERSION=rust:$$( [ "$(RUST_TOOLCHAIN_VERSION)" = "stable" ] && echo "latest" || echo "$(RUST_TOOLCHAIN_VERSION)"); \
@@ -44,6 +57,7 @@ build-stellar-cli:
 		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
 		--build-arg DOCKERHUB_RUST_VERSION="$$DOCKERHUB_RUST_VERSION" \
 		--build-arg STELLAR_CLI_CRATE_VERSION="$(STELLAR_CLI_CRATE_VERSION)" \
+		$(CACHE_ARGS) \
 		-f- $(STELLAR_CLI_GIT_REF) < $(MAKEFILE_DIR)Dockerfile.stellar-cli; \
 	fi
 
@@ -56,4 +70,5 @@ build: build-stellar-cli
 		--build-arg RUST_TOOLCHAIN_VERSION=$(RUST_TOOLCHAIN_VERSION) \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
 		--build-arg JS_STELLAR_SDK_NPM_VERSION=$(JS_STELLAR_SDK_NPM_VERSION) \
-		--label org.opencontainers.image.revision="$(SYSTEM_TEST_SHA)" .;
+		--label org.opencontainers.image.revision="$(SYSTEM_TEST_SHA)" \
+		$(CACHE_ARGS) .;

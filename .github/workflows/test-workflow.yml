@@ -2,11 +2,6 @@ name: Systems test workflow, next gen, uses quickstart pipelines
 
 on:
   workflow_call:
-    secrets:
-      DOCKERHUB_USERNAME:
-        required: false
-      DOCKERHUB_TOKEN:
-        required: false
     inputs:
       runner:
         description: "GitHub runner to use"
@@ -123,25 +118,14 @@ on:
 
 env:
   SYSTEM_TEST_IMAGE: stellar/system-test:cache
-  SYSTEM_TEST_IMAGE_CACHE_REGISTRY: docker.io
-  
+
 jobs:
   prepare-config:
     runs-on: ubuntu-latest
     outputs:
       images-config: ${{ steps.set-config.outputs.images }}
-      system-test-image-cache-registry: ${{ env.SYSTEM_TEST_IMAGE_CACHE_REGISTRY }}
       system-test-image-cached: "${{ env.SYSTEM_TEST_IMAGE}}_${{ steps.set-cache-key.outputs.cache-key }}"
-      registry_allowed: ${{ steps.check-registry.outputs.registry-allowed }}
     steps:
-      - id: check-registry
-        name: Check if registry access is allowed
-        run: |
-          if [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
-            echo "registry-allowed=false" >> $GITHUB_OUTPUT
-          else
-            echo "registry-allowed=true" >> $GITHUB_OUTPUT
-          fi 
       - id: set-cache-key
         run: |
           # Fetch commit SHAs for each dependency repo
@@ -216,27 +200,9 @@ jobs:
         images: ${{ needs.prepare-config.outputs.images-config }}
         archs: '["amd64"]'
 
-  check-system-test-cache:
-    runs-on: ubuntu-latest
-    needs: prepare-config
-    outputs:
-      cache-hit: ${{ steps.check.outputs.exists }}
-    steps:
-      - id: check
-        name: Check if cached system-test image exists
-        run: |
-          if docker manifest inspect ${{ needs.prepare-config.outputs.system-test-image-cache-registry }}/${{ needs.prepare-config.outputs.system-test-image-cached }} > /dev/null 2>&1; then
-            echo "Image exists in registry"
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "Image not found in registry"
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
   build-system-test:
     runs-on: ubuntu-latest-4-cores
-    needs: [prepare-config, check-system-test-cache]
-    if: needs.check-system-test-cache.outputs.cache-hit != 'true'
+    needs: [prepare-config]
     env:
       SYSTEM_TEST_IMAGE: ${{ needs.prepare-config.outputs.system-test-image-cached }}
     steps:
@@ -275,34 +241,20 @@ jobs:
           fi
            
           make \
+            USE_GHA_CACHE=true \
             STELLAR_CLI_GIT_REF=$STELLAR_CLI_GIT_REF \
             STELLAR_CLI_CRATE_VERSION=$STELLAR_CLI_CRATE_VERSION \
             RUST_TOOLCHAIN_VERSION=${{ inputs.rust-toolchain-version }} \
             JS_STELLAR_SDK_NPM_VERSION=$JS_STELLAR_SDK_REF \
             SYSTEM_TEST_IMAGE=$SYSTEM_TEST_IMAGE \
             build
-      - name: login to registry
-        if: needs.prepare-config.outputs.registry_allowed == 'true'
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
-        with:
-          registry: ${{ needs.prepare-config.outputs.system-test-image-cache-registry }}
-          username: ${{ secrets.DOCKERHUB_USERNAME  }}
-          password: ${{ secrets.DOCKERHUB_TOKEN  }}
-      - name: Publish system-test image
-        if: needs.prepare-config.outputs.registry_allowed == 'true'
-        run: |
-          docker tag $SYSTEM_TEST_IMAGE ${{ needs.prepare-config.outputs.system-test-image-cache-registry }}/$SYSTEM_TEST_IMAGE
-          docker push ${{ needs.prepare-config.outputs.system-test-image-cache-registry }}/$SYSTEM_TEST_IMAGE
-
-      - name: extract image to artifact when no registry
-        if: needs.prepare-config.outputs.registry_allowed != 'true'
+      - name: extract image to file
         run: |
           docker save $SYSTEM_TEST_IMAGE -o /tmp/image.tar
-      - name: save to artifact when no registry
-        if: needs.prepare-config.outputs.registry_allowed != 'true'
-        uses: actions/upload-artifact@v4
+      - name: save file to cache
+        uses: actions/cache@v4
         with:
-          name: image-system-test
+          key: ${{ env.SYSTEM_TEST_IMAGE }}
           path: /tmp/image.tar
 
   integration:
@@ -324,21 +276,19 @@ jobs:
           artifact: image-quickstart-rpc-custom-amd64.tar
           tag: rpc-custom-amd64
           enable: core,rpc
-      - name: download system-test image
-        if: needs.build-system-test.result == 'skipped'
-        run: |
-          docker pull ${{ needs.prepare-config.outputs.system-test-image-cache-registry }}/$SYSTEM_TEST_IMAGE
-          docker tag ${{ needs.prepare-config.outputs.system-test-image-cache-registry }}/$SYSTEM_TEST_IMAGE $SYSTEM_TEST_IMAGE
-
-      - name: download artifact if no registry
-        if: needs.build-system-test.result != 'skipped' && needs.prepare-config.outputs.registry_allowed != 'true'
-        uses: actions/download-artifact@v4
+      - name: Get system-test image from cache
+        id: get-system-test-image
+        uses: actions/cache/restore/v4
         with:
-          name: image-system-test
-          path: /tmp/
-
-      - name: load system-test image if no registry
-        if: needs.build-system-test.result != 'skipped' && needs.prepare-config.outputs.registry_allowed != 'true'
+          key: ${{ env.SYSTEM_TEST_IMAGE }}
+          path: /tmp/image.tar  
+      - name: Fail if cache not found
+        run: |
+          if [ "${{ steps.get-system-test-image.outputs.cache-hit }}" != "true" ]; then
+            echo "Required cache key $SYSTEM_TEST_IMAGE not found, failing job."
+            exit 1
+          fi 
+      - name: load system-test image from cache file
         run: |
           docker load -i /tmp/image.tar
           
