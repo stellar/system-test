@@ -278,7 +278,7 @@ jobs:
           enable: core,rpc
       - name: Get system-test image from cache
         id: get-system-test-image
-        uses: actions/cache/restore/v4
+        uses: actions/cache/restore@v4
         with:
           key: ${{ env.SYSTEM_TEST_IMAGE }}
           path: /tmp/image.tar  
