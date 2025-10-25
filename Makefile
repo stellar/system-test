@@ -63,7 +63,7 @@ build-stellar-cli:
 
 build: build-stellar-cli
 	STELLAR_CLI_IMAGE_REF=$$( [ -z "$(STELLAR_CLI_IMAGE)" ] && echo "$(STELLAR_CLI_STAGE_IMAGE)" || echo "$(STELLAR_CLI_IMAGE)"); \
-	docker build -t "$(SYSTEM_TEST_IMAGE)" -f Dockerfile \
+	docker buildx build -t "$(SYSTEM_TEST_IMAGE)" -f Dockerfile \
 	    --build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
 		--build-arg STELLAR_CLI_CRATE_VERSION=$(STELLAR_CLI_CRATE_VERSION) \
 		--build-arg STELLAR_CLI_IMAGE_REF=$$STELLAR_CLI_IMAGE_REF \

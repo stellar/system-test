@@ -124,52 +124,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       images-config: ${{ steps.set-config.outputs.images }}
-      system-test-image-cached: "${{ env.SYSTEM_TEST_IMAGE}}_${{ steps.set-cache-key.outputs.cache-key }}"
+      system-test-image: "${{ env.SYSTEM_TEST_IMAGE}}"
     steps:
-      - id: set-cache-key
-        run: |
-          # Fetch commit SHAs for each dependency repo
-
-          SYSTEM_TEST_SHA=$(git ls-remote https://github.com/stellar/system-test ${{ inputs.system-test-git-ref }} | awk '{print $1}')
-          if [ -z "$SYSTEM_TEST_SHA" ]; then
-            echo "Error: Could not find ref ${{ inputs.system-test-git-ref }} in stellar/system-test"
-            exit 1
-          fi
-
-          CLI_REF="${{ inputs.stellar-cli-ref }}"
-          CLI_REPO="${{ inputs.stellar-cli-repo }}"
-          
-          # Only fetch if stellar-cli-ref and repo is provided
-          if [ -n "$CLI_REF" ] && [ -n "$CLI_REPO" ]; then
-            CLI_URL=https://github.com/$CLI_REPO
-            
-            STELLAR_CLI_SHA=$(git ls-remote "$CLI_URL" "$CLI_REF" | awk '{print $1}')
-            if [ -z "$STELLAR_CLI_SHA" ]; then
-              echo "Error: Could not find ref $CLI_REF in $CLI_URL"
-              exit 1
-            fi
-          else
-            # If no CLI ref provided
-            STELLAR_CLI_SHA="${{ inputs.stellar-cli-crate-version }}"
-          fi
-
-          # Handle JS Stellar SDK
-          if [ -n "${{ inputs.js-stellar-sdk-repo }}" ]; then
-            JS_SDK_PART=$(git ls-remote https://github.com/${{ inputs.js-stellar-sdk-repo }} ${{ inputs.js-stellar-sdk-ref }} | awk '{print $1}')
-            if [ -z "$JS_SDK_PART" ]; then
-              echo "Error: Could not find ref ${{ inputs.js-stellar-sdk-ref }} in ${{ inputs.js-stellar-sdk-repo }}"
-              exit 1
-            fi
-          else
-            JS_SDK_PART="${{ inputs.js-stellar-sdk-npm-version }}"
-          fi
-
-          # Create cache key by hashing all components
-          CACHE_INPUT="${SYSTEM_TEST_SHA}${STELLAR_CLI_SHA}${JS_SDK_PART}"
-          CACHE_KEY=$(echo -n "$CACHE_INPUT" | sha256sum | cut -c1-16)
-          echo "cache-key=${CACHE_KEY}" >> $GITHUB_OUTPUT
-          echo "Generated cache key: ${CACHE_KEY}"
-
       - id: set-config
         run: |
           cat <<EOF >> $GITHUB_OUTPUT
@@ -204,7 +160,7 @@ jobs:
     runs-on: ubuntu-latest-4-cores
     needs: [prepare-config]
     env:
-      SYSTEM_TEST_IMAGE: ${{ needs.prepare-config.outputs.system-test-image-cached }}
+      SYSTEM_TEST_IMAGE: ${{ needs.prepare-config.outputs.system-test-image }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -268,7 +224,7 @@ jobs:
         scenario-filter: ["${{ inputs.test-filter }}"]
     runs-on: ubuntu-latest
     env:
-      SYSTEM_TEST_IMAGE: ${{ needs.prepare-config.outputs.system-test-image-cached }}
+      SYSTEM_TEST_IMAGE: ${{ needs.prepare-config.outputs.system-test-image }}
     steps:
       - name: Start quickstart with rpc
         uses: stellar/quickstart@main
