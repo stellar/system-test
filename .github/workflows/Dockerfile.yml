@@ -43,7 +43,7 @@ jobs:
     outputs:
       push_enabled: ${{ env.PUSH_ENABLED }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         ref: ${{ env.HEAD_SHA }}
     - name: Build System Test Image
@@ -64,7 +64,7 @@ jobs:
         docker save ${{ env.IMAGE }} -o /tmp/image;
     - if: ${{ env.PUSH_ENABLED == 'true' }}
       name: Upload System Test Image
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: image-Dockerfile
         path: /tmp/image
@@ -80,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     if: needs.build.outputs.push_enabled == 'true'
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         ref: ${{ env.HEAD_SHA  }}
     - id: push
