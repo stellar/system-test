@@ -207,10 +207,10 @@ jobs:
       - name: extract image to file
         run: |
           docker save $SYSTEM_TEST_IMAGE -o /tmp/image.tar
-      - name: save file to cache
-        uses: actions/cache@v4
+      - name: save file to artifact
+        uses: actions/upload-artifact@v4
         with:
-          key: ${{ env.SYSTEM_TEST_IMAGE }}
+          name: image-system-test
           path: /tmp/image.tar
 
   integration:
@@ -232,19 +232,12 @@ jobs:
           artifact: image-quickstart-rpc-custom-amd64.tar
           tag: rpc-custom-amd64
           enable: core,rpc
-      - name: Get system-test image from cache
-        id: get-system-test-image
-        uses: actions/cache/restore@v4
+      - name: Download system-test image artifact
+        uses: actions/download-artifact@v4
         with:
-          key: ${{ env.SYSTEM_TEST_IMAGE }}
-          path: /tmp/image.tar  
-      - name: Fail if cache not found
-        run: |
-          if [ "${{ steps.get-system-test-image.outputs.cache-hit }}" != "true" ]; then
-            echo "Required cache key $SYSTEM_TEST_IMAGE not found, failing job."
-            exit 1
-          fi 
-      - name: load system-test image from cache file
+          name: image-system-test
+          path: /tmp/
+      - name: load system-test image from artifact file
         run: |
           docker load -i /tmp/image.tar
           
