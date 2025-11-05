@@ -45,7 +45,7 @@ jobs:
         driver: docker  # Use docker driver instead of default docker-container    
     - name: Build System Test Image
       run: |
-        make BUILDX_DEBUG=1 USE_GHA_CACHE=true \
+        make USE_GHA_CACHE=true \
              SYSTEM_TEST_IMAGE=${{ env.PUSH_ENABLED == 'true' && env.IMAGE || 'stellar/system-test:dev' }} \
              JS_STELLAR_SDK_NPM_VERSION=${{ env.JS_STELLAR_SDK_NPM_VERSION }} \
              build;

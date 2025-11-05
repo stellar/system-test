@@ -41,7 +41,7 @@ SYSTEM_TEST_IMAGE=stellar/system-test:dev
 USE_GHA_CACHE=false
 
 # github actions cache arguments for docker build
-GHA_CACHE_ARGS=--cache-from=type=gha,scope=system-test-layer-cache --cache-to=type=gha,scope=system-test-layer-cache,mode=max,compression=zstd
+GHA_CACHE_ARGS="--cache-from type=gha,scope=system-test-layer-cache --cache-to type=gha,scope=system-test-layer-cache,mode=max,compression=zstd"
 
 # set cache args based on USE_GHA_CACHE flag
 ifeq ($(USE_GHA_CACHE),true)
