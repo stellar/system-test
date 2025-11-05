@@ -40,9 +40,12 @@ jobs:
     - uses: actions/checkout@v4
       with:
         ref: ${{ env.HEAD_SHA }}
+    - uses: docker/setup-buildx-action@v3
+      with:
+        driver: docker  # Use docker driver instead of default docker-container    
     - name: Build System Test Image
       run: |
-        make SOROBAN_CLI_GIT_REF=${{ env.SOROBAN_CLI_GIT_REF }} \
+        make USE_GHA_CACHE=true \
              SYSTEM_TEST_IMAGE=${{ env.PUSH_ENABLED == 'true' && env.IMAGE || 'stellar/system-test:dev' }} \
              JS_STELLAR_SDK_NPM_VERSION=${{ env.JS_STELLAR_SDK_NPM_VERSION }} \
              build;
