@@ -181,6 +181,7 @@ jobs:
           path: system-test/js-stellar-sdk
 
       - uses: stellar/actions/rust-cache@main
+      - uses: docker/setup-buildx-action@v3
 
       - name: Build system test with component versions
         run: |
