@@ -81,9 +81,14 @@ on:
         type: string
 
       horizon-ref:
-        description: "git ref of horizon to use"
+        description: "git ref of stellar/stellar-horizon to use"
         required: true
         type: string
+
+      friendbot-ref:
+        description: "git ref of stellar/friendbot to use"
+        required: true
+        type: string  
 
       lab-ref:
         description: "git ref of stellar laboratory to use"
@@ -140,8 +145,8 @@ jobs:
                 { "name": "xdr", "repo": "stellar/rs-stellar-xdr", "ref": "${{ inputs.stellar-xdr-ref }}" },
                 { "name": "core", "repo": "stellar/stellar-core", "ref": "${{ inputs.stellar-core-ref }}", "options": { "configure_flags": "--disable-tests" } },
                 { "name": "rpc", "repo": "${{ inputs.stellar-rpc-repo }}", "ref": "${{ inputs.stellar-rpc-ref }}" },
-                { "name": "horizon", "repo": "stellar/go", "ref": "${{ inputs.horizon-ref }}" },
-                { "name": "friendbot", "repo": "stellar/go", "ref": "${{ inputs.horizon-ref }}" },
+                { "name": "horizon", "repo": "stellar/stellar-horizon", "ref": "${{ inputs.horizon-ref }}", "options": { "pkg": "github.com/stellar/stellar-horizon" } },
+                { "name": "friendbot", "repo": "stellar/friendbot", "ref": "${{ inputs.friendbot-ref }}", "options": { "pkg": "github.com/stellar/friendbot" } },
                 { "name": "lab", "repo": "stellar/laboratory", "ref": "${{ inputs.lab-ref }}" }
               ],
               "additional-tests": []
