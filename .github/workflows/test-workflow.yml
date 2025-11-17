@@ -189,9 +189,6 @@ jobs:
       - name: Expose GitHub Runtime
         uses: crazy-max/ghaction-github-runtime@v3
       - uses: docker/setup-buildx-action@v3
-        with:
-          driver: docker  # Use docker driver instead of default docker-container
-
       - name: Build system test with component versions
         run: |
           cd $GITHUB_WORKSPACE/system-test
