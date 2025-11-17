@@ -29,6 +29,7 @@ async function main() {
 
   let response = await server.getEvents({
     startLedger: Number(ledgerFrom),
+    endLedger: 0,
     filters: filters,
     limit: Number(size)
   });
