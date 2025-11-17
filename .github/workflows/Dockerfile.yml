@@ -42,9 +42,7 @@ jobs:
         ref: ${{ env.HEAD_SHA }}
     - name: Expose GitHub Runtime
       uses: crazy-max/ghaction-github-runtime@v3
-    - uses: docker/setup-buildx-action@v3
-      with:
-        driver: docker  # Use docker driver instead of default docker-container    
+    - uses: docker/setup-buildx-action@v3  
     - name: Build System Test Image
       run: |
         make USE_GHA_CACHE=true \
