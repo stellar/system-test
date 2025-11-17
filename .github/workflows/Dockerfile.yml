@@ -40,6 +40,8 @@ jobs:
     - uses: actions/checkout@v4
       with:
         ref: ${{ env.HEAD_SHA }}
+    - name: Expose GitHub Runtime
+      uses: crazy-max/ghaction-github-runtime@v3
     - uses: docker/setup-buildx-action@v3
       with:
         driver: docker  # Use docker driver instead of default docker-container    
