@@ -252,9 +252,15 @@ jobs:
             build
 
           if [ "${{ steps.restore-cli-image.outputs.cache-hit }}" != 'true' ]; then \
-            docker save $STELLAR_CLI_STAGED_IMAGE | zstd -19 -o /tmp/cli-image.tar.zst
-          fi  
+            echo "Starting CLI image extract and compression..."; \
+            docker save $STELLAR_CLI_STAGED_IMAGE | zstd -19 -o /tmp/cli-image.tar.zst; \
+            CLI_SIZE=$(stat -f%z /tmp/cli-image.tar.zst 2>/dev/null || stat -c%s /tmp/cli-image.tar.zst 2>/dev/null); \
+            echo "Finished CLI image extract, compressed size = $CLI_SIZE bytes"; \
+          fi
+          echo "Starting system test image extract and compression..."
           docker save $SYSTEM_TEST_IMAGE | zstd -19 -o /tmp/system-test-image.tar.zst
+          SYSTEM_SIZE=$(stat -f%z /tmp/system-test-image.tar.zst 2>/dev/null || stat -c%s /tmp/system-test-image.tar.zst 2>/dev/null)
+          echo "Finished system test image extract, compressed size = $SYSTEM_SIZE bytes"
 
       - name: Save cache for cli
         uses: actions/cache/save@v4
