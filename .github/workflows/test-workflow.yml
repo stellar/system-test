@@ -58,7 +58,7 @@ on:
       js-stellar-sdk-ref:
         description: "The git ref (branch, tag, sha) to use for js-stellar-sdk if using gh repo option"
         required: false
-        type: string  
+        type: string
 
       stellar-xdr-ref:
         description: "git ref of stellar-xdr to use"
@@ -88,7 +88,7 @@ on:
       friendbot-ref:
         description: "git ref of stellar/friendbot to use"
         required: true
-        type: string  
+        type: string
 
       lab-ref:
         description: "git ref of stellar laboratory to use"
@@ -114,7 +114,7 @@ on:
         description: "The git ref (branch, tag, sha) to use for soroban-examples"
         required: true
         type: string
-        
+
       soroban-examples-repo:
         description: "The git repo to use for soroban-examples"
         required: false
@@ -155,11 +155,11 @@ jobs:
           DELIMITER
           EOF
   build-quickstart:
-      needs: prepare-config
-      uses: stellar/quickstart/.github/workflows/build.yml@main
-      with:
-        images: ${{ needs.prepare-config.outputs.images-config }}
-        archs: '["amd64"]'
+    needs: prepare-config
+    uses: stellar/quickstart/.github/workflows/build.yml@main
+    with:
+      images: ${{ needs.prepare-config.outputs.images-config }}
+      archs: '["amd64"]'
 
   build-system-test:
     runs-on: ubuntu-latest-4-cores
@@ -186,9 +186,16 @@ jobs:
           path: system-test/js-stellar-sdk
 
       - uses: stellar/actions/rust-cache@main
-      - name: Expose GitHub Runtime
-        uses: crazy-max/ghaction-github-runtime@v3
       - uses: docker/setup-buildx-action@v3
+
+      - name: Restore Docker buildx cache
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/buildx-cache
+          key: system-test-buildx-cache-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            system-test-buildx-cache-${{ runner.os }}-
+
       - name: Build system test with component versions
         run: |
           cd $GITHUB_WORKSPACE/system-test
@@ -204,13 +211,21 @@ jobs:
           fi
            
           make \
-            USE_GHA_CACHE=true \
+            USE_LOCAL_CACHE=true \
             STELLAR_CLI_GIT_REF=$STELLAR_CLI_GIT_REF \
             STELLAR_CLI_CRATE_VERSION=$STELLAR_CLI_CRATE_VERSION \
             RUST_TOOLCHAIN_VERSION=${{ inputs.rust-toolchain-version }} \
             JS_STELLAR_SDK_NPM_VERSION=$JS_STELLAR_SDK_REF \
             SYSTEM_TEST_IMAGE=$SYSTEM_TEST_IMAGE \
             build
+
+      - name: Save Docker buildx cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: /tmp/buildx-cache
+          key: system-test-buildx-cache-${{ runner.os }}-${{ github.sha }}
+
       - name: extract image to file
         run: |
           docker save $SYSTEM_TEST_IMAGE -o /tmp/image.tar
@@ -225,7 +240,7 @@ jobs:
     needs: [build-system-test, build-quickstart, prepare-config]
     # Run if build-system-test succeeded OR was skipped because image is already in built(cache hit)
     if: always() && (needs.build-system-test.result == 'success' || needs.build-system-test.result == 'skipped')
-    
+
     strategy:
       matrix:
         scenario-filter: ["${{ inputs.test-filter }}"]
@@ -247,7 +262,7 @@ jobs:
       - name: load system-test image from artifact file
         run: |
           docker load -i /tmp/image.tar
-          
+
       - name: Run system test scenarios
         run: |
           docker run \

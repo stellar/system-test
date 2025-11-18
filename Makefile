@@ -37,23 +37,15 @@ RUST_TOOLCHAIN_VERSION=stable
 # the final image name that is created in local docker images store for system test
 SYSTEM_TEST_IMAGE=stellar/system-test:dev
 
-# set to true to enable github actions cache for layer caching during build
-USE_GHA_CACHE=false
-
 # set to true to enable local directory cache for layer caching during build
 USE_LOCAL_CACHE=false
-
-# github actions cache arguments for docker build
-GHA_CACHE_ARGS=--cache-from type=gha,scope=system-test-layer-cache --cache-to type=gha,scope=system-test-layer-cache,mode=max,compression=zstd
 
 # local directory cache arguments for docker build
 LOCAL_CACHE_ARGS=--cache-from type=local,src=/tmp/buildx-cache --cache-to type=local,dest=/tmp/buildx-cache,mode=max,compression=zstd
 
 
-# set cache args based on USE_GHA_CACHE or USE_LOCAL_CACHE flag
-ifeq ($(USE_GHA_CACHE),true)
-	CACHE_ARGS=$(GHA_CACHE_ARGS)
-else ifeq ($(USE_LOCAL_CACHE),true)
+# set cache args based on USE_LOCAL_CACHE flag
+ifeq ($(USE_LOCAL_CACHE),true)
 	CACHE_ARGS=$(LOCAL_CACHE_ARGS)
 else
 	CACHE_ARGS=
