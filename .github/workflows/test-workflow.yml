@@ -137,13 +137,34 @@ jobs:
     steps:
       - id: compute-cache-keys
         run: |
+          # Helper function to resolve ref to commit SHA
+          get_commit_sha() {
+            local repo="$1"
+            local ref="$2"
+            
+            # Return empty if either repo or ref is blank
+            if [ -z "$repo" ] || [ -z "$ref" ]; then
+              echo ""
+              return
+            fi
+            
+            # Fetch the commit SHA for the ref (works for branches, tags, and SHAs)
+            local sha=$(git ls-remote "https://github.com/$repo.git" "$ref" 2>/dev/null | cut -f1)
+            echo "${sha:-$ref}"
+          }
+          
+          # Resolve commit SHAs for cache key stability
+          CLI_SHA=$(get_commit_sha "${{ inputs.stellar-cli-repo }}" "${{ inputs.stellar-cli-ref }}")
+          JS_SDK_SHA=$(get_commit_sha "${{ inputs.js-stellar-sdk-repo }}" "${{ inputs.js-stellar-sdk-ref }}")
+          SYSTEM_TEST_SHA=$(get_commit_sha "stellar/system-test" "${{ inputs.system-test-git-ref }}")
+          
           # Compute CLI image cache key
-          CLI_CACHE_INPUT="${{ runner.os }}-${{ inputs.stellar-cli-repo }}-${{ inputs.stellar-cli-ref }}-${{ inputs.stellar-cli-crate-version }}"
+          CLI_CACHE_INPUT="${{ runner.os }}-${{ inputs.stellar-cli-repo }}-$CLI_SHA-${{ inputs.stellar-cli-crate-version }}"
           CLI_CACHE_KEY="cli-image-$(echo -n "$CLI_CACHE_INPUT" | sha256sum | cut -d' ' -f1)"
           echo "cli-image-cache-key=$CLI_CACHE_KEY" >> $GITHUB_OUTPUT
           
           # Compute system test image cache key (includes CLI key + additional inputs)
-          SYSTEM_TEST_CACHE_INPUT="$CLI_CACHE_KEY-${{ inputs.js-stellar-sdk-repo }}-${{ inputs.js-stellar-sdk-ref }}-${{ inputs.js-stellar-sdk-npm-version }}-${{ inputs.rust-toolchain-version }}-${{ inputs.system-test-git-ref }}"
+          SYSTEM_TEST_CACHE_INPUT="$CLI_CACHE_KEY-${{ inputs.js-stellar-sdk-repo }}-$JS_SDK_SHA-${{ inputs.js-stellar-sdk-npm-version }}-${{ inputs.rust-toolchain-version }}-$SYSTEM_TEST_SHA"
           SYSTEM_TEST_CACHE_KEY="system-test-image-$(echo -n "$SYSTEM_TEST_CACHE_INPUT" | sha256sum | cut -d' ' -f1)"
           echo "system-test-image-cache-key=$SYSTEM_TEST_CACHE_KEY" >> $GITHUB_OUTPUT
           
