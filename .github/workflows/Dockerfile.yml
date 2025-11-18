@@ -58,6 +58,16 @@ jobs:
             -v /tmp/buildkit-socket:/tmp/buildkit-socket \
             -v /tmp/buildx-cache:/tmp/buildx-cache \
             moby/buildkit:latest --addr unix:///tmp/buildkit-socket/buildkitd.sock
+      - name: Confirm custom_buildkitd is active
+        run: |
+          docker ps --filter name=custom_buildkitd
+          # Wait for the socket
+          timeout 30s bash -c 'while [ ! -S /tmp/buildkit-socket/buildkitd.sock ]; do sleep 0.5; done'      
+          if [ $? -ne 0 ]; then
+            echo "Timeout reached. Printing container logs before exiting:"
+            docker logs custom_buildkitd
+            exit 1 # Explicitly fail the GHA step after printing logs
+          fi
       - name: Create buildx builder instance (UNIX Socket)
         run: |
           docker buildx create --name custombuilder --driver remote unix:///tmp/buildkit-socket/buildkitd.sock --use
