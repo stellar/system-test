@@ -48,16 +48,19 @@ jobs:
           restore-keys: |
             buildx-${{ runner.os }}-
       - name: Ensure cache directory exists
-        run: mkdir -p /tmp/buildx-cache        
+        run: |
+          mkdir -p /tmp/buildx-cache
+          mkdir -p /tmp/buildkit-socket        
       - name: Start custom BuildKit container with volume mount to gha runner(UNIX Socket)
         run: |
           docker run -d --name custom_buildkitd \
             --privileged \
-            -v  /tmp/buildx-cache:/tmp/buildx-cache \
-            moby/buildkit:latest --addr unix:///run/buildkit/buildkitd.sock
+            -v /tmp/buildkit-socket:/tmp/buildkit-socket \
+            -v /tmp/buildx-cache:/tmp/buildx-cache \
+            moby/buildkit:latest --addr unix:///tmp/buildkit-socket/buildkitd.sock
       - name: Create buildx builder instance (UNIX Socket)
         run: |
-          docker buildx create --name custombuilder --driver remote unix:///run/buildkit/buildkitd.sock --use
+          docker buildx create --name custombuilder --driver remote unix:///tmp/buildkit-socket/buildkitd.sock --use
           docker buildx inspect custombuilder --bootstrap      
 
       - name: Build System Test Image
