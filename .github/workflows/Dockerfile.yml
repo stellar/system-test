@@ -56,7 +56,7 @@ jobs:
         run: |
           docker buildx create --name custombuilder --driver docker-container \
             --use --bootstrap \
-            -v /tmp/buildx-cache:/tmp/buildx-cache
+            --driver-opt volume=/tmp/buildx-cache:/tmp/buildx-cache
       - name: Build System Test Image
         run: |
           make USE_LOCAL_CACHE=true \
