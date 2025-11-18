@@ -50,27 +50,34 @@ jobs:
       - name: Ensure cache directory exists
         run: |
           mkdir -p /tmp/buildx-cache
-          mkdir -p /tmp/buildkit-socket        
-      - name: Start custom BuildKit container with volume mount to gha runner(UNIX Socket)
+      - name: Get free port for BuildKit daemon
+        id: get-port
+        run: |
+          # Find a free port by letting the OS assign one
+          PORT=$(python3 -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()')
+          echo "port=$PORT" >> $GITHUB_OUTPUT
+          echo "Using port: $PORT"
+      - name: Start custom BuildKit container with volume mount
         run: |
           docker run -d --name custom_buildkitd \
             --privileged \
-            -v /tmp/buildkit-socket:/tmp/buildkit-socket \
             -v /tmp/buildx-cache:/tmp/buildx-cache \
-            moby/buildkit:latest --addr unix:///tmp/buildkit-socket/buildkitd.sock
+            -p ${{ steps.get-port.outputs.port }}:${{ steps.get-port.outputs.port }} \
+            moby/buildkit:latest --addr tcp://0.0.0.0:${{ steps.get-port.outputs.port }}
       - name: Confirm custom_buildkitd is active
         run: |
           docker ps --filter name=custom_buildkitd
-          # Wait for the socket
-          timeout 30s bash -c 'while [ ! -S /tmp/buildkit-socket/buildkitd.sock ]; do sleep 0.5; done'      
+          # Wait for the TCP port to be ready
+          timeout 30s bash -c 'until nc -z localhost ${{ steps.get-port.outputs.port }}; do sleep 0.5; done'      
           if [ $? -ne 0 ]; then
             echo "Timeout reached. Printing container logs before exiting:"
             docker logs custom_buildkitd
-            exit 1 # Explicitly fail the GHA step after printing logs
+            exit 1
           fi
-      - name: Create buildx builder instance (UNIX Socket)
+          echo "BuildKit daemon is listening on port ${{ steps.get-port.outputs.port }}"
+      - name: Create buildx builder instance (TCP)
         run: |
-          docker buildx create --name custombuilder --driver remote unix:///tmp/buildkit-socket/buildkitd.sock --use
+          docker buildx create --name custombuilder --driver remote tcp://localhost:${{ steps.get-port.outputs.port }} --use
           docker buildx inspect custombuilder --bootstrap      
 
       - name: Build System Test Image
