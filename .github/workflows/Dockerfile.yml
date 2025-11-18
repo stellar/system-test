@@ -40,9 +40,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.HEAD_SHA }}
-      - uses: docker/setup-buildx-action@v3
-        with:
-          install: true
       - name: Restore Docker buildx cache
         uses: actions/cache/restore@v4
         with:
@@ -52,7 +49,7 @@ jobs:
             buildx-${{ runner.os }}-
       - name: Ensure cache directory exists
         run: mkdir -p /tmp/buildx-cache        
-      - name: Start custom BuildKit container (UNIX Socket)
+      - name: Start custom BuildKit container with volume mount to gha runner(UNIX Socket)
         run: |
           docker run -d --name custom_buildkitd \
             --privileged \
@@ -60,7 +57,7 @@ jobs:
             moby/buildkit:latest --addr unix:///run/buildkit/buildkitd.sock
       - name: Create buildx builder instance (UNIX Socket)
         run: |
-          docker buildx create --name custombuilder --driver remote unix:///tmp/buildkit-socket/buildkitd.sock --use
+          docker buildx create --name custombuilder --driver remote unix:///run/buildkit/buildkitd.sock --use
           docker buildx inspect custombuilder --bootstrap      
 
       - name: Build System Test Image
