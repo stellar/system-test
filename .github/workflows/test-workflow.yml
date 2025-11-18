@@ -209,12 +209,6 @@ jobs:
         with:
           path: /tmp/system-test-image.tar.zst
           key: ${{ needs.prepare-config.outputs.system-test-image-cache-key }}
-      
-      - name: Load cached system test image
-        if: steps.restore-system-test-image.outputs.cache-hit == 'true'
-        run: |
-          zstd -d -c /tmp/system-test-image.tar.zst | docker load
-      
       - name: Restore cli image cache
         if: steps.restore-system-test-image.outputs.cache-hit != 'true'
         id: restore-cli-image
@@ -274,16 +268,11 @@ jobs:
         with:
           path: /tmp/system-test-image.tar.zst
           key: ${{ needs.prepare-config.outputs.system-test-image-cache-key }}
-
-      - name: Decompress system test image for artifact
-        run: |
-          zstd -d /tmp/system-test-image.tar.zst -o /tmp/system-test-image.tar
-
       - name: save file to artifact
         uses: actions/upload-artifact@v4
         with:
           name: image-system-test
-          path: /tmp/system-test-image.tar
+          path: /tmp/system-test-image.tar.zst
 
   integration:
     name: System tests
@@ -311,7 +300,7 @@ jobs:
           path: /tmp/
       - name: load system-test image from artifact file
         run: |
-          docker load -i /tmp/image.tar
+           zstd -d -c /tmp/system-test-image.tar.zst | docker load
 
       - name: Run system test scenarios
         run: |
