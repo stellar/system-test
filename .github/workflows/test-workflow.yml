@@ -143,7 +143,7 @@ jobs:
           echo "cli-image-cache-key=$CLI_CACHE_KEY" >> $GITHUB_OUTPUT
           
           # Compute system test image cache key (includes CLI key + additional inputs)
-          SYSTEM_TEST_CACHE_INPUT="$CLI_CACHE_KEY-${{ inputs.js-stellar-sdk-repo }}-${{ inputs.js-stellar-sdk-ref }}-${{ inputs.js-stellar-sdk-npm-version }}-${{ inputs.rust-toolchain-version }}"
+          SYSTEM_TEST_CACHE_INPUT="$CLI_CACHE_KEY-${{ inputs.js-stellar-sdk-repo }}-${{ inputs.js-stellar-sdk-ref }}-${{ inputs.js-stellar-sdk-npm-version }}-${{ inputs.rust-toolchain-version }}-${{ inputs.system-test-git-ref }}"
           SYSTEM_TEST_CACHE_KEY="system-test-image-$(echo -n "$SYSTEM_TEST_CACHE_INPUT" | sha256sum | cut -d' ' -f1)"
           echo "system-test-image-cache-key=$SYSTEM_TEST_CACHE_KEY" >> $GITHUB_OUTPUT
           
