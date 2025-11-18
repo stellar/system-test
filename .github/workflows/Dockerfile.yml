@@ -41,7 +41,8 @@ jobs:
         with:
           ref: ${{ env.HEAD_SHA }}
       - uses: docker/setup-buildx-action@v3
-
+        with:
+          install: true
       - name: Restore Docker buildx cache
         uses: actions/cache/restore@v4
         with:
@@ -49,7 +50,13 @@ jobs:
           key: buildx-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
             buildx-${{ runner.os }}-
-
+      - name: Ensure cache directory exists
+        run: mkdir -p /tmp/buildx-cache        
+      - name: Manually create and use custom builder with volume mount to cache directory
+        run: |
+          docker buildx create --name custombuilder --driver docker-container \
+            --use --bootstrap \
+            -v /tmp/buildx-cache:/tmp/buildx-cache
       - name: Build System Test Image
         run: |
           make USE_LOCAL_CACHE=true \
@@ -59,7 +66,6 @@ jobs:
 
       - name: Save Docker buildx cache
         uses: actions/cache/save@v4
-        if: always()
         with:
           path: /tmp/buildx-cache
           key: buildx-${{ runner.os }}-${{ github.sha }}
