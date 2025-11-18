@@ -52,11 +52,17 @@ jobs:
             buildx-${{ runner.os }}-
       - name: Ensure cache directory exists
         run: mkdir -p /tmp/buildx-cache        
-      - name: Manually create and use custom builder with volume mount to cache directory
+      - name: Start custom BuildKit container (UNIX Socket)
         run: |
-          docker buildx create --name custombuilder --driver docker-container \
-            --use --bootstrap \
-            --driver-opt volume=/tmp/buildx-cache:/tmp/buildx-cache
+          docker run -d --name custom_buildkitd \
+            --privileged \
+            -v  /tmp/buildx-cache:/tmp/buildx-cache \
+            moby/buildkit:latest --addr unix:///run/buildkit/buildkitd.sock
+      - name: Create buildx builder instance (UNIX Socket)
+        run: |
+          docker buildx create --name custombuilder --driver remote unix:///tmp/buildkit-socket/buildkitd.sock --use
+          docker buildx inspect custombuilder --bootstrap      
+
       - name: Build System Test Image
         run: |
           make USE_LOCAL_CACHE=true \
