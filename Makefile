@@ -37,49 +37,18 @@ RUST_TOOLCHAIN_VERSION=stable
 # the final image name that is created in local docker images store for system test
 SYSTEM_TEST_IMAGE=stellar/system-test:dev
 
-# set to true to enable local directory cache for layer caching during build
-USE_LOCAL_CACHE=false
-
-# local directory cache arguments for docker build
-LOCAL_CACHE_ARGS=--cache-from type=local,src=/tmp/buildx-cache --cache-to type=local,dest=/tmp/buildx-cache,mode=max,compression=zstd
-
-
-# set cache args based on USE_LOCAL_CACHE flag
-ifeq ($(USE_LOCAL_CACHE),true)
-	CACHE_ARGS=$(LOCAL_CACHE_ARGS)
-else
-	CACHE_ARGS=
-endif
-
 build-stellar-cli:
 	if [ -z "$(STELLAR_CLI_IMAGE)" ]; then \
 		DOCKERHUB_RUST_VERSION=rust:$$( [ "$(RUST_TOOLCHAIN_VERSION)" = "stable" ] && echo "latest" || echo "$(RUST_TOOLCHAIN_VERSION)"); \
-		OUTPUT_ARG="--load"; \
-		if [ -n "$(CACHE_ARGS)" ]; then \
-			rm -rf $(MAKEFILE_DIR)cli_oci_image; \
-			mkdir -p $(MAKEFILE_DIR)cli_oci_image; \
-			OUTPUT_ARG="--output type=oci,dest=$(MAKEFILE_DIR)cli_oci_image.tar"; \
-		fi; \
-		docker buildx build --progress=plain $$OUTPUT_ARG -t "$(STELLAR_CLI_STAGE_IMAGE)" --target builder \
+		docker buildx build --progress=plain --load -t "$(STELLAR_CLI_STAGE_IMAGE)" --target builder \
 		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
 		--build-arg DOCKERHUB_RUST_VERSION="$$DOCKERHUB_RUST_VERSION" \
 		--build-arg STELLAR_CLI_CRATE_VERSION="$(STELLAR_CLI_CRATE_VERSION)" \
-		$(CACHE_ARGS) \
 		-f- $(STELLAR_CLI_GIT_REF) < $(MAKEFILE_DIR)Dockerfile.stellar-cli; \
-		if [ -n "$(CACHE_ARGS)" ]; then \
-			tar -xf $(MAKEFILE_DIR)cli_oci_image.tar -C $(MAKEFILE_DIR)cli_oci_image; \
-			rm $(MAKEFILE_DIR)cli_oci_image.tar; \
-		fi; \
 	fi
 
 build: build-stellar-cli
-	if [ -z "$(STELLAR_CLI_IMAGE)" ] && [ -n "$(CACHE_ARGS)" ]; then \
-		STELLAR_CLI_IMAGE_REF="cli_oci"; \
-		BUILD_CONTEXT_ARG="--build-context cli_oci=oci-layout://$(MAKEFILE_DIR)cli_oci_image"; \
-	else \
-		STELLAR_CLI_IMAGE_REF=$$( [ -z "$(STELLAR_CLI_IMAGE)" ] && echo "$(STELLAR_CLI_STAGE_IMAGE)" || echo "$(STELLAR_CLI_IMAGE)"); \
-		BUILD_CONTEXT_ARG=""; \
-	fi; \
+	STELLAR_CLI_IMAGE_REF=$$( [ -z "$(STELLAR_CLI_IMAGE)" ] && echo "$(STELLAR_CLI_STAGE_IMAGE)" || echo "$(STELLAR_CLI_IMAGE)"); \
 	docker buildx build --progress=plain --load -t "$(SYSTEM_TEST_IMAGE)" -f Dockerfile \
 	    --build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
 		--build-arg STELLAR_CLI_CRATE_VERSION=$(STELLAR_CLI_CRATE_VERSION) \
@@ -87,9 +56,4 @@ build: build-stellar-cli
 		--build-arg RUST_TOOLCHAIN_VERSION=$(RUST_TOOLCHAIN_VERSION) \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
 		--build-arg JS_STELLAR_SDK_NPM_VERSION=$(JS_STELLAR_SDK_NPM_VERSION) \
-		--label org.opencontainers.image.revision="$(SYSTEM_TEST_SHA)" \
-		$$BUILD_CONTEXT_ARG \
-		$(CACHE_ARGS) .; \
-	if [ -n "$(CACHE_ARGS)" ]; then \
-		rm -rf $(MAKEFILE_DIR)cli_oci_image; \
-	fi;
+		--label org.opencontainers.image.revision="$(SYSTEM_TEST_SHA)" .; \

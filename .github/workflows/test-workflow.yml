@@ -122,7 +122,8 @@ on:
         default: "stellar/soroban-examples"
 
 env:
-  SYSTEM_TEST_IMAGE: stellar/system-test:cache
+  SYSTEM_TEST_IMAGE: stellar/system-test:dev
+  STELLAR_CLI_STAGED_IMAGE: stellar/system-test-stellar-cli:dev
 
 jobs:
   prepare-config:
@@ -130,7 +131,22 @@ jobs:
     outputs:
       images-config: ${{ steps.set-config.outputs.images }}
       system-test-image: "${{ env.SYSTEM_TEST_IMAGE}}"
+      stellar-cli-staged-image: "${{ env.STELLAR_CLI_STAGED_IMAGE}}"
+      cli-image-cache-key: ${{ steps.compute-cache-keys.outputs.cli-image-cache-key }}
+      system-test-image-cache-key: ${{ steps.compute-cache-keys.outputs.system-test-image-cache-key }}
     steps:
+      - id: compute-cache-keys
+        run: |
+          # Compute CLI image cache key
+          CLI_CACHE_INPUT="${{ runner.os }}-${{ inputs.stellar-cli-repo }}-${{ inputs.stellar-cli-ref }}-${{ inputs.stellar-cli-crate-version }}"
+          CLI_CACHE_KEY="cli-image-$(echo -n "$CLI_CACHE_INPUT" | sha256sum | cut -d' ' -f1)"
+          echo "cli-image-cache-key=$CLI_CACHE_KEY" >> $GITHUB_OUTPUT
+          
+          # Compute system test image cache key (includes CLI key + additional inputs)
+          SYSTEM_TEST_CACHE_INPUT="$CLI_CACHE_KEY-${{ inputs.js-stellar-sdk-repo }}-${{ inputs.js-stellar-sdk-ref }}-${{ inputs.js-stellar-sdk-npm-version }}-${{ inputs.rust-toolchain-version }}"
+          SYSTEM_TEST_CACHE_KEY="system-test-image-$(echo -n "$SYSTEM_TEST_CACHE_INPUT" | sha256sum | cut -d' ' -f1)"
+          echo "system-test-image-cache-key=$SYSTEM_TEST_CACHE_KEY" >> $GITHUB_OUTPUT
+          
       - id: set-config
         run: |
           cat <<EOF >> $GITHUB_OUTPUT
@@ -166,6 +182,7 @@ jobs:
     needs: [prepare-config]
     env:
       SYSTEM_TEST_IMAGE: ${{ needs.prepare-config.outputs.system-test-image }}
+      STELLAR_CLI_STAGED_IMAGE: ${{ needs.prepare-config.outputs.stellar-cli-staged-image }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -186,17 +203,33 @@ jobs:
           path: system-test/js-stellar-sdk
 
       - uses: stellar/actions/rust-cache@main
-      - uses: docker/setup-buildx-action@v3
-
-      - name: Restore Docker buildx cache
+      - name: Restore system test image cache
+        id: restore-system-test-image
         uses: actions/cache/restore@v4
         with:
-          path: /tmp/buildx-cache
-          key: system-test-buildx-cache-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            system-test-buildx-cache-${{ runner.os }}-
+          path: /tmp/system-test-image.tar.zst
+          key: ${{ needs.prepare-config.outputs.system-test-image-cache-key }}
+      
+      - name: Load cached system test image
+        if: steps.restore-system-test-image.outputs.cache-hit == 'true'
+        run: |
+          zstd -d -c /tmp/system-test-image.tar.zst | docker load
+      
+      - name: Restore cli image cache
+        if: steps.restore-system-test-image.outputs.cache-hit != 'true'
+        id: restore-cli-image
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/cli-image.tar.zst
+          key: ${{ needs.prepare-config.outputs.cli-image-cache-key }}
+      
+      - name: Load cached cli image
+        if: steps.restore-cli-image.outputs.cache-hit == 'true'
+        run: |
+          zstd -d -c /tmp/cli-image.tar.zst | docker load
 
       - name: Build system test with component versions
+        if: steps.restore-system-test-image.outputs.cache-hit != 'true'
         run: |
           cd $GITHUB_WORKSPACE/system-test
           if [ -z "${{ inputs.js-stellar-sdk-repo }}" ]; then \
@@ -204,14 +237,19 @@ jobs:
           else \
             JS_STELLAR_SDK_REF="file:/home/tester/js-stellar-sdk"; \
           fi
-          if [ -n "${{ inputs.stellar-cli-ref }}" ] && [ -n "${{ inputs.stellar-cli-repo }}" ]; then \
-            STELLAR_CLI_GIT_REF="https://github.com/${{ inputs.stellar-cli-repo }}.git#${{ inputs.stellar-cli-ref }}"; \
-          else \
-            STELLAR_CLI_CRATE_VERSION="${{ inputs.stellar-cli-crate-version }}"; \
+        
+          if [ "${{ steps.restore-cli-image.outputs.cache-hit }}" == 'true' ]; then \
+            STELLAR_CLI_IMAGE=$STELLAR_CLI_STAGED_IMAGE; \
+          else
+            if [ -n "${{ inputs.stellar-cli-ref }}" ] && [ -n "${{ inputs.stellar-cli-repo }}" ]; then \
+              STELLAR_CLI_GIT_REF="https://github.com/${{ inputs.stellar-cli-repo }}.git#${{ inputs.stellar-cli-ref }}"; \
+            else \
+              STELLAR_CLI_CRATE_VERSION="${{ inputs.stellar-cli-crate-version }}"; \
+            fi  
           fi
-           
+
           make \
-            USE_LOCAL_CACHE=true \
+            STELLAR_CLI_IMAGE=$STELLAR_CLI_IMAGE \
             STELLAR_CLI_GIT_REF=$STELLAR_CLI_GIT_REF \
             STELLAR_CLI_CRATE_VERSION=$STELLAR_CLI_CRATE_VERSION \
             RUST_TOOLCHAIN_VERSION=${{ inputs.rust-toolchain-version }} \
@@ -219,21 +257,33 @@ jobs:
             SYSTEM_TEST_IMAGE=$SYSTEM_TEST_IMAGE \
             build
 
-      - name: Save Docker buildx cache
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: /tmp/buildx-cache
-          key: system-test-buildx-cache-${{ runner.os }}-${{ github.sha }}
+          if [ "${{ steps.restore-cli-image.outputs.cache-hit }}" != 'true' ]; then \
+            docker save $STELLAR_CLI_STAGED_IMAGE | zstd -19 -o /tmp/cli-image.tar.zst
+          fi  
+          docker save $SYSTEM_TEST_IMAGE | zstd -19 -o /tmp/system-test-image.tar.zst
 
-      - name: extract image to file
+      - name: Save cache for cli
+        uses: actions/cache/save@v4
+        if: steps.restore-cli-image.outputs.cache-hit != 'true'
+        with:
+          path: /tmp/cli-image.tar.zst
+          key: ${{ needs.prepare-config.outputs.cli-image-cache-key }}
+      - name: Save cache for system test image
+        uses: actions/cache/save@v4
+        if: steps.restore-system-test-image.outputs.cache-hit != 'true'
+        with:
+          path: /tmp/system-test-image.tar.zst
+          key: ${{ needs.prepare-config.outputs.system-test-image-cache-key }}
+
+      - name: Decompress system test image for artifact
         run: |
-          docker save $SYSTEM_TEST_IMAGE -o /tmp/image.tar
+          zstd -d /tmp/system-test-image.tar.zst -o /tmp/system-test-image.tar
+
       - name: save file to artifact
         uses: actions/upload-artifact@v4
         with:
           name: image-system-test
-          path: /tmp/image.tar
+          path: /tmp/system-test-image.tar
 
   integration:
     name: System tests

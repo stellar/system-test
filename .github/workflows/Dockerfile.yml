@@ -44,8 +44,14 @@ jobs:
         id: image-cache
         uses: actions/cache/restore@v4
         with:
-          path: /tmp/image.tar
+          path: /tmp/image.tar.zst
           key: systemtest-image-${{ runner.os }}-${{ github.sha }}
+      
+      - name: Load cached Docker image
+        if: steps.image-cache.outputs.cache-hit == 'true'
+        run: |
+          zstd -d -c /tmp/image.tar.zst | docker load
+      
       - name: Build System Test Image
         if: steps.image-cache.outputs.cache-hit != 'true'
         run: |
@@ -56,14 +62,20 @@ jobs:
       - name: Save Docker Image to file
         if: steps.image-cache.outputs.cache-hit != 'true'
         run: |
-          docker save ${{ env.PUSH_ENABLED == 'true' && env.IMAGE || 'stellar/system-test:dev' }} -o /tmp/image.tar
+          docker save ${{ env.PUSH_ENABLED == 'true' && env.IMAGE || 'stellar/system-test:dev' }} | zstd -19 -o /tmp/image.tar.zst
 
       - name: Save image cache
         if: steps.image-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
-          path: /tmp/image.tar
+          path: /tmp/image.tar.zst
           key: systemtest-image-${{ runner.os }}-${{ github.sha }}
+      
+      - if: ${{ env.PUSH_ENABLED == 'true' }}
+        name: Decompress image for upload
+        run: |
+          zstd -d /tmp/image.tar.zst -o /tmp/image.tar
+      
       - if: ${{ env.PUSH_ENABLED == 'true' }}
         name: Upload System Test Image
         uses: actions/upload-artifact@v4
@@ -90,7 +102,7 @@ jobs:
         with:
           head_sha: ${{ env.HEAD_SHA }}
           artifact_name: image-Dockerfile
-          artifact_image_file: image
+          artifact_image_file: image.tar
           image: ${{ env.IMAGE }}
           registry: ${{ secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io' }}
           username: ${{ secrets.DOCKERHUB_USERNAME || github.actor }}
