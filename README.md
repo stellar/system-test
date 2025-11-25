@@ -2,74 +2,33 @@
 
 ### Running system tests:
 
-Identify the system-test image you want to use for running tests:
+Identify the quickstart image you want to use as target for running tests. Quickstart contains the server stack of core, rpc:
 
 - Use a prebuilt system test image published as tags under
-  `dockerhub.io/stellar/system-test`
-- Build the system test docker image locally with specific versions of core,
-  horizon, soroban rpc, rust toolchain, stellar cli, this will create a docker
-  image named `stellar/system-test:dev`. All `GIT_REF` variables can refer to
+  `dockerhub.io/stellar/quickstart`
+- Or build the system test docker image locally with specific versions of cli and stellar-js-sdk,
+  this will create a docker image named `stellar/system-test:dev`. All `GIT_REF` variables can refer to
   either a fully qualified local path to checked out git repo, or a fully
   qualified github remote repo url `https://github.com/repo#<ref>`
 
 ```
 make
-     QUICKSTART_GIT_REF=? \
-     CORE_GIT_REF=? \
-     CORE_COMPILE_CONFIGURE_FLAGS=? \
-     STELLAR_RPC_GIT_REF=? \
      STELLAR_CLI_GIT_REF=? \
-     GO_GIT_REF=? \
      RUST_TOOLCHAIN_VERSION=? \
      STELLAR_CLI_CRATE_VERSION=? \
      JS_STELLAR_SDK_NPM_VERSION=? \
      NODE_VERSION=? \
-     PROTOCOL_VERSION_DEFAULT=? \
      build
 ```
 
-example of build using specific git refs, mainline from repos in this example,
-or use tags, branches, etc:
+all settings have defaults pre-set, and optionally be overriden, refer to the Makefile for the defaulted values.
+
+#### Optional Build Params
 
 ```
-make CORE_GIT_REF=https://github.com/stellar/stellar-core.git#f1dc39f0f146815e5e3a94ed162e2f0639cb433f \
-       CORE_COMPILE_CONFIGURE_FLAGS="--disable-tests --enable-next-protocol-version-unsafe-for-production" \
-       STELLAR_RPC_GIT_REF=https://github.com/stellar/soroban-tools.git#main \
-       RUST_TOOLCHAIN_VERSION=stable \
-       STELLAR_CLI_GIT_REF=https://github.com/stellar/soroban-tools.git#main \
-       QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git#main \
-       JS_STELLAR_SDK_NPM_VERSION=https://github.com/stellar/js-stellar-sdk.git#master \
-       build
-```
-
-example of build using an existing quickstart image, this can dramatically speed
-up the build time, as the existing quickstart image will provide the
-pre-compiled rpc, and core runtimes already:
-
-```
-make QUICKSTART_IMAGE=stellar/quickstart:soroban-dev \
-       RUST_TOOLCHAIN_VERSION=1.66.0 \
-       STELLAR_CLI_GIT_REF=/Users/user/stellar-cli-build
-```
-
-some settings have defaults pre-set, and optionally be overriden:
-
-```
+# cli will be compiled from this git ref
 STELLAR_CLI_GIT_REF=https://github.com/stellar/stellar-cli.git#main
-STELLAR_RPC_GIT_REF=https://github.com/stellar/stellar-rpc.git#main
-RUST_TOOLCHAIN_VERSION=stable
-QUICKSTART_GIT_REF=https://github.com/stellar/quickstart.git#main
-# the GO_GIT_REF provides the reference on the stellar/go repo from which
-# to build horizon
-GO_GIT_REF=https://github.com/stellar/go.git#master
-CORE_COMPILE_CONFIGURE_FLAGS="--disable-tests"
-CORE_GIT_REF=https://github.com/stellar/stellar-core.git#master
-JS_STELLAR_SDK_NPM_VERSION=https://github.com/stellar/js-stellar-sdk.git#master
-```
 
-optional params to set:
-
-```
 # this will override STELLAR_CLI_GIT_REF, and install stellar cli from crates repo instead
 STELLAR_CLI_CRATE_VERSION=0.4.0
 
@@ -86,42 +45,26 @@ JS_STELLAR_SDK_NPM_VERSION=https://github.com/stellar/js-stellar-sdk.git#master
 # platform arch as the build host is running on, i.e. linux/amd64 or linux/arm64.
 # Otherwise, build will fail if image is not available for matching host platform.
 #
-# this will skip building from source for core(CORE_GIT_REF), rpc(STELLAR_RPC_GIT_REF) and quickstart(QUICKSTART_GIT_REF), instead
-# will use the versions already compiled in the existing quickstart docker image provided:
-QUICKSTART_IMAGE=<docker registry>/<docker image name>:<docker tag>
-
-# this will skip building core from CORE_GIT_REF and instead
-# will use the `stellar-core` by default at /usr/local/bin/stellar-core in the existing docker image provided:
-CORE_IMAGE=<docker registry>/<docker image name>:<docker tag>
-
-# define a custom path that `stellar-core` bin is located on CORE_IMAGE,
-# to override the default of /usr/local/bin/stellar-core
-CORE_IMAGE_BIN_PATH=
-
-# this will skip building stellar-rpc from STELLAR_RPC_GIT_REF and instead
-# will use the bin already compiled at /bin/stellar-rpc in the existing docker image provided:
-STELLAR_RPC_IMAGE=<docker registry>/<docker image name>:<docker tag>
 
 # this will skip building stellar-cli from STELLAR_CLI_GIT_REF and instead
 # will use the bin already compiled at /usr/local/cargo/bin/soroban in the existing docker image provided:
 STELLAR_CLI_IMAGE=<docker registry>/<docker image name>:<docker tag>
-
-# this will skip building horizon from GO_GIT_REF and instead
-# will use the bin already compiled at /go/bin/horizon in the existing docker image provided:
-HORIZON_IMAGE=<docker registry>/<docker image name>:<docker tag>
-
-# this will skip building friendbot from GO_GIT_REF and instead
-# will use the bin already compiled at /app/friendbot in the existing docker image provided:
-FRIENDBOT_IMAGE=<docker registry>/<docker image name>:<docker tag>
-
-# set the default network protocol version which the internal core runtime built from `CORE_GIT_REF` should start with.
-# Should typically be set to the maximum supported protocol version of all components.
-# If not set or set to empty, will default to the core max supported protocol version defined in quickstart.
-PROTOCOL_VERSION_DEFAULT=
 ```
 
-Optional parameters to pass when running the system-test image,
-`stellar/system-test:<tag>`:
+#### Required runtime params
+
+Set the target network to test. This just needs to be the RPC server of the network. It can be from a running quickstart instance or testnet or pubnet:
+  `--TargetNetworkRPCURL {http://<rpc_host:rpc_port>/soroban/rpc}`
+
+Note - If you are running quickstart as a docker container on the same host machine, then specify the rpc url as `--TargetNetworkRPCURL http://host.docker.internal:8000/rpc` to use Docker's convention to reference host network. 
+
+#### Optional runtime params
+
+System test will by default use the network settings for `local` network from quickstart. 
+If `TargetNetworkRPCURL` is pointed at any stellar network other than a `local` network instance provided from quickstart, then you'll need to provide the network specifics. 
+`--TargetNetworkPassphrase "{passphrase}"`
+`--TargetNetworkTestAccountSecret "{your test account key pair info}"`
+`--TargetNetworkTestAccountPublic "{your test account key pair info}"`
 
 To specify git version of the smart contract source code used in soroban test
 fixtures. `--SorobanExamplesGitHash {branch, tag, git commit hash}`
@@ -134,46 +77,12 @@ scenario outline is postfixed with '#01', '#02', examples:
 or
 `--TestFilter "^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract#01$"`
 
-The default target network for system tests is a new/empty instance of local
-network hosted inside the docker container, tests will use the default root
-account already seeded into local network. Alternatively, can override the
-network settings for local and remote usages:
+Set verbose logging output `--VerboseOutput true` 
 
-- Tests will use an internally hosted core watcher node:
-  `--TargetNetwork {standalone|futurenet|testnet}`
-- Tests will use an external rpc instance and the container will not run core,
-  horizon, rpc services internally:
-  `--TargetNetworkRPCURL {http://<rpc_host:rpc_port>/soroban/rpc}`
-- Tests use these settings in either target network mode, and these are by
-  default set to work with local: `--TargetNetworkPassphrase "{passphrase}"`
-  `--TargetNetworkTestAccountSecret "{your test account key pair info}"`
-  `--TargetNetworkTestAccountPublic "{your test account key pair info}"`
+#### Running Tests
 
-Debug mode, the docker container will exit with error code when any pre-setup or
-test fails to pass, you can enable DEBUG_MODE flag, and the container will stay
-running, prompting you for enter key before shutting down, make sure you invoke
-docker with `-it` so the prompt will reach your command line. While container is
-kept running, you can shell into it via `docker exec -it <container id or name>`
-and view log files of services in the stack such as core, rpc located in
-container at `/var/log/supervisor`. `--DebugMode=true`
-
-The docker run follows standard exit code conventions, so if all tests pass in
-the container run, exit code from command line execution will be 0, otherwise,
-if any failures in container or tests, then exit code will be greater than 0.
-
-#### Running Test Examples
-
-- Run tests against an instance of core and rpc on a local network all running
-  in the test container:
-
-  ```
-  docker run --rm -t --name e2e_test stellar/system-test:<tag> \
-  --VerboseOutput true
-  ```
-
-- Run tests against a remote instance of rpc configured for testnet, this will
-  not run core or rpc instances locally in the test container. It requires you
-  provide a key pair of an account that is funded with Lumens on the target
+- Run tests against a remote instance of rpc hosted on a quickstart configured for testnet. 
+  The tests requires you provide a key pair of an account that is funded with Lumens on the target
   network for the tests to use as source account on transactions it will submit
   to target network:
 
@@ -184,8 +93,22 @@ if any failures in container or tests, then exit code will be greater than 0.
   --TargetNetworkPassphrase "Test SDF Network ; September 2015" \
   --TargetNetworkTestAccountSecret <your test account key pair info> \
   --TargetNetworkTestAccountPublic <your test account key pair info> \
-  --SorobanExamplesGitHash v20.0.0-rc2
+  --SorobanExamplesGitHash v22.0.1
   ```
+
+#### Debug test failures
+Use `--VerboseOutput true` and may need to check the lops of the rpc server instance if you have access to those at same time.
+
+The docker container will exit with error code when any pre-setup or
+test fails to pass, you can enable DEBUG_MODE flag, and the container will stay
+running, prompting you for depressing enter key before shutting down, make sure you invoke
+docker with `-it` so the prompt will reach your command line. While container is
+kept running, you can shell into it via `docker exec -it <container id or name>`
+and manually re-run tests in container, check local outputs. 
+
+The docker run follows standard exit code conventions, so if all tests pass in
+the container run, exit code from command line execution will be 0, otherwise,
+if any failures in container or tests, then exit code will be greater than 0.
 
 ### Development mode and running tests directly from checked out system-test repo.
 
@@ -200,17 +123,11 @@ tests, no docker image is used.
     https://www.rust-lang.org/tools/install
 3.  `stellar` cli, compile or install via cargo crate a version of stellar cli
     onto your machine and accessible from PATH.
-4.  target network stack for the tests to access stellar-rpc instance. You can
-    use an existing/running instance if reachable or can use the quickstart
-    image `stellar/quickstart:testing` from dockerhub to run the latest stable
-    target network stack locally, or build quickstart with specific versions of
-    core, horizon and soroban rpc first
-    [following these instructions](https://github.com/stellar/quickstart#building-custom-images)
-    and run `stellar/quickstart:dev` locally.
+4.  run an instance of RPC locally by running quickstart on a local network such as `stellar/quickstart:latest`.
     ```
-    docker run --rm -it -p 8000:8000 --name stellar stellar/quickstart:dev --local --enable rpc
+    docker run --rm -it -p 8000:8000 --name stellar stellar/quickstart:latest --local 
     ```
-5.  locally checkout stellar/system-test GH repo and go into top folder -
+5.  locally checkout stellar/system-test 
     `git clone https://github.com/stellar/system-test.git;cd system-test`
 
 #### Running tests locally as go programs

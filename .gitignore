@@ -3,3 +3,4 @@ systest.sublime-project
 systest.sublime-workspace
 .quickstart_repo
 node_modules/
+cli_oci_image

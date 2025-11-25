@@ -1,8 +1,0 @@
-ARG CORE_IMAGE=
-
-FROM $CORE_IMAGE AS stellar-core
-
-FROM ubuntu
-ARG CORE_IMAGE_BIN_PATH=
-
-COPY --from=stellar-core ${CORE_IMAGE_BIN_PATH} /usr/local/bin/stellar-core

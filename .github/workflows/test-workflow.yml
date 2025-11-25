@@ -1,0 +1,341 @@
+name: Systems test workflow, next gen, uses quickstart pipelines
+
+on:
+  workflow_call:
+    inputs:
+      runner:
+        description: "GitHub runner to use"
+        required: false
+        type: string
+        default: "ubuntu-latest"
+
+      system-test-git-ref:
+        description: "the git ref (branch, tag, sha) to use for system-test"
+        required: false
+        type: string
+        default: master
+
+      stellar-cli-repo:
+        description: "The git repo for stellar-cli"
+        required: false
+        type: string
+        default: "stellar/stellar-cli"
+      stellar-cli-ref:
+        description: |
+          git ref of stellar cli software version to build
+        required: false
+        type: string
+
+      stellar-cli-crate-version:
+        description: |
+          version of stellar-cli crate to use, if not using git ref and repo
+        required: false
+        type: string
+
+      test-filter:
+        description: |
+          example filter for all combos of one scenario outline: ^TestDappDevelop$/^DApp developer compiles, deploys and invokes a contract.*$
+          each row in example data for a scenario outline is postfixed with '#01', '#02', example:
+          TestDappDevelop/DApp developer compiles, deploys and invokes a contract#01
+        required: false
+        type: string
+        default: "^TestDappDevelop$/^.*$"
+
+      js-stellar-sdk-npm-version:
+        description: |
+          set the version of js-stellar-sdk to use, need to choose one of either
+          resolution options, using this for npm release or a gh ref using js-stellar-sdk-ref:
+        required: false
+        type: string
+
+      js-stellar-sdk-repo:
+        description: |
+          set the version of stellar-sdk based on a gh repo, e.g. stellar/js-stellar-sdk
+          if set, takes precedence over js-stellar-sdk-npm-version
+        required: false
+        type: string
+
+      js-stellar-sdk-ref:
+        description: "The git ref (branch, tag, sha) to use for js-stellar-sdk if using gh repo option"
+        required: false
+        type: string
+
+      stellar-xdr-ref:
+        description: "git ref of stellar-xdr to use"
+        required: true
+        type: string
+
+      stellar-core-ref:
+        description: "git ref of stellar-core to use"
+        required: true
+        type: string
+      stellar-rpc-repo:
+        description: "The git repo to use for stellar-rpc"
+        required: false
+        type: string
+        default: "stellar/stellar-rpc"
+
+      stellar-rpc-ref:
+        description: "git ref of stellar-rpc to use"
+        required: true
+        type: string
+
+      horizon-ref:
+        description: "git ref of stellar/stellar-horizon to use"
+        required: true
+        type: string
+
+      friendbot-ref:
+        description: "git ref of stellar/friendbot to use"
+        required: true
+        type: string
+
+      lab-ref:
+        description: "git ref of stellar laboratory to use"
+        required: true
+        type: string
+
+      protocol-version:
+        description: "Protocol version to use"
+        required: true
+        type: string
+
+      rust-toolchain-version:
+        description: "Version of Rust toolchain to use in test runtime environment"
+        required: true
+        type: string
+
+      verbose-output:
+        required: false
+        type: boolean
+        default: true
+
+      soroban-examples-ref:
+        description: "The git ref (branch, tag, sha) to use for soroban-examples"
+        required: true
+        type: string
+
+      soroban-examples-repo:
+        description: "The git repo to use for soroban-examples"
+        required: false
+        type: string
+        default: "stellar/soroban-examples"
+
+env:
+  SYSTEM_TEST_IMAGE: stellar/system-test:dev
+  STELLAR_CLI_STAGED_IMAGE: stellar/system-test-stellar-cli:dev
+
+jobs:
+  prepare-config:
+    runs-on: ubuntu-latest
+    outputs:
+      images-config: ${{ steps.set-config.outputs.images }}
+      system-test-image: "${{ env.SYSTEM_TEST_IMAGE}}"
+      stellar-cli-staged-image: "${{ env.STELLAR_CLI_STAGED_IMAGE}}"
+      cli-image-cache-key: ${{ steps.compute-cache-keys.outputs.cli-image-cache-key }}
+      system-test-image-cache-key: ${{ steps.compute-cache-keys.outputs.system-test-image-cache-key }}
+    steps:
+      - id: compute-cache-keys
+        run: |
+          # Helper function to resolve ref to commit SHA
+          get_commit_sha() {
+            local repo="$1"
+            local ref="$2"
+            
+            # Return empty if either repo or ref is blank
+            if [ -z "$repo" ] || [ -z "$ref" ]; then
+              echo ""
+              return
+            fi
+            
+            # Fetch the commit SHA for the ref (works for branches, tags, and SHAs)
+            local sha=$(git ls-remote "https://github.com/$repo.git" "$ref" 2>/dev/null | cut -f1)
+            echo "${sha:-$ref}"
+          }
+          
+          # Resolve commit SHAs for cache key stability
+          CLI_SHA=$(get_commit_sha "${{ inputs.stellar-cli-repo }}" "${{ inputs.stellar-cli-ref }}")
+          JS_SDK_SHA=$(get_commit_sha "${{ inputs.js-stellar-sdk-repo }}" "${{ inputs.js-stellar-sdk-ref }}")
+          SYSTEM_TEST_SHA=$(get_commit_sha "stellar/system-test" "${{ inputs.system-test-git-ref }}")
+          
+          # Compute CLI image cache key
+          CLI_CACHE_INPUT="${{ runner.os }}-${{ inputs.stellar-cli-repo }}-$CLI_SHA-${{ inputs.stellar-cli-crate-version }}"
+          CLI_CACHE_KEY="cli-image-$(echo -n "$CLI_CACHE_INPUT" | sha256sum | cut -d' ' -f1)"
+          echo "cli-image-cache-key=$CLI_CACHE_KEY" >> $GITHUB_OUTPUT
+          
+          # Compute system test image cache key (includes CLI key + additional inputs)
+          SYSTEM_TEST_CACHE_INPUT="$CLI_CACHE_KEY-${{ inputs.js-stellar-sdk-repo }}-$JS_SDK_SHA-${{ inputs.js-stellar-sdk-npm-version }}-${{ inputs.rust-toolchain-version }}-$SYSTEM_TEST_SHA"
+          SYSTEM_TEST_CACHE_KEY="system-test-image-$(echo -n "$SYSTEM_TEST_CACHE_INPUT" | sha256sum | cut -d' ' -f1)"
+          echo "system-test-image-cache-key=$SYSTEM_TEST_CACHE_KEY" >> $GITHUB_OUTPUT
+          
+      - id: set-config
+        run: |
+          cat <<EOF >> $GITHUB_OUTPUT
+          images<<DELIMITER
+          [
+            {
+              "tag": "rpc-custom",
+              "config": {
+                "protocol_version_default": ${{ inputs.protocol-version }}
+              },
+              "deps": [
+                { "name": "xdr", "repo": "stellar/rs-stellar-xdr", "ref": "${{ inputs.stellar-xdr-ref }}" },
+                { "name": "core", "repo": "stellar/stellar-core", "ref": "${{ inputs.stellar-core-ref }}", "options": { "configure_flags": "--disable-tests" } },
+                { "name": "rpc", "repo": "${{ inputs.stellar-rpc-repo }}", "ref": "${{ inputs.stellar-rpc-ref }}" },
+                { "name": "horizon", "repo": "stellar/stellar-horizon", "ref": "${{ inputs.horizon-ref }}", "options": { "pkg": "github.com/stellar/stellar-horizon" } },
+                { "name": "friendbot", "repo": "stellar/friendbot", "ref": "${{ inputs.friendbot-ref }}", "options": { "pkg": "github.com/stellar/friendbot" } },
+                { "name": "lab", "repo": "stellar/laboratory", "ref": "${{ inputs.lab-ref }}" }
+              ],
+              "additional-tests": []
+            }
+          ]
+          DELIMITER
+          EOF
+  build-quickstart:
+    needs: prepare-config
+    uses: stellar/quickstart/.github/workflows/build.yml@main
+    with:
+      images: ${{ needs.prepare-config.outputs.images-config }}
+      archs: '["amd64"]'
+
+  build-system-test:
+    runs-on: ubuntu-latest-4-cores
+    needs: [prepare-config]
+    env:
+      SYSTEM_TEST_IMAGE: ${{ needs.prepare-config.outputs.system-test-image }}
+      STELLAR_CLI_STAGED_IMAGE: ${{ needs.prepare-config.outputs.stellar-cli-staged-image }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: stellar/system-test
+          ref: ${{ inputs.system-test-git-ref }}
+          path: system-test
+
+      - if: inputs.js-stellar-sdk-repo != ''
+        name: prepare local js-stellar-sdk
+        run: |
+          rm -rf $GITHUB_WORKSPACE/system-test/js-stellar-sdk;
+
+      - if: inputs.js-stellar-sdk-repo != ''
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.js-stellar-sdk-repo }}
+          ref: ${{ inputs.js-stellar-sdk-ref }}
+          path: system-test/js-stellar-sdk
+
+      - uses: stellar/actions/rust-cache@main
+      - name: Restore system test image cache
+        id: restore-system-test-image
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/system-test-image.tar.zst
+          key: ${{ needs.prepare-config.outputs.system-test-image-cache-key }}
+      - name: Restore cli image cache
+        if: steps.restore-system-test-image.outputs.cache-hit != 'true'
+        id: restore-cli-image
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/cli-image.tar.zst
+          key: ${{ needs.prepare-config.outputs.cli-image-cache-key }}
+      
+      - name: Load cached cli image
+        if: steps.restore-cli-image.outputs.cache-hit == 'true'
+        run: |
+          zstd -d -c /tmp/cli-image.tar.zst | docker load
+
+      - name: Build system test with component versions
+        if: steps.restore-system-test-image.outputs.cache-hit != 'true'
+        run: |
+          cd $GITHUB_WORKSPACE/system-test
+          if [ -z "${{ inputs.js-stellar-sdk-repo }}" ]; then \
+            JS_STELLAR_SDK_REF="${{ inputs.js-stellar-sdk-npm-version }}"; \
+          else \
+            JS_STELLAR_SDK_REF="file:/home/tester/js-stellar-sdk"; \
+          fi
+        
+          if [ "${{ steps.restore-cli-image.outputs.cache-hit }}" == 'true' ]; then \
+            STELLAR_CLI_IMAGE=$STELLAR_CLI_STAGED_IMAGE; \
+          else
+            if [ -n "${{ inputs.stellar-cli-ref }}" ] && [ -n "${{ inputs.stellar-cli-repo }}" ]; then \
+              STELLAR_CLI_GIT_REF="https://github.com/${{ inputs.stellar-cli-repo }}.git#${{ inputs.stellar-cli-ref }}"; \
+            else \
+              STELLAR_CLI_CRATE_VERSION="${{ inputs.stellar-cli-crate-version }}"; \
+            fi  
+          fi
+
+          make \
+            STELLAR_CLI_IMAGE=$STELLAR_CLI_IMAGE \
+            STELLAR_CLI_GIT_REF=$STELLAR_CLI_GIT_REF \
+            STELLAR_CLI_CRATE_VERSION=$STELLAR_CLI_CRATE_VERSION \
+            RUST_TOOLCHAIN_VERSION=${{ inputs.rust-toolchain-version }} \
+            JS_STELLAR_SDK_NPM_VERSION=$JS_STELLAR_SDK_REF \
+            SYSTEM_TEST_IMAGE=$SYSTEM_TEST_IMAGE \
+            build
+
+          if [ "${{ steps.restore-cli-image.outputs.cache-hit }}" != 'true' ]; then \
+            echo "Starting CLI image extract and compression..."; \
+            docker save $STELLAR_CLI_STAGED_IMAGE | zstd -vv -10 -o /tmp/cli-image.tar.zst; \
+            CLI_SIZE=$(stat -f%z /tmp/cli-image.tar.zst 2>/dev/null || stat -c%s /tmp/cli-image.tar.zst 2>/dev/null); \
+            echo "Finished CLI image extract, compressed size = $CLI_SIZE bytes"; \
+          fi
+          echo "Starting system test image extract and compression..."
+          docker save $SYSTEM_TEST_IMAGE | zstd -vv -10 -o /tmp/system-test-image.tar.zst
+          SYSTEM_SIZE=$(stat -f%z /tmp/system-test-image.tar.zst 2>/dev/null || stat -c%s /tmp/system-test-image.tar.zst 2>/dev/null)
+          echo "Finished system test image extract, compressed size = $SYSTEM_SIZE bytes"
+
+      - name: Save cache for cli
+        uses: actions/cache/save@v4
+        if: steps.restore-cli-image.outputs.cache-hit != 'true'
+        with:
+          path: /tmp/cli-image.tar.zst
+          key: ${{ needs.prepare-config.outputs.cli-image-cache-key }}
+      - name: Save cache for system test image
+        uses: actions/cache/save@v4
+        if: steps.restore-system-test-image.outputs.cache-hit != 'true'
+        with:
+          path: /tmp/system-test-image.tar.zst
+          key: ${{ needs.prepare-config.outputs.system-test-image-cache-key }}
+      - name: save file to artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-system-test
+          path: /tmp/system-test-image.tar.zst
+
+  integration:
+    name: System tests
+    needs: [build-system-test, build-quickstart, prepare-config]
+    # Run if build-system-test succeeded OR was skipped because image is already in built(cache hit)
+    if: always() && (needs.build-system-test.result == 'success' || needs.build-system-test.result == 'skipped')
+
+    strategy:
+      matrix:
+        scenario-filter: ["${{ inputs.test-filter }}"]
+    runs-on: ubuntu-latest
+    env:
+      SYSTEM_TEST_IMAGE: ${{ needs.prepare-config.outputs.system-test-image }}
+    steps:
+      - name: Start quickstart with rpc
+        uses: stellar/quickstart@main
+        with:
+          artifact: image-quickstart-rpc-custom-amd64.tar
+          tag: rpc-custom-amd64
+          enable: core,rpc
+      - name: Download system-test image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: image-system-test
+          path: /tmp/
+      - name: load system-test image from artifact file
+        run: |
+           zstd -d -c /tmp/system-test-image.tar.zst | docker load
+
+      - name: Run system test scenarios
+        run: |
+          docker run \
+          --add-host=host.docker.internal:host-gateway \
+          --rm -t --name e2e_test $SYSTEM_TEST_IMAGE \
+          --VerboseOutput ${{ inputs.verbose-output }}  \
+          --TargetNetworkRPCURL http://host.docker.internal:8000/rpc \
+          --TestFilter "${{ matrix.scenario-filter }}" \
+          --SorobanExamplesGitHash ${{ inputs.soroban-examples-ref }} \
+          --SorobanExamplesRepoURL https://github.com/${{ inputs.soroban-examples-repo }}

@@ -5,7 +5,7 @@ on:
     branches:
       - master
     tags:
-      - '*'
+      - "*"
   pull_request:
   release:
     types: [published]
@@ -19,55 +19,69 @@ env:
   # the only time system test image needs to be defined for a push is when it's a non 'v' tag creation
   PUSH_ENABLED: ${{ secrets.DOCKERHUB_TOKEN && github.ref_type == 'tag' && startsWith(github.ref_name, 'v') != true && 'true' || 'false' }}
   IMAGE: ${{ format('{0}/{1}:{2}', secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io', github.repository, github.ref_type == 'tag' && github.ref_name || github.event.ref || 'latest') }}
-  CORE_GIT_REF: https://github.com/stellar/stellar-core.git#master
-  STELLAR_RPC_GIT_REF: https://github.com/stellar/stellar-rpc.git#protocol-23
-  RUST_TOOLCHAIN_VERSION: stable
   SOROBAN_CLI_GIT_REF: https://github.com/stellar/soroban-tools.git#main
-  QUICKSTART_GIT_REF: https://github.com/stellar/quickstart.git#main
   # leaving sdk npm version blank defaults to whatever npm has for latest version
   # rather than build from git source, which is fine for ci test build
   JS_STELLAR_SDK_NPM_VERSION:
-  RS_XDR_GIT_REPO: https://github.com/stellar/rs-stellar-xdr
-  RS_XDR_GIT_REF: main
 jobs:
   complete:
     if: always()
     needs: [build]
     runs-on: ubuntu-latest
     steps:
-    - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
-      run: exit 1
+      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
 
   build:
     runs-on: ubuntu-latest-16-cores
     outputs:
       push_enabled: ${{ env.PUSH_ENABLED }}
     steps:
-    - uses: actions/checkout@v4
-      with:
-        ref: ${{ env.HEAD_SHA }}
-    - name: Build System Test Image
-      run: |
-        make CORE_GIT_REF=${{ env.CORE_GIT_REF }} \
-             CORE_COMPILE_CONFIGURE_FLAGS="${{ env.CORE_COMPILE_CONFIGURE_FLAGS }}" \
-             STELLAR_RPC_GIT_REF=${{ env.STELLAR_RPC_GIT_REF }} \
-             RUST_TOOLCHAIN_VERSION=${{ env.RUST_TOOLCHAIN_VERSION }} \
-             SOROBAN_CLI_GIT_REF=${{ env.SOROBAN_CLI_GIT_REF }} \
-             SYSTEM_TEST_IMAGE=${{ env.PUSH_ENABLED == 'true' && env.IMAGE || 'stellar/system-test:dev' }} \
-             JS_STELLAR_SDK_NPM_VERSION=${{ env.JS_STELLAR_SDK_NPM_VERSION }} \
-             RS_XDR_GIT_REPO=${{ env.RS_XDR_GIT_REPO }} \
-             RS_XDR_GIT_REF=${{ env.RS_XDR_GIT_REF }} \
-             QUICKSTART_GIT_REF=${{ env.QUICKSTART_GIT_REF }} build;
-    - if: ${{ env.PUSH_ENABLED == 'true' }}
-      name: Save Docker Image to file
-      run: |
-        docker save ${{ env.IMAGE }} -o /tmp/image;
-    - if: ${{ env.PUSH_ENABLED == 'true' }}
-      name: Upload System Test Image
-      uses: actions/upload-artifact@v4
-      with:
-        name: image-Dockerfile
-        path: /tmp/image
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.HEAD_SHA }}
+      - name: Restore image cache
+        id: image-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/image.tar.zst
+          key: systemtest-image-${{ runner.os }}-${{ github.sha }}
+      
+      - name: Load cached Docker image
+        if: steps.image-cache.outputs.cache-hit == 'true'
+        run: |
+          zstd -d -c /tmp/image.tar.zst | docker load
+      
+      - name: Build System Test Image
+        if: steps.image-cache.outputs.cache-hit != 'true'
+        run: |
+          make SYSTEM_TEST_IMAGE=${{ env.PUSH_ENABLED == 'true' && env.IMAGE || 'stellar/system-test:dev' }} \
+               JS_STELLAR_SDK_NPM_VERSION=${{ env.JS_STELLAR_SDK_NPM_VERSION }} \
+               build;
+
+      - name: Save Docker Image to file
+        if: steps.image-cache.outputs.cache-hit != 'true'
+        run: |
+          docker save ${{ env.PUSH_ENABLED == 'true' && env.IMAGE || 'stellar/system-test:dev' }} | zstd -19 -o /tmp/image.tar.zst
+
+      - name: Save image cache
+        if: steps.image-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: /tmp/image.tar.zst
+          key: systemtest-image-${{ runner.os }}-${{ github.sha }}
+      
+      - if: ${{ env.PUSH_ENABLED == 'true' }}
+        name: Decompress image for upload
+        run: |
+          zstd -d /tmp/image.tar.zst -o /tmp/image.tar
+      
+      - if: ${{ env.PUSH_ENABLED == 'true' }}
+        name: Upload System Test Image
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-Dockerfile
+          path: /tmp/image.tar
 
   push:
     # Only push non 'vX.Y.Z' tags as pre-built system test image with versions compiled into image.
@@ -80,16 +94,16 @@ jobs:
     runs-on: ubuntu-latest
     if: needs.build.outputs.push_enabled == 'true'
     steps:
-    - uses: actions/checkout@v4
-      with:
-        ref: ${{ env.HEAD_SHA  }}
-    - id: push
-      uses: ./.github/actions/push
-      with:
-        head_sha: ${{ env.HEAD_SHA }}
-        artifact_name: image-Dockerfile
-        artifact_image_file: image
-        image: ${{ env.IMAGE }}
-        registry: ${{ secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io' }}
-        username: ${{ secrets.DOCKERHUB_USERNAME || github.actor }}
-        password: ${{ secrets.DOCKERHUB_TOKEN || github.token }}
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.HEAD_SHA  }}
+      - id: push
+        uses: ./.github/actions/push
+        with:
+          head_sha: ${{ env.HEAD_SHA }}
+          artifact_name: image-Dockerfile
+          artifact_image_file: image.tar
+          image: ${{ env.IMAGE }}
+          registry: ${{ secrets.DOCKERHUB_TOKEN && 'docker.io' || 'ghcr.io' }}
+          username: ${{ secrets.DOCKERHUB_USERNAME || github.actor }}
+          password: ${{ secrets.DOCKERHUB_TOKEN || github.token }}
