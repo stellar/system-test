@@ -6,7 +6,7 @@ require (
 	github.com/cucumber/godog v0.15.1
 	github.com/go-cmd/cmd v1.4.3
 	github.com/stellar/go v0.0.0-20230711170410-05e630f47f6c
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.11.1
 )
 
 require (
