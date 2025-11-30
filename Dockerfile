@@ -1,7 +1,7 @@
 ARG BASE_IMAGE_REF=ubuntu:24.04
 ARG STELLAR_CLI_IMAGE_REF=stellar/system-test-soroban-cli:dev
 
-FROM golang:1.24 AS go
+FROM golang:1.25 AS go
 
 SHELL ["/bin/bash", "-c"]
 RUN ["mkdir", "-p", "/test"]
