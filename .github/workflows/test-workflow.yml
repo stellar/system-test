@@ -205,7 +205,7 @@ jobs:
       SYSTEM_TEST_IMAGE: ${{ needs.prepare-config.outputs.system-test-image }}
       STELLAR_CLI_STAGED_IMAGE: ${{ needs.prepare-config.outputs.stellar-cli-staged-image }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           repository: stellar/system-test
           ref: ${{ inputs.system-test-git-ref }}
@@ -217,7 +217,7 @@ jobs:
           rm -rf $GITHUB_WORKSPACE/system-test/js-stellar-sdk;
 
       - if: inputs.js-stellar-sdk-repo != ''
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ inputs.js-stellar-sdk-repo }}
           ref: ${{ inputs.js-stellar-sdk-ref }}
@@ -296,7 +296,7 @@ jobs:
           path: /tmp/system-test-image.tar.zst
           key: ${{ needs.prepare-config.outputs.system-test-image-cache-key }}
       - name: save file to artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: image-system-test
           path: /tmp/system-test-image.tar.zst
@@ -321,7 +321,7 @@ jobs:
           tag: rpc-custom-amd64
           enable: core,rpc
       - name: Download system-test image artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: image-system-test
           path: /tmp/
