@@ -12,7 +12,7 @@ STELLAR_CLI_STAGE_IMAGE=stellar/system-test-stellar-cli:dev
 
 # variables to set for source code, can be any valid docker context url local
 # path github remote repo `https://github.com/repo#<ref>`
-STELLAR_CLI_GIT_REF=https://github.com/stellar/stellar-cli.git\#main
+override STELLAR_CLI_GIT_REF := $(if $(STELLAR_CLI_GIT_REF),$(STELLAR_CLI_GIT_REF),https://github.com/stellar/stellar-cli.git\#main)
 
 # if crate version is set, then it overrides STELLAR_CLI_GIT_REF, cli will be installed from this create instead
 STELLAR_CLI_CRATE_VERSION=
