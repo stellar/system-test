@@ -190,7 +190,7 @@ jobs:
                 "protocol_version_default": ${{ inputs.protocol-version }}
               },
               "deps": [
-                { "name": "xdr", "repo": "stellar/rs-stellar-xdr", "refg": "${{ inputs.stellar-xdr-ref }}" },
+                { "name": "xdr", "repo": "stellar/rs-stellar-xdr", "ref": "${{ inputs.stellar-xdr-ref }}" },
                 { "name": "core", "repo": "stellar/stellar-core", "ref": "${{ inputs.stellar-core-ref }}", "options": { "configure_flags": "--disable-tests" } },
                 { "name": "rpc", "repo": "${{ inputs.stellar-rpc-repo }}", "ref": "${{ inputs.stellar-rpc-ref }}" },
                 { "name": "horizon", "repo": "stellar/stellar-horizon", "ref": "${{ inputs.horizon-ref }}", "options": { "pkg": "github.com/stellar/stellar-horizon" } },
