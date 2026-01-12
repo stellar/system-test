@@ -185,7 +185,7 @@ jobs:
           images<<DELIMITER
           [
             {
-              "tag": "rpc-custom",
+              "tag": "system-test-custom",
               "config": {
                 "protocol_version_default": ${{ inputs.protocol-version }}
               },
