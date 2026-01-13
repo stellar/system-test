@@ -329,7 +329,7 @@ jobs:
       - name: Start quickstart with rpc
         uses: stellar/quickstart@main
         with:
-          artifact: image-quickstart-rpc-custom-amd64.tar
+          artifact: image-quickstart-system-test-custom-amd64
           tag: rpc-custom-amd64
           enable: core,rpc
       - name: Download system-test image artifact
