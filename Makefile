@@ -12,7 +12,7 @@ STELLAR_CLI_STAGE_IMAGE=stellar/system-test-stellar-cli:dev
 
 # variables to set for source code, can be any valid docker context url local
 # path github remote repo `https://github.com/repo#<ref>`
-override STELLAR_CLI_GIT_REF := $(if $(STELLAR_CLI_GIT_REF),$(STELLAR_CLI_GIT_REF),https://github.com/stellar/stellar-cli.git\#main)
+STELLAR_CLI_GIT_REF=https://github.com/stellar/stellar-cli.git\#main
 
 # if crate version is set, then it overrides STELLAR_CLI_GIT_REF, cli will be installed from this create instead
 STELLAR_CLI_CRATE_VERSION=
@@ -40,11 +40,12 @@ SYSTEM_TEST_IMAGE=stellar/system-test:dev
 build-stellar-cli:
 	if [ -z "$(STELLAR_CLI_IMAGE)" ]; then \
 		DOCKERHUB_RUST_VERSION=rust:$$( [ "$(RUST_TOOLCHAIN_VERSION)" = "stable" ] && echo "latest" || echo "$(RUST_TOOLCHAIN_VERSION)"); \
-		docker buildx build --progress=plain --load -t "$(STELLAR_CLI_STAGE_IMAGE)" --target builder \
+		DOCKER_CONTEXT=$$( [ -z "$(STELLAR_CLI_CRATE_VERSION)" ] && echo "-f- $(STELLAR_CLI_GIT_REF) < $(MAKEFILE_DIR)Dockerfile.stellar-cli" || echo "-f Dockerfile.stellar-cli ." ); \
+		eval "docker buildx build --progress=plain --load -t \"$(STELLAR_CLI_STAGE_IMAGE)\" --target builder \
 		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
-		--build-arg DOCKERHUB_RUST_VERSION="$$DOCKERHUB_RUST_VERSION" \
-		--build-arg STELLAR_CLI_CRATE_VERSION="$(STELLAR_CLI_CRATE_VERSION)" \
-		-f- $(STELLAR_CLI_GIT_REF) < $(MAKEFILE_DIR)Dockerfile.stellar-cli; \
+		--build-arg DOCKERHUB_RUST_VERSION=\"\$$DOCKERHUB_RUST_VERSION\" \
+		--build-arg STELLAR_CLI_CRATE_VERSION=\"$(STELLAR_CLI_CRATE_VERSION)\" \
+		\$$DOCKER_CONTEXT"; \
 	fi
 
 build: build-stellar-cli

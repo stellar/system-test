@@ -170,7 +170,7 @@ jobs:
           SYSTEM_TEST_SHA=$(get_commit_sha "stellar/system-test" "${{ inputs.system-test-git-ref }}")
           
           # Compute CLI image cache key
-          CLI_CACHE_INPUT="${{ runner.os }}-${{ inputs.stellar-cli-repo }}-$CLI_SHA-${{ inputs.stellar-cli-crate-version }}"
+          CLI_CACHE_INPUT="${{ runner.os }}-${{ inputs.stellar-cli-repo }}-$CLI_SHA-${{ inputs.stellar-cli-ref }}-${{ inputs.stellar-cli-crate-version }}"
           CLI_CACHE_KEY="cli-image-$(echo -n "$CLI_CACHE_INPUT" | sha256sum | cut -d' ' -f1)"
           echo "cli-image-cache-key=$CLI_CACHE_KEY" >> $GITHUB_OUTPUT
           
