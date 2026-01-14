@@ -80,6 +80,17 @@ on:
         required: true
         type: string
 
+      galexie-repo:
+        description: "The git repo to use for galexie"
+        required: false
+        type: string
+        default: "stellar/stellar-galexie"
+
+      galexie-ref:
+        description: "git ref of galexie to use"
+        required: true
+        type: string  
+
       horizon-ref:
         description: "git ref of stellar/stellar-horizon to use"
         required: true
@@ -159,7 +170,7 @@ jobs:
           SYSTEM_TEST_SHA=$(get_commit_sha "stellar/system-test" "${{ inputs.system-test-git-ref }}")
           
           # Compute CLI image cache key
-          CLI_CACHE_INPUT="${{ runner.os }}-${{ inputs.stellar-cli-repo }}-$CLI_SHA-${{ inputs.stellar-cli-crate-version }}"
+          CLI_CACHE_INPUT="${{ runner.os }}-${{ inputs.stellar-cli-repo }}-$CLI_SHA-${{ inputs.stellar-cli-ref }}-${{ inputs.stellar-cli-crate-version }}"
           CLI_CACHE_KEY="cli-image-$(echo -n "$CLI_CACHE_INPUT" | sha256sum | cut -d' ' -f1)"
           echo "cli-image-cache-key=$CLI_CACHE_KEY" >> $GITHUB_OUTPUT
           
@@ -174,7 +185,7 @@ jobs:
           images<<DELIMITER
           [
             {
-              "tag": "rpc-custom",
+              "tag": "system-test-custom",
               "config": {
                 "protocol_version_default": ${{ inputs.protocol-version }}
               },
@@ -184,7 +195,8 @@ jobs:
                 { "name": "rpc", "repo": "${{ inputs.stellar-rpc-repo }}", "ref": "${{ inputs.stellar-rpc-ref }}" },
                 { "name": "horizon", "repo": "stellar/stellar-horizon", "ref": "${{ inputs.horizon-ref }}", "options": { "pkg": "github.com/stellar/stellar-horizon" } },
                 { "name": "friendbot", "repo": "stellar/friendbot", "ref": "${{ inputs.friendbot-ref }}", "options": { "pkg": "github.com/stellar/friendbot" } },
-                { "name": "lab", "repo": "stellar/laboratory", "ref": "${{ inputs.lab-ref }}" }
+                { "name": "lab", "repo": "stellar/laboratory", "ref": "${{ inputs.lab-ref }}" },
+                { "name": "galexie", "repo": "${{ inputs.galexie-repo }}", "ref": "${{ inputs.galexie-ref }}" }
               ],
               "additional-tests": []
             }
@@ -317,8 +329,8 @@ jobs:
       - name: Start quickstart with rpc
         uses: stellar/quickstart@main
         with:
-          artifact: image-quickstart-rpc-custom-amd64.tar
-          tag: rpc-custom-amd64
+          artifact: image-quickstart-system-test-custom-amd64.tar
+          tag: system-test-custom-amd64
           enable: core,rpc
       - name: Download system-test image artifact
         uses: actions/download-artifact@v4

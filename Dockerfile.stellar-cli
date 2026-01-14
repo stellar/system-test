@@ -1,7 +1,9 @@
 ARG DOCKERHUB_RUST_VERSION
-ARG STELLAR_CLI_CRATE_VERSION
 
 FROM $DOCKERHUB_RUST_VERSION AS builder
+
+# Declare ARG to make it available in this build stage
+ARG STELLAR_CLI_CRATE_VERSION
 
 WORKDIR /soroban-tools
 COPY . .
